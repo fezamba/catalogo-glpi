@@ -1,7 +1,8 @@
 <?php
 header('Content-Type: application/json');
 
-$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
+//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
+require_once 'conexao.php';
 if ($mysqli->connect_errno) {
     echo json_encode(['error' => 'Erro de conexão']);
     exit;

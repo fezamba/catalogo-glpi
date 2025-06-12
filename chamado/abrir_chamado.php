@@ -1,5 +1,6 @@
 <?php
-$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
+//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
+require_once 'conexao.php';
 if ($mysqli->connect_errno) {
   die("Erro ao conectar: " . $mysqli->connect_error);
 }

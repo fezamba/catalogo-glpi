@@ -3,7 +3,8 @@
 header('Content-Type: application/json');
 
 // Conecta ao banco de dados
-$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
+//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
+require_once 'conexao.php';
 if ($mysqli->connect_errno) {
     // Em caso de erro de conexão, retorna um JSON de erro
     http_response_code(500); // Internal Server Error
