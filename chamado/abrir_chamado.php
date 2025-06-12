@@ -76,7 +76,7 @@ if ($mysqli->connect_errno) {
 
       <div class="form-actions-horizontal">
         <button type="submit" class="btn btn-primary">Criar</button>
-        <a href="../index/index.php" class="btn btn-secondary">
+        <a href="../index.php" class="btn btn-secondary">
           ← Voltar
         </a>
       </div>

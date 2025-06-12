@@ -33,7 +33,7 @@
       </div>
 
       <div style="margin-top: 20px;">
-        <a href="../index/index.php" class="botao-voltar">← Voltar ao Catálogo</a>
+        <a href="../index.php" class="botao-voltar">← Voltar ao Catálogo</a>
       </div>
     </div>
 

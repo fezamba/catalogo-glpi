@@ -33,7 +33,7 @@ while ($cat = $result->fetch_assoc()) {
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="menu-item">
-        <button class="menu-button" onclick="window.location.href='../index/index.php'">
+        <button class="menu-button" onclick="window.location.href='../index.php'">
           Todas Categorias <span class="badge"><?php echo count($categorias); ?></span>
         </button>
       </div>
