@@ -74,7 +74,7 @@ while ($cat = $result->fetch_assoc()) {
         <div class="card-button" onclick="window.location.href='list/manage_listsubcat.php'">
           <div class="card-header">
             <h3>SubCategorias</h3>
-            <img src="../index/img/edit.png" alt="SubCategorias">
+            <img src="../img/edit.png" alt="SubCategorias">
           </div>
           <p>Gerencie as subcategorias ligadas às categorias.</p>
         </div>
@@ -82,14 +82,14 @@ while ($cat = $result->fetch_assoc()) {
         <div class="card-button" onclick="window.location.href='list/manage_listservico.php'">
           <div class="card-header">
             <h3>Serviços</h3>
-            <img src="../index/img/edit.png" alt="Serviços">
+            <img src="../img/edit.png" alt="Serviços">
           </div>
           <p>Gerencie os serviços associados às subcategorias.</p>
         </div>
         <div class="card-button" onclick="window.location.href='pos/manage_pos.php'">
           <div class="card-header">
             <h3>Product Owners (POs)</h3>
-            <img src="../index/img/edit.png" alt="Product Owners">
+            <img src="../img/edit.png" alt="Product Owners">
           </div>
           <p>Gerencie os Product Owners e seus dados de contato.</p>
         </div>
