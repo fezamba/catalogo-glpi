@@ -1,6 +1,6 @@
 <?php
 //$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
-require_once 'conexao.php';
+require_once '../../conexao.php';
 if ($mysqli->connect_errno) {
   die("Erro: " . $mysqli->connect_error);
 }
