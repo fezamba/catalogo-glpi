@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 
 // Conecta ao banco de dados
 //$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
-require_once 'conexao.php';
+require_once '../conexao.php';
 if ($mysqli->connect_errno) {
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao conectar com o banco de dados']);
