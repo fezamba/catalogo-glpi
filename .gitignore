@@ -1,0 +1,11 @@
+conexao.php
+config.php
+
+/vendor/
+
+.env
+
+*.log
+/cache/
+
+/pip

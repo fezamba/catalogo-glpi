@@ -1,0 +1,127 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f9;
+}
+
+.layout {
+  display: flex;
+  max-width: 1280px;
+  margin: 20px auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  min-height: 600px;
+}
+
+.sidebar {
+  flex: 0 0 240px;
+  background-color: #f9fafb;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.menu-item {
+  margin-bottom: 5px;
+}
+
+.menu-button {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+  font-weight: normal;
+}
+
+.menu-button:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-button.active {
+  font-weight: bold;
+}
+
+.submenu {
+  display: none;
+  padding: 10px 15px;
+  background-color: #f1f1f1;
+  border-left: 2px solid #ccc;
+}
+
+.submenu a {
+  display: block;
+  padding: 5px 0;
+  font-size: 13px;
+  text-decoration: none;
+  color: #333;
+}
+
+.submenu a:hover {
+  text-decoration: underline;
+}
+
+.badge {
+  background-color: #e0e7ff;
+  color: #1a237e;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.content {
+  flex: 1;
+  padding: 20px 40px;
+}
+
+.content h1 {
+  font-size: 25px;
+  margin-bottom: 10px;
+}
+
+.content p {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 30px;
+}
+
+/* Cards das Subcategorias da CATEGORIA */
+.subcards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.subcard {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.subcard h3 {
+  font-size: 20px;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+}
+
+.subcard p {
+  font-size: 16px;
+  color: #444;
+  line-height: 1.4;
+  margin: 0 0 10px 0;
+}
+
+.subcard a {
+  font-size: 14px;
+  color: #1a237e;
+  text-decoration: underline;
+}

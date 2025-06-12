@@ -1,0 +1,163 @@
+/* --- ESTRUTURA GERAL --- */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+}
+
+.form-wrapper {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+    font-size: 28px;
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* --- FORMULÁRIO --- */
+.form-grid {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.form-column {
+    flex: 1 1 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+input[type='text'],
+textarea,
+select {
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* --- BOTÕES --- */
+.form-actions-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-start;
+}
+
+/* Base para todos os botões */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    font-weight: bold;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+/* Botão Primário (Amarelo) */
+.btn-primary {
+    background-color: #f9b000;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #d89a00;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Botão Secundário (Cinza) */
+.btn-secondary {
+    background-color: #e0e0e0;
+    color: #333;
+}
+.btn-secondary:hover {
+    background-color: #cfcfcf;
+}
+
+
+/* --- COMPONENTES DINÂMICOS --- */
+#descricao-container {
+    display: none;
+    background-color: #fff8e6;
+    border-left: 4px solid #f9b000;
+    padding: 15px 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    line-height: 1.6;
+}
+
+#descricao-container strong {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* A caixa de resultados agora é um bloco normal */
+#resultados-busca {
+    /* Removemos position: absolute e todas as regras de posicionamento */
+    display: none; /* Começa escondida, o JS vai mostrar */
+    background: white; 
+    border: 1px solid #ddd; 
+    border-top: none; /* Para se conectar visualmente à barra de busca */
+    border-radius: 0 0 6px 6px; 
+    margin-top: -1px; /* Pequeno ajuste para a borda ficar bonita */
+    margin-bottom: 20px; /* Espaçamento antes dos campos de categoria */
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.resultado-item {
+    display: block;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+}
+
+.resultado-item:last-child {
+    border-bottom: none;
+}
+
+.resultado-item:hover {
+    background-color: #f8f9fa;
+}
+
+.resultado-titulo {
+    font-size: 1rem;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.resultado-desc {
+    display: block;
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.4;
+}

@@ -1,0 +1,11 @@
+pergunta,resposta,id_subcategoria,chaves
+como trocar minha senha,"Tranquilo! Acesse o portal de identidade institucional (normalmente usado pro e-mail e sistemas internos), vá em ""Perfil"" e clique em ""Trocar Senha"". Rapidinho 😉",5,trocar senha resetar esqueci redefinir portal perfil identidade
+estou com erro no outlook,"Já tentou reiniciar o computador? Se continuar travando, abre o Gerenciador de Tarefas, finaliza o Outlook e abre de novo. Persistindo, chama o suporte! 💻",7,outlook erro email travando suporte gerenciador travado
+como solicitar acesso ao sefaznet,"Você precisa preencher o formulário de solicitação de acesso ao SEFAZNET, pedir assinatura do gestor da sua unidade e enviar para a área de atendimento. ⚡",3,acesso sefaznet sistema liberar solicitar formulario gestor
+meu teams não abre,"Verifique sua conexão de rede, depois vá no menu iniciar e busque por ""Teams (versão nova)"". Se não abrir, tenta limpar cache ou reinstalar o app. 🧑‍💻",8,teams erro travando abrir conexão novo cache aplicativo
+como instalar o office,"Vai em https://www.office.com, entre com seu e-mail da fazenda e clique em ""Instalar Office"" no canto superior direito. Escolha ""Aplicativos do Microsoft 365"". 📦",6,office instalar pacote word excel baixar institucional
+preciso de licença para excel,"Se você tem o e-mail da fazenda com Microsoft 365, já está licenciado. Se aparecer erro de ativação, entra no Office.com e revalida seu login. 🎁",6,licença excel microsoft365 planilha ativar ativação
+o que fazer quando o sistema está fora do ar,"Primeiro: respira. Depois, confere a Intranet (ou canal de comunicados). Se não tiver aviso, abre um chamado pelo GLPI e descreve tudo certinho. 🔧",4,sistema fora ar indisponível caiu glpi
+como redefinir minha senha do e-mail,"Na tela de login do Outlook Web (https://outlook.office.com), clique em “Esqueci minha senha” e siga os passos. Se não conseguir, chama a equipe de suporte. 📩",5,senha email redefinir trocar recuperar outlook login
+oi,E aí! 👋 Em que posso ajudar hoje?,,oi olá eae tudo bem bom dia boa tarde boa noite
+fala ju,"Em que posso lhe ajudar, meu mestre? 😌",,fala ju eae ju fala comigo junin

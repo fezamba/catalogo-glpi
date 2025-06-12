@@ -1,0 +1,220 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f9;
+}
+
+.layout {
+  display: flex;
+  max-width: 1280px;
+  margin: 20px auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  min-height: 600px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 240px;
+  background-color: #f9fafb;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.menu-item {
+  margin-bottom: 5px;
+}
+
+.menu-button {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+  font-weight: normal;
+}
+
+.menu-button:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-button.active {
+  font-weight: bold;
+}
+
+.submenu {
+  display: none;
+  padding: 10px 15px;
+  margin-top: 0;
+  background-color: #f1f1f1;
+  border-left: 2px solid #ccc;
+}
+
+.submenu a {
+  display: block;
+  padding: 5px 0;
+  font-size: 13px;
+  text-decoration: none;
+  color: #333;
+}
+
+.submenu a:hover {
+  text-decoration: underline;
+}
+
+.badge {
+  background-color: #e0e7ff;
+  color: #1a237e;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.content {
+  flex: 1;
+  padding: 10px 40px;
+}
+
+.content h1 {
+  font-size: 25px;
+  margin-bottom: 8px;
+}
+
+.content p {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 30px;
+}
+
+/* Cards do INDEX: lado a lado (grid) */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.card-button {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: left;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-button:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  font-size: 20px;
+  margin: 0;
+  font-weight: bold;
+}
+
+.card-header img {
+  width: 50px;
+  height: 50px;
+}
+
+.card-button p {
+  font-size: 16px;
+  color: #444;
+  margin-top: 12px;
+  line-height: 1.4;
+}
+
+.fixed-bottom {
+  margin-top: auto;
+}
+
+.icon-left {
+  width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.icon-left2 {
+  width: 24px;
+  height: 24px;
+  margin-right: 2.2px;
+  vertical-align: middle;
+}
+
+/* --- INÍCIO: ESTILOS PARA OS RESULTADOS DA BUSCA --- */
+
+/* A caixa que envolve os links de resultado */
+#resultados-busca {
+    background: white; 
+    border: 1px solid #ddd; 
+    border-radius: 6px; 
+    text-align: left; 
+    display: none; /* Começa escondido */
+    margin-top: -1px; /* Encosta na barra de busca */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* O link de cada item do resultado */
+#resultados-busca a.resultado-item {
+    display: block; /* MUITO IMPORTANTE: faz cada item ocupar uma linha */
+    padding: 12px 15px;
+    color: #333; /* Cor preta para o texto */
+    text-decoration: none; /* Remove o sublinhado */
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+/* Remove a borda do último item */
+#resultados-busca a.resultado-item:last-child {
+    border-bottom: none;
+}
+
+/* Efeito de hover ao passar o mouse */
+#resultados-busca a.resultado-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Título do serviço */
+.resultado-titulo {
+    font-size: 1rem;
+    font-weight: bold;
+    display: block; /* Garante que o título ocupe sua própria linha */
+    margin-bottom: 3px;
+}
+
+/* Contexto (em Categoria > Subcategoria) */
+.resultado-contexto {
+    font-size: 0.8rem;
+    color: #777;
+    display: block; /* Ocupa sua própria linha */
+    margin-bottom: 5px;
+}
+
+/* Descrição do serviço */
+.resultado-desc {
+    display: block; /* Ocupa sua própria linha */
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.4;
+}
