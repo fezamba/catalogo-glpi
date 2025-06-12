@@ -66,7 +66,7 @@ while ($cat = $result->fetch_assoc()) {
         <div class="card-button" onclick="window.location.href='list/manage_listcategoria.php'">
           <div class="card-header">
             <h3>Categorias</h3>
-            <img src="../index/img/edit.png" alt="Categorias">
+            <img src="../img/edit.png" alt="Categorias">
           </div>
           <p>Gerencie as categorias principais do catálogo.</p>
         </div>
