@@ -575,7 +575,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
   $res = $mysqli->query("SELECT codigo_ficha FROM servico WHERE ID = $id LIMIT 1");
   if ($row = $res->fetch_assoc()) {
     $codigo_ficha = $mysqli->real_escape_string($row['codigo_ficha']);
-    $mysqli->query("UPDATE servico SET status_ficha = 'substituida' WHERE codigo_ficha = '$codigo_ficha' AND ID != $id AND status_ficha = 'publicado'");
   }
 
   $mysqli->query("DELETE FROM diretriz WHERE ID_Servico = $id");
