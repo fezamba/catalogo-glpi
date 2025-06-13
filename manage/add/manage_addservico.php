@@ -778,7 +778,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', ?)");
 
   $stmt->bind_param(
-    "sssisssssssssss",
+    "sssissssssssss",
     $versao,
     $titulo,
     $descricao,
