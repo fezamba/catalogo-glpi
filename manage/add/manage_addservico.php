@@ -766,26 +766,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
 
   $eh_software  = $_POST['eh_software'] ?? 'nao';
   $versao_software = $_POST['versao_software'] ?? '';
-
   $eh_sistema   = $_POST['eh_sistema'] ?? 'nao';
   $sistema_portal = $_POST['sistema_portal'] ?? '';
   $equipe_solucionadora_externa = $_POST['equipe_solucionadora_externa'] ?? '';
 
-  $res = $mysqli->query("SELECT MAX(ID) as max_id FROM servico");
-  $row = $res->fetch_assoc();
-  $prox_id = intval($row['max_id']) + 1;
-  $codigo_ficha = "FCH-" . str_pad($prox_id, 4, "0", STR_PAD_LEFT);
-  $versao = "1.0";
-
   $stmt = $mysqli->prepare("INSERT INTO servico 
-  (codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, 
+  (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, 
    area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, 
    usuario_criador, tipo, determinacao_orientacao_norma, status_ficha, anexo) 
-  VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', ?)");
+  VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', ?)");
 
   $stmt->bind_param(
-    "ssssissssssssss",
-    $codigo_ficha,
+    "sssissssssssss",
     $versao,
     $titulo,
     $descricao,
@@ -805,6 +797,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   if ($stmt->execute()) {
     $id_servico = $stmt->insert_id;
     $stmt->close();
+
+    $codigo_ficha = "FCH-" . str_pad($id_servico, 4, "0", STR_PAD_LEFT);
+
+    $stmt_update = $mysqli->prepare("UPDATE servico SET codigo_ficha = ? WHERE ID = ?");
+    $stmt_update->bind_param("si", $codigo_ficha, $id_servico);
+    $stmt_update->execute();
+    $stmt_update->close();
 
     if (!empty($_POST['atendimentos'])) {
       foreach ($_POST['atendimentos'] as $att) {
