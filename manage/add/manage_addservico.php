@@ -763,6 +763,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   $tipo      = $_POST['tipo'];
   $norma     = $_POST['determinacao_orientacao_norma'];
   $criador      = $_POST['usuario_criador'];
+  $versao       = $_POST['versao'] ?? '1.0';
 
   $eh_software  = $_POST['eh_software'] ?? 'nao';
   $versao_software = $_POST['versao_software'] ?? '';
