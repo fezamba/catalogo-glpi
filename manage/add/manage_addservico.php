@@ -1095,11 +1095,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                   echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar</button>';
                 }
               }
-
-              // Ação de EXCLUIR (para Criador ou PO)
-              if ($modo_edicao && ($tipo_usuario === 'criador' || $tipo_usuario === 'po')) {
-                echo '<button type="submit" class="btn-danger" name="acao" value="excluir" onclick="return confirm(\'Tem certeza que deseja excluir este serviço?\');" style="margin-left: 15px;">Excluir</button>';
-              }
             }
             ?>
           </div>
