@@ -1305,7 +1305,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
 
             if ($modo_edicao && $pode_excluir):
             ?>
-              <button type="submit" class="btn-danger" name="acao" value="excluir" onclick="return confirm('Tem certeza que deseja excluir permanentemente este serviço? Esta ação não pode ser desfeita.');" style="margin-left: 15px;">Excluir</button>
+              <button type="submit" class="btn-danger" name="acao" value="excluir" onclick="return confirm('Tem certeza que deseja excluir permanentemente este serviço? Esta ação não pode ser desfeita.');">Excluir</button>
               <input type="hidden" name="delete_id" value="<?php echo intval($_GET['id']); ?>">
             <?php endif; ?>
           </div>
