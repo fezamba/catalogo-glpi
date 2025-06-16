@@ -31,7 +31,6 @@ if ($mysqli->connect_errno) {
       <div class="form-grid">
         <div class="form-column">
 
-          <!-- CATEGORIA -->
           <label for="categoria">Categoria
             <select id="categoria" name="categoria" required>
               <option value="">Selecione...</option>
@@ -47,7 +46,6 @@ if ($mysqli->connect_errno) {
               ?>
             </select>
           </label>
-          <!-- SUBCATEGORIA -->
           <div id="subcategoria-wrapper" style="display: none;">
             <label for="subcategoria">Subcategoria
               <select id="subcategoria" name="subcategoria" required>
@@ -56,7 +54,6 @@ if ($mysqli->connect_errno) {
             </label>
           </div>
 
-          <!-- SERVIÇO -->
           <div id="servico-wrapper" style="display: none;">
             <label for="servico">Serviço
               <select id="servico" name="servico" required>
@@ -65,7 +62,6 @@ if ($mysqli->connect_errno) {
             </label>
           </div>
 
-          <!-- DESCRIÇÃO DO SERVIÇO -->
           <div id="descricao-container" class="grupo" style="display:none;">
             <strong>Descrição do Serviço:</strong>
             <p id="descricao-servico" style="margin-top: 5px;"></p>

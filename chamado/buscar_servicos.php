@@ -8,37 +8,33 @@ if ($mysqli->connect_errno) {
     exit;
 }
 
-// Pega e sanitiza o termo de busca
 $termo = trim($_GET['termo'] ?? '');
 if (strlen($termo) < 2) {
     echo json_encode([]);
     exit;
 }
 
-// Quebra o termo em palavras individuais (tokens)
 $tokens = array_filter(explode(' ', $termo));
 if (empty($tokens)) {
     echo json_encode([]);
     exit;
 }
 
-// Constrói a consulta SQL segura e com busca ampla
 $whereConditions = [];
 $params = [];
 $types = '';
 
 foreach ($tokens as $token) {
-    // A condição de busca
+
     $whereConditions[] = "(s.Titulo LIKE ? OR s.Descricao LIKE ? OR cat.Titulo LIKE ?)";
     $param = "%" . $token . "%";
     array_push($params, $param, $param, $param);
     $types .= 'sss';
 }
 
-// Junta todas as condições com 'AND'
+
 $whereClause = implode(' AND ', $whereConditions);
 
-// A consulta agora busca em todos os serviços, sem filtro de status
 $query = "
     SELECT DISTINCT
         s.ID,
@@ -60,12 +56,12 @@ $query = "
 $stmt = $mysqli->prepare($query);
 
 if ($stmt) {
-    // Vincula os parâmetros dinamicamente
+
     $stmt->bind_param($types, ...$params);
     
     $stmt->execute();
     $result = $stmt->get_result();
-    // Renomeia as chaves para corresponder ao seu JS original
+
     $servicos = [];
     while ($row = $result->fetch_assoc()) {
         $servicos[] = [
