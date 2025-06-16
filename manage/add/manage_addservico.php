@@ -359,15 +359,15 @@ if ($modo_edicao) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_novamente') {
-    $id = intval($_GET['id']);
+  $id = intval($_GET['id']);
 
-    $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'em_revisao' WHERE ID = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $stmt->close();
+  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'em_revisao' WHERE ID = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $stmt->close();
 
-    header("Location: ../list/manage_listservico.php?sucesso=1");
-    exit;
+  header("Location: ../list/manage_listservico.php?sucesso=1");
+  exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'publicar_ficha') {
@@ -535,11 +535,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor') {
-    $id = intval($_GET['id']);
-    $nome_revisor = $_SESSION['username'] ?? 'revisor'; 
-    $email_revisor = $_SESSION['email_usuario'] ?? 'revisor@email.com';
+  $id = intval($_GET['id']);
+  $nome_revisor = $_SESSION['username'] ?? 'revisor';
+  $email_revisor = $_SESSION['email_usuario'] ?? 'revisor@email.com';
 
-    $stmt = $mysqli->prepare("
+  $stmt = $mysqli->prepare("
         UPDATE servico SET 
             status_ficha = 'revisada', 
             revisor_nome = ?, 
@@ -547,12 +547,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor
             data_revisao = NOW() 
         WHERE ID = ?
     ");
-    $stmt->bind_param("ssi", $nome_revisor, $email_revisor, $id);
-    $stmt->execute();
-    $stmt->close();
+  $stmt->bind_param("ssi", $nome_revisor, $email_revisor, $id);
+  $stmt->execute();
+  $stmt->close();
 
-    header("Location: ../list/manage_listservico.php?sucesso=1");
-    exit;
+  header("Location: ../list/manage_listservico.php?sucesso=1");
+  exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_para_aprovacao') {
+  $id = intval($_GET['id']);
+
+  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'em_aprovacao' WHERE ID = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $stmt->close();
+
+  header("Location: ../list/manage_listservico.php?sucesso=1");
+  exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_revisor') {
@@ -773,7 +785,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         <label>Nome do Serviço:
           <textarea name="nome_servico" rows="1" oninput="autoResize(this)" required><?php echo htmlspecialchars($dados_edicao['Titulo'] ?? '') ?></textarea>
         </label>
-    
+
         <label>Descrição do Serviço:
           <textarea name="descricao_servico" rows="4"><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea>
         </label>
@@ -1038,53 +1050,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
             <input type="hidden" name="usuario_criador" value="Service-Desk/WD">
 
             <?php
+            // Se não for modo de edição, mostra apenas o botão de criar
             if (!$modo_edicao) {
-              if (true) { // Trocar para uma verificação de permissão real
+              if ($tipo_usuario === 'criador') {
                 echo '<button type="submit" class="btn-salvar" name="acao" value="criar_servico">Criar serviço</button>';
               }
             } else {
+              // Se estiver editando, busca o status atual
               $status = $dados_edicao['status_ficha'] ?? 'rascunho';
 
-              if ($tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po'])) {
-                echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_revisao" style="margin-right: 4px;>Enviar para revisão</button>';
-                echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar Ficha</button>';
+              // --- AÇÕES DO CRIADOR ---
+              if ($tipo_usuario === 'criador') {
+                // Se a ficha é um rascunho (ou foi reprovada e voltou a ser rascunho)
+                if ($status === 'rascunho') {
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_revisao" style="margin-right: 4px;">Enviar para Revisão</button>';
+                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar Ficha</button>';
+                }
+                // Se a ficha foi revisada, o criador a envia para o PO
+                if ($status === 'revisada') {
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_para_aprovacao" style="margin-right: 4px;">Enviar para Aprovação do PO</button>';
+                  echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'devolver_para_revisao\')">Devolver para Correção</button>';
+                }
+                // Se já foi publicada, pode criar uma nova versão
+                if ($status === 'publicado') {
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
+                }
               }
 
+              // --- AÇÕES DO REVISOR ---
               if ($tipo_usuario === 'revisor' && $status === 'em_revisao') {
-                echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_revisor" style="margin-right: 4px;">Aprovar a ficha</button>';
-                echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_revisor\')">Reprovar</button>';
+                echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_revisor" style="margin-right: 4px;">Concluir Revisão</button>';
+                echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_revisor\')">Reprovar (Volta p/ Criador)</button>';
               }
 
-              if ($tipo_usuario === 'revisor' && $status === 'revisada') {
-                echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_para_aprovacao" style="margin-right: 4px;">Enviar para Aprovação do PO</button>';
-                echo '<button type="submit" class="btn-danger" name="acao" value="enviar_revisao" style="margin-right: 4px;">Devolver para Correção</button>';
-                echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" style="margin-right: 0px;">Cancelar</button>';
-              }
-
+              // --- AÇÕES DO PO ---
               if ($tipo_usuario === 'po') {
                 if ($status === 'em_aprovacao') {
-                  echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar ficha</button>';
-                  echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_revisao_novamente" style="margin-right: 4px;">Voltar para revisão</button>';
-                  echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_po\')" >Reprovar</button>';
-                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" style="margin-right: 0px;">Cancelar</button>';
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar Ficha</button>';
+                  echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="margin-right: 4px; background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
+                  echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_po\')">Reprovar (Volta p/ Criador)</button>';
                 }
-
                 if ($status === 'aprovada') {
-                  echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar ficha</button>';
-                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" style="margin-right: 0px;">Cancelar</button>';
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar Ficha</button>';
+                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar</button>';
                 }
               }
-              if ($status === 'publicado' && $tipo_usuario === 'criador') {
-                echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova versão</button>';
+
+              // Ação de EXCLUIR (para Criador ou PO)
+              if ($modo_edicao && ($tipo_usuario === 'criador' || $tipo_usuario === 'po')) {
+                echo '<button type="submit" class="btn-danger" name="acao" value="excluir" onclick="return confirm(\'Tem certeza que deseja excluir este serviço?\');" style="margin-left: 15px;">Excluir</button>';
               }
             }
-
-            if ($modo_edicao && ($tipo_usuario === 'criador' || $tipo_usuario === 'po')):
             ?>
-              <input type="hidden" name="delete_id" value="<?php echo intval($_GET['id']); ?>">
-              <button type="submit" class="btn-danger" name="acao" value="excluir" onclick="return confirm('Tem certeza que deseja excluir este serviço?');">Excluir</button>
-            <?php endif; ?>
-
           </div>
         </div>
     </form>
