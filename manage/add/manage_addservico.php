@@ -504,9 +504,15 @@ if ($modo_edicao) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_novamente') {
   $id = intval($_GET['id']);
+  $justificativa = $_POST['justificativa'] ?? 'Devolvido pelo PO para ajustes.';
 
-  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'em_revisao' WHERE ID = ?");
-  $stmt->bind_param("i", $id);
+  $stmt = $mysqli->prepare("
+        UPDATE servico SET 
+            status_ficha = 'em_revisao', 
+            justificativa_rejeicao = ? 
+        WHERE ID = ?
+    ");
+  $stmt->bind_param("si", $justificativa, $id);
   $stmt->execute();
   $stmt->close();
 
@@ -959,7 +965,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         ?>
       </p>
     <?php endif; ?>
-    <?php if (!empty($dados_edicao['status_ficha']) && in_array($dados_edicao['status_ficha'], ['reprovado_revisor', 'reprovado_po'])): ?>
+    <?php if (!empty($dados_edicao['justificativa_rejeicao']) && in_array($dados_edicao['status_ficha'], ['rascunho', 'em_revisao', 'reprovado_revisor', 'reprovado_po'])): ?>
       <div style="margin-top: 15px; margin-bottom: 15px; padding: 10px; background-color: #ffe6e6; border-left: 4px solid #cc0000;">
         <strong>Justificativa da Reprovação:</strong><br>
         <em><?php echo nl2br(htmlspecialchars($dados_edicao['justificativa_rejeicao'] ?? 'Nenhuma')); ?></em>
@@ -1250,44 +1256,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
             <input type="hidden" name="usuario_criador" value="Service-Desk/WD">
 
             <?php
-            // Se não for modo de edição, mostra apenas o botão de criar
             if (!$modo_edicao) {
               if ($tipo_usuario === 'criador') {
                 echo '<button type="submit" class="btn-salvar" name="acao" value="criar_servico">Criar serviço</button>';
               }
             } else {
-              // Se estiver editando, busca o status atual
               $status = $dados_edicao['status_ficha'] ?? 'rascunho';
 
-              // --- AÇÕES DO CRIADOR ---
               if ($tipo_usuario === 'criador') {
-                // Se a ficha é um rascunho (ou foi reprovada e voltou a ser rascunho)
-                if ($status === 'rascunho') {
+                if ($status === 'rascunho' || $status === 'reprovado_revisor' || $status === 'reprovado_po') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_revisao" style="margin-right: 4px;">Enviar para Revisão</button>';
-                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar Ficha</button>';
                 }
-                // Se a ficha foi revisada, o criador a envia para o PO
                 if ($status === 'revisada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_para_aprovacao" style="margin-right: 4px;">Enviar para Aprovação do PO</button>';
+                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar Ficha</button>';
                 }
-                // Se já foi publicada, pode criar uma nova versão
                 if ($status === 'publicado') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
                 }
               }
 
-              // --- AÇÕES DO REVISOR ---
               if ($tipo_usuario === 'revisor' && $status === 'em_revisao') {
                 echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_revisor" style="margin-right: 4px;">Concluir Revisão</button>';
                 echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_revisor\')">Reprovar (Volta p/ Criador)</button>';
               }
 
-              // --- AÇÕES DO PO ---
               if ($tipo_usuario === 'po') {
                 if ($status === 'em_aprovacao') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar Ficha</button>';
                   echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="margin-right: 4px; background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
-                  echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_po\')">Reprovar (Volta p/ Criador)</button>';
                 }
                 if ($status === 'aprovada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar Ficha</button>';
@@ -1296,6 +1293,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               }
             }
             ?>
+            <?php
+            $pode_excluir = false;
+            if (isset($status)) {
+              if ($tipo_usuario === 'po') {
+                $pode_excluir = true;
+              } elseif ($tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po'])) {
+                $pode_excluir = true;
+              }
+            }
+
+            if ($modo_edicao && $pode_excluir):
+            ?>
+              <button type="submit" class="btn-danger" name="acao" value="excluir" onclick="return confirm('Tem certeza que deseja excluir permanentemente este serviço? Esta ação não pode ser desfeita.');" style="margin-left: 15px;">Excluir</button>
+              <input type="hidden" name="delete_id" value="<?php echo intval($_GET['id']); ?>">
+            <?php endif; ?>
           </div>
         </div>
     </form>

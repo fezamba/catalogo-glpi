@@ -121,7 +121,7 @@ $checklist = $mysqli->query("SELECT NomeItem, Observacao FROM checklist WHERE ID
                 </p>
             </div>
             <div class="header-actions">
-                <a href="abrir_chamado.php?servico_id=<?= $servico['ID'] ?>" class="btn btn-primary">Criar Chamado</a>
+                <a href="/chamado/abrir_chamado.php?servico_id=<?= $servico['ID'] ?>" class="btn btn-primary">Criar Chamado</a>
             </div>
         </div>
 
