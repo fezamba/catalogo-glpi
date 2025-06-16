@@ -359,145 +359,15 @@ if ($modo_edicao) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_novamente') {
-  $id = intval($_GET['id']);
+    $id = intval($_GET['id']);
 
-  // Atualiza dados principais
-  $titulo    = $_POST['nome_servico'];
-  $descricao = $_POST['descricao_servico'];
-  $subcategoria = $_POST['id_subcategoria'];
-  $kbs       = $_POST['base_conhecimento'];
-  $anexo = $_POST['anexo'];
-  $area      = $_POST['area_especialista'];
-  $po        = $_POST['po_responsavel'];
-  $alcadas   = $_POST['alcadas'];
-  $excecao   = $_POST['procedimento_excecao'];
-  $obs       = $_POST['observacoes_gerais'];
-  $tipo      = $_POST['tipo'];
-  $norma     = $_POST['determinacao_orientacao_norma'];
-  $criador   = $_POST['usuario_criador'];
-
-  $eh_software  = $_POST['eh_software'] ?? 'nao';
-  $versao_software = $_POST['versao_software'] ?? '';
-  $eh_sistema   = $_POST['eh_sistema'] ?? 'nao';
-  $sistema_portal = $_POST['sistema_portal'] ?? '';
-  $equipe_solucionadora_externa = $_POST['equipe_solucionadora_externa'] ?? '';
-  $atendimentos_post = $_POST['atendimentos'] ?? [];
-
-  $stmt = $mysqli->prepare("UPDATE servico SET 
-    Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
-    UltimaAtualizacao = NOW(), area_especialista = ?, 
-    po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, 
-    observacoes = ?, usuario_criador = ?, tipo = ?, 
-    determinacao_orientacao_norma = ?, status_ficha = 'em_revisao',
-    anexo = ?
-    WHERE ID = ?");
-
-  $stmt->bind_param(
-    "ssissssssssssi",
-    $titulo,
-    $descricao,
-    $subcategoria,
-    $kbs,
-    $area,
-    $po,
-    $alcadas,
-    $excecao,
-    $obs,
-    $criador,
-    $tipo,
-    $norma,
-    $anexo,
-    $id
-  );
-  $stmt->execute();
-  $stmt->close();
-
-  $mysqli->query("DELETE FROM diretriz WHERE ID_Servico = $id");
-  $mysqli->query("DELETE FROM padrao WHERE ID_Servico = $id");
-  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $id");
-
-  if (!empty($_POST['diretrizes'])) {
-    foreach ($_POST['diretrizes'] as $diretriz) {
-      $titulo = $mysqli->real_escape_string($diretriz['titulo']);
-      $mysqli->query("INSERT INTO diretriz (Titulo, ID_Servico) VALUES ('$titulo', $id)");
-      $id_diretriz = $mysqli->insert_id;
-
-      if (!empty($diretriz['itens'])) {
-        foreach ($diretriz['itens'] as $item) {
-          $conteudo = $mysqli->real_escape_string($item);
-          $mysqli->query("INSERT INTO itemdiretriz (ID_Diretriz, Conteudo) VALUES ($id_diretriz, '$conteudo')");
-        }
-      }
-    }
-  }
-
-  if (!empty($_POST['padroes'])) {
-    foreach ($_POST['padroes'] as $padrao) {
-      $titulo = $mysqli->real_escape_string($padrao['titulo']);
-      $mysqli->query("INSERT INTO padrao (Titulo, ID_Servico) VALUES ('$titulo', $id)");
-      $id_padrao = $mysqli->insert_id;
-
-      if (!empty($padrao['itens'])) {
-        foreach ($padrao['itens'] as $item) {
-          $conteudo = $mysqli->real_escape_string($item);
-          $mysqli->query("INSERT INTO itempadrao (ID_Padrao, Conteudo) VALUES ($id_padrao, '$conteudo')");
-        }
-      }
-    }
-  }
-
-  if (!empty($_POST['checklist'])) {
-    foreach ($_POST['checklist'] as $item) {
-      $nome = $mysqli->real_escape_string($item['item']);
-      $obs  = $mysqli->real_escape_string($item['observacao']);
-      $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($id, '$nome', '$obs')");
-    }
-  }
-
-  $mysqli->query("DELETE FROM servico_atendimento WHERE id_servico = $id");
-
-  $atendimentos_post = $_POST['atendimentos'] ?? [];
-
-  foreach ($atendimentos_post as $item) {
-    $tipo = $item['tipo'] ?? '';
-    $desc = $item['descricao'] ?? '';
-
-    if (!empty($tipo) && !empty($desc)) {
-      $stmt = $mysqli->prepare("INSERT INTO servico_atendimento (id_servico, atendimento, descricao_tecnica) VALUES (?, ?, ?)");
-      $stmt->bind_param("iss", $id, $tipo, $desc);
-      $stmt->execute();
-      $stmt->close();
-    }
-  }
-
-  $mysqli->query("DELETE FROM servico_sistema WHERE id_servico = $id");
-  $mysqli->query("DELETE FROM servico_equipe_externa WHERE id_servico = $id");
-  $mysqli->query("DELETE FROM servico_software WHERE id_servico = $id");
-
-  if ($eh_software === 'sim' && !empty($versao_software)) {
-    $stmt = $mysqli->prepare("INSERT INTO servico_software (id_servico, nome_software, versao_software) VALUES (?, ?, ?)");
-    $stmt->bind_param("iss", $id, $titulo, $versao_software);
+    $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'em_revisao' WHERE ID = ?");
+    $stmt->bind_param("i", $id);
     $stmt->execute();
     $stmt->close();
-  }
 
-  if ($eh_sistema === 'sim' && !empty($sistema_portal)) {
-    $stmt = $mysqli->prepare("INSERT INTO servico_sistema (id_servico, nome_sistema) VALUES (?, ?)");
-    $stmt->bind_param("is", $id, $sistema_portal);
-    $stmt->execute();
-    $id_sistema = $stmt->insert_id;
-    $stmt->close();
-
-    if (!empty($equipe_solucionadora_externa)) {
-      $stmt = $mysqli->prepare("INSERT INTO servico_equipe_externa (id_servico, id_sistema, nome_equipe) VALUES (?, ?, ?)");
-      $stmt->bind_param("iis", $id, $id_sistema, $equipe_solucionadora_externa);
-      $stmt->execute();
-      $stmt->close();
-    }
-  }
-
-  header("Location: ../list/manage_listservico.php?sucesso=1");
-  exit;
+    header("Location: ../list/manage_listservico.php?sucesso=1");
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'publicar_ficha') {
@@ -665,245 +535,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor') {
-  $id = intval($_GET['id']);
-  $nome = $_SESSION['nome_usuario'] ?? 'revisor';
-  $email = $_SESSION['email_usuario'] ?? 'sem@email.com';
+    $id = intval($_GET['id']);
+    $nome_revisor = $_SESSION['username'] ?? 'revisor'; 
+    $email_revisor = $_SESSION['email_usuario'] ?? 'revisor@email.com';
 
-  $stmt = $mysqli->prepare("UPDATE servico SET 
-    status_ficha = 'revisada',
-    revisor_nome = ?, 
-    revisor_email = ?, 
-    data_revisao = NOW()
-    WHERE ID = ?");
-
-  $stmt->bind_param("ssi", $nome, $email, $id);
-  $stmt->execute();
-  $stmt->close();
-
-  header("Location: ../list/manage_listservico.php?sucesso=1");
-  exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_para_aprovacao') {
-  $id = intval($_GET['id']);
-  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'em_aprovacao' WHERE ID = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $stmt->close();
-  header("Location: ../list/manage_listservico.php?sucesso=1");
-  exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_po') {
-  $id_servico_aprovado = intval($_GET['id']);
-
-  $nome_po_responsavel = null;
-  $stmt_find_resp = $mysqli->prepare("SELECT po_responsavel FROM servico WHERE ID = ?");
-  $stmt_find_resp->bind_param("i", $id_servico_aprovado);
-  $stmt_find_resp->execute();
-  $result_resp = $stmt_find_resp->get_result();
-  if ($servico_row = $result_resp->fetch_assoc()) {
-    $nome_po_responsavel = $servico_row['po_responsavel'];
-  }
-  $stmt_find_resp->close();
-
-  if ($nome_po_responsavel) {
-    $email_po_aprovador = null;
-    $stmt_find_email = $mysqli->prepare("SELECT email FROM pos WHERE nome = ?");
-    $stmt_find_email->bind_param("s", $nome_po_responsavel);
-    $stmt_find_email->execute();
-    $result_email = $stmt_find_email->get_result();
-    if ($po_row = $result_email->fetch_assoc()) {
-      $email_po_aprovador = $po_row['email'];
-    }
-    $stmt_find_email->close();
-
-    $stmt_update = $mysqli->prepare("
-            UPDATE servico SET 
-                status_ficha = 'aprovada', 
-                po_aprovador_nome = ?, 
-                po_aprovador_email = ?, 
-                data_aprovacao = NOW() 
-            WHERE ID = ?
-        ");
-    $stmt_update->bind_param("ssi", $nome_po_responsavel, $email_po_aprovador, $id_servico_aprovado);
-    $stmt_update->execute();
-    $stmt_update->close();
-
-    $res = $mysqli->query("SELECT codigo_ficha FROM servico WHERE ID = $id_servico_aprovado LIMIT 1");
-    if ($row = $res->fetch_assoc()) {
-      $codigo_ficha = $mysqli->real_escape_string($row['codigo_ficha']);
-      $mysqli->query("UPDATE servico SET status_ficha = 'substituida' WHERE codigo_ficha = '$codigo_ficha' AND ID != $id_servico_aprovado AND status_ficha = 'publicado'");
-    }
+    $stmt = $mysqli->prepare("
+        UPDATE servico SET 
+            status_ficha = 'revisada', 
+            revisor_nome = ?, 
+            revisor_email = ?, 
+            data_revisao = NOW() 
+        WHERE ID = ?
+    ");
+    $stmt->bind_param("ssi", $nome_revisor, $email_revisor, $id);
+    $stmt->execute();
+    $stmt->close();
 
     header("Location: ../list/manage_listservico.php?sucesso=1");
     exit;
-  } else {
-    echo "Erro: Não foi possível aprovar. Nenhum PO Responsável está definido para este serviço.";
-    exit;
-  }
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_po') {
-  $id = intval($_GET['id']);
-  $justificativa = $_POST['justificativa'] ?? 'Sem justificativa';
-
-  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'reprovado_po', justificativa_rejeicao = ? WHERE ID = ?");
-  $stmt->bind_param("si", $justificativa, $id);
-  $stmt->execute();
-  $stmt->close();
-
-  header("Location: ../list/manage_listservico.php?sucesso=1");
-  exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' && !$modo_edicao) {
-  $titulo       = $_POST['nome_servico'];
-  $descricao    = $_POST['descricao_servico'];
-  $subcategoria = $_POST['id_subcategoria'];
-  $kbs          = $_POST['base_conhecimento'];
-  $anexo        = $_POST['anexo'];
-  $area         = $_POST['area_especialista'];
-  $po           = $_POST['po_responsavel'];
-  $alcadas      = $_POST['alcadas'];
-  $excecao      = $_POST['procedimento_excecao'];
-  $obs          = $_POST['observacoes_gerais'];
-  $tipo      = $_POST['tipo'];
-  $norma     = $_POST['determinacao_orientacao_norma'];
-  $criador      = $_POST['usuario_criador'];
-  $versao       = $_POST['versao'] ?? '1.0';
-
-  $eh_software  = $_POST['eh_software'] ?? 'nao';
-  $versao_software = $_POST['versao_software'] ?? '';
-  $eh_sistema   = $_POST['eh_sistema'] ?? 'nao';
-  $sistema_portal = $_POST['sistema_portal'] ?? '';
-  $equipe_solucionadora_externa = $_POST['equipe_solucionadora_externa'] ?? '';
-
-  $stmt = $mysqli->prepare("INSERT INTO servico 
-  (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, 
-   area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, 
-   usuario_criador, tipo, determinacao_orientacao_norma, status_ficha, anexo) 
-  VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', ?)");
-
-  $stmt->bind_param(
-    "sssissssssssss",
-    $versao,
-    $titulo,
-    $descricao,
-    $subcategoria,
-    $kbs,
-    $area,
-    $po,
-    $alcadas,
-    $excecao,
-    $obs,
-    $criador,
-    $tipo,
-    $norma,
-    $anexo
-  );
-
-  if ($stmt->execute()) {
-    $id_servico = $stmt->insert_id;
-    $stmt->close();
-
-    $codigo_ficha = "FCH-" . str_pad($id_servico, 4, "0", STR_PAD_LEFT);
-
-    $stmt_update = $mysqli->prepare("UPDATE servico SET codigo_ficha = ? WHERE ID = ?");
-    $stmt_update->bind_param("si", $codigo_ficha, $id_servico);
-    $stmt_update->execute();
-    $stmt_update->close();
-
-    if (!empty($_POST['atendimentos'])) {
-      foreach ($_POST['atendimentos'] as $att) {
-        $tipo = trim($att['tipo'] ?? '');
-        $descricao = trim($att['descricao'] ?? '');
-        if (!empty($tipo) && !empty($descricao)) {
-          $stmt_at = $mysqli->prepare("INSERT INTO servico_atendimento (id_servico, atendimento, descricao_tecnica) VALUES (?, ?, ?)");
-          $stmt_at->bind_param("iss", $id_servico, $tipo, $descricao);
-          $stmt_at->execute();
-          $stmt_at->close();
-        }
-      }
-    }
-
-    if ($eh_software === 'sim' && !empty($versao_software)) {
-      $stmt = $mysqli->prepare("INSERT INTO servico_software (id_servico, nome_software, versao_software) VALUES (?, ?, ?)");
-      $stmt->bind_param("iss", $id_servico, $titulo, $versao_software);
-      $stmt->execute();
-      $stmt->close();
-    }
-
-    if ($eh_sistema === 'sim' && !empty($sistema_portal)) {
-      // Inserir sistema
-      $stmt = $mysqli->prepare("INSERT INTO servico_sistema (id_servico, nome_sistema) VALUES (?, ?)");
-      $stmt->bind_param("is", $id_servico, $sistema_portal);
-      $stmt->execute();
-      $id_sistema = $stmt->insert_id;
-      $stmt->close();
-
-      if (!empty($equipe_solucionadora_externa)) {
-        $stmt = $mysqli->prepare("INSERT INTO servico_equipe_externa (id_servico, id_sistema, nome_equipe) VALUES (?, ?, ?)");
-        $stmt->bind_param("iis", $id_servico, $id_sistema, $equipe_solucionadora_externa);
-        $stmt->execute();
-        $stmt->close();
-      }
-    }
-
-    if (!empty($_POST['diretrizes'])) {
-      foreach ($_POST['diretrizes'] as $diretriz) {
-        if (!empty($diretriz['titulo'])) {
-          $titulo = $mysqli->real_escape_string($diretriz['titulo']);
-          $mysqli->query("INSERT INTO diretriz (Titulo, ID_Servico) VALUES ('$titulo', $id_servico)");
-          $id_diretriz = $mysqli->insert_id;
-
-          if (!empty($diretriz['itens'])) {
-            foreach ($diretriz['itens'] as $item) {
-              if (!empty($item)) {
-                $conteudo = $mysqli->real_escape_string($item);
-                $mysqli->query("INSERT INTO itemdiretriz (ID_Diretriz, Conteudo) VALUES ($id_diretriz, '$conteudo')");
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (!empty($_POST['padroes'])) {
-      foreach ($_POST['padroes'] as $padrao) {
-        if (!empty($padrao['titulo'])) {
-          $titulo = $mysqli->real_escape_string($padrao['titulo']);
-          $mysqli->query("INSERT INTO padrao (Titulo, ID_Servico) VALUES ('$titulo', $id_servico)");
-          $id_padrao = $mysqli->insert_id;
-
-          if (!empty($padrao['itens'])) {
-            foreach ($padrao['itens'] as $item) {
-              if (!empty($item)) {
-                $conteudo = $mysqli->real_escape_string($item);
-                $mysqli->query("INSERT INTO itempadrao (ID_Padrao, Conteudo) VALUES ($id_padrao, '$conteudo')");
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (!empty($_POST['checklist'])) {
-      foreach ($_POST['checklist'] as $item) {
-        if (!empty($item['item'])) {
-          $nome = $mysqli->real_escape_string($item['item']);
-          $obs  = $mysqli->real_escape_string($item['observacao']);
-          $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($id_servico, '$nome', '$obs')");
-        }
-      }
-    }
-
-    header("Location: ../list/manage_listservico.php?sucesso=1");
-    exit;
-  } else {
-    $mensagem = "Erro ao criar serviço: " . $stmt->error;
-    $stmt->close();
-  }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_revisor') {
@@ -1397,7 +1046,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               $status = $dados_edicao['status_ficha'] ?? 'rascunho';
 
               if ($tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po'])) {
-                echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_revisao">Enviar para revisão</button>';
+                echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_revisao" style="margin-right: 4px;>Enviar para revisão</button>';
                 echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar Ficha</button>';
               }
 
@@ -1416,7 +1065,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                 if ($status === 'em_aprovacao') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar ficha</button>';
                   echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_revisao_novamente" style="margin-right: 4px;">Voltar para revisão</button>';
-                  echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_po\')">Reprovar</button>';
+                  echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_po\')" >Reprovar</button>';
                   echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" style="margin-right: 0px;">Cancelar</button>';
                 }
 
