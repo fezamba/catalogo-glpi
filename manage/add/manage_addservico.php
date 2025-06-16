@@ -277,6 +277,150 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $_POST['acao'] === 'nova_versao_aut
   }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' && !$modo_edicao) {
+  $titulo = $_POST['nome_servico'];
+  $descricao = $_POST['descricao_servico'];
+  $subcategoria = $_POST['id_subcategoria'];
+  $kbs = $_POST['base_conhecimento'];
+  $anexo = $_POST['anexo'];
+  $area = $_POST['area_especialista'];
+  $po = $_POST['po_responsavel'];
+  $alcadas = $_POST['alcadas'];
+  $excecao = $_POST['procedimento_excecao'];
+  $obs = $_POST['observacoes_gerais'];
+  $tipo = $_POST['tipo'];
+  $norma = $_POST['determinacao_orientacao_norma'];
+  $criador = $_POST['usuario_criador'];
+  $versao = "1.0";
+
+  $eh_software = $_POST['eh_software'] ?? 'nao';
+  $versao_software = $_POST['versao_software'] ?? '';
+  $eh_sistema = $_POST['eh_sistema'] ?? 'nao';
+  $sistema_portal = $_POST['sistema_portal'] ?? '';
+  $equipe_solucionadora_externa = $_POST['equipe_solucionadora_externa'] ?? '';
+
+  $stmt_insert = $mysqli->prepare("INSERT INTO servico 
+        (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, 
+        area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, 
+        usuario_criador, tipo, determinacao_orientacao_norma, status_ficha, anexo) 
+        VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', ?)");
+
+  $stmt_insert->bind_param(
+    "sssissssssssss",
+    $versao,
+    $titulo,
+    $descricao,
+    $subcategoria,
+    $kbs,
+    $area,
+    $po,
+    $alcadas,
+    $excecao,
+    $obs,
+    $criador,
+    $tipo,
+    $norma,
+    $anexo
+  );
+
+  if ($stmt_insert->execute()) {
+    $id_servico = $stmt_insert->insert_id;
+    $stmt_insert->close();
+
+    $codigo_ficha = "FCH-" . str_pad($id_servico, 4, "0", STR_PAD_LEFT);
+
+    $stmt_update = $mysqli->prepare("UPDATE servico SET codigo_ficha = ? WHERE ID = ?");
+    $stmt_update->bind_param("si", $codigo_ficha, $id_servico);
+    $stmt_update->execute();
+    $stmt_update->close();
+
+    if (!empty($_POST['atendimentos'])) {
+      foreach ($_POST['atendimentos'] as $att) {
+        if (!empty($att['tipo']) && !empty($att['descricao'])) {
+          $stmt_at = $mysqli->prepare("INSERT INTO servico_atendimento (id_servico, atendimento, descricao_tecnica) VALUES (?, ?, ?)");
+          $stmt_at->bind_param("iss", $id_servico, $att['tipo'], $att['descricao']);
+          $stmt_at->execute();
+          $stmt_at->close();
+        }
+      }
+    }
+
+    if (!empty($_POST['diretrizes'])) {
+      foreach ($_POST['diretrizes'] as $diretriz) {
+        if (!empty($diretriz['titulo'])) {
+          $titulo_dir = $mysqli->real_escape_string($diretriz['titulo']);
+          $mysqli->query("INSERT INTO diretriz (Titulo, ID_Servico) VALUES ('$titulo_dir', $id_servico)");
+          $id_diretriz = $mysqli->insert_id;
+          if (!empty($diretriz['itens'])) {
+            foreach ($diretriz['itens'] as $item) {
+              if (!empty($item)) {
+                $conteudo = $mysqli->real_escape_string($item);
+                $mysqli->query("INSERT INTO itemdiretriz (ID_Diretriz, Conteudo) VALUES ($id_diretriz, '$conteudo')");
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (!empty($_POST['padroes'])) {
+      foreach ($_POST['padroes'] as $padrao) {
+        if (!empty($padrao['titulo'])) {
+          $titulo_pad = $mysqli->real_escape_string($padrao['titulo']);
+          $mysqli->query("INSERT INTO padrao (Titulo, ID_Servico) VALUES ('$titulo_pad', $id_servico)");
+          $id_padrao = $mysqli->insert_id;
+          if (!empty($padrao['itens'])) {
+            foreach ($padrao['itens'] as $item) {
+              if (!empty($item)) {
+                $conteudo = $mysqli->real_escape_string($item);
+                $mysqli->query("INSERT INTO itempadrao (ID_Padrao, Conteudo) VALUES ($id_padrao, '$conteudo')");
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (!empty($_POST['checklist'])) {
+      foreach ($_POST['checklist'] as $item) {
+        if (!empty($item['item'])) {
+          $nome = $mysqli->real_escape_string($item['item']);
+          $obs_item = $mysqli->real_escape_string($item['observacao']);
+          $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($id_servico, '$nome', '$obs_item')");
+        }
+      }
+    }
+
+    if ($eh_software === 'sim' && !empty($versao_software)) {
+      $stmt = $mysqli->prepare("INSERT INTO servico_software (id_servico, nome_software, versao_software) VALUES (?, ?, ?)");
+      $stmt->bind_param("iss", $id_servico, $titulo, $versao_software);
+      $stmt->execute();
+      $stmt->close();
+    }
+
+    if ($eh_sistema === 'sim' && !empty($sistema_portal)) {
+      $stmt = $mysqli->prepare("INSERT INTO servico_sistema (id_servico, nome_sistema) VALUES (?, ?)");
+      $stmt->bind_param("is", $id_servico, $sistema_portal);
+      $stmt->execute();
+      $id_sistema = $stmt->insert_id;
+      $stmt->close();
+
+      if (!empty($equipe_solucionadora_externa)) {
+        $stmt = $mysqli->prepare("INSERT INTO servico_equipe_externa (id_servico, id_sistema, nome_equipe) VALUES (?, ?, ?)");
+        $stmt->bind_param("iis", $id_servico, $id_sistema, $equipe_solucionadora_externa);
+        $stmt->execute();
+        $stmt->close();
+      }
+    }
+
+    header("Location: ../list/manage_listservico.php?sucesso=1");
+    exit;
+  } else {
+    $mensagem = "Erro ao criar serviço: " . $stmt_insert->error;
+    $stmt_insert->close();
+  }
+}
+
 $tipo_usuario = $_GET['tipo'] ?? 'criador'; // 'criador', 'revisor', 'po'
 if (isset($_GET['forcar_status'])) {
   $dados_edicao['status_ficha'] = $_GET['forcar_status'];
