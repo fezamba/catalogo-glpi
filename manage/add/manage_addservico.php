@@ -567,6 +567,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_para_apr
   exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_po') {
+  $id_servico_aprovado = intval($_GET['id']);
+
+  $nome_po_responsavel = null;
+  $stmt_find_resp = $mysqli->prepare("SELECT po_responsavel FROM servico WHERE ID = ?");
+  $stmt_find_resp->bind_param("i", $id_servico_aprovado);
+  $stmt_find_resp->execute();
+  $result_resp = $stmt_find_resp->get_result();
+  if ($servico_row = $result_resp->fetch_assoc()) {
+    $nome_po_responsavel = $servico_row['po_responsavel'];
+  }
+  $stmt_find_resp->close();
+
+  if ($nome_po_responsavel) {
+    $email_po_aprovador = null;
+    $stmt_find_email = $mysqli->prepare("SELECT email FROM pos WHERE nome = ?");
+    $stmt_find_email->bind_param("s", $nome_po_responsavel);
+    $stmt_find_email->execute();
+    $result_email = $stmt_find_email->get_result();
+    if ($po_row = $result_email->fetch_assoc()) {
+      $email_po_aprovador = $po_row['email'];
+    }
+    $stmt_find_email->close();
+
+    $stmt_update = $mysqli->prepare("
+            UPDATE servico SET 
+                status_ficha = 'aprovada', 
+                po_aprovador_nome = ?, 
+                po_aprovador_email = ?, 
+                data_aprovacao = NOW() 
+            WHERE ID = ?
+        ");
+    $stmt_update->bind_param("ssi", $nome_po_responsavel, $email_po_aprovador, $id_servico_aprovado);
+    $stmt_update->execute();
+    $stmt_update->close();
+
+    header("Location: ../list/manage_listservico.php?sucesso=1");
+    exit;
+  } else {
+    die("Erro: Não foi possível aprovar. Nenhum PO Responsável está definido para este serviço.");
+  }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_revisor') {
   $id = intval($_GET['id']);
   $justificativa = $_POST['justificativa'] ?? 'Sem justificativa';
@@ -1069,7 +1112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                 // Se a ficha foi revisada, o criador a envia para o PO
                 if ($status === 'revisada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_para_aprovacao" style="margin-right: 4px;">Enviar para Aprovação do PO</button>';
-                  echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'devolver_para_revisao\')">Devolver para Correção</button>';
                 }
                 // Se já foi publicada, pode criar uma nova versão
                 if ($status === 'publicado') {
