@@ -371,19 +371,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'publicar_ficha') {
-  $id = intval($_GET['id']);
-  $nome_po   = $_SESSION['nome_usuario'] ?? 'po';
-  $email_po  = $_SESSION['email_usuario'] ?? 'po@email.com';
+  $id_nova_versao = intval($_GET['id']);
 
-  $stmt = $mysqli->prepare("UPDATE servico SET 
-    status_ficha = 'publicado', 
-    data_aprovacao = NOW(), 
-    po_aprovador_nome = ?, 
-    po_aprovador_email = ? 
-    WHERE ID = ?");
-  $stmt->bind_param("ssi", $nome_po, $email_po, $id);
-  $stmt->execute();
-  $stmt->close();
+  $codigo_ficha = null;
+  $stmt_find = $mysqli->prepare("SELECT codigo_ficha FROM servico WHERE ID = ?");
+  $stmt_find->bind_param("i", $id_nova_versao);
+  $stmt_find->execute();
+  $result = $stmt_find->get_result();
+  if ($row = $result->fetch_assoc()) {
+    $codigo_ficha = $row['codigo_ficha'];
+  }
+  $stmt_find->close();
+
+  $stmt_pub = $mysqli->prepare("UPDATE servico SET status_ficha = 'publicado' WHERE ID = ?");
+  $stmt_pub->bind_param("i", $id_nova_versao);
+  $stmt_pub->execute();
+  $stmt_pub->close();
+
+  if ($codigo_ficha) {
+    $stmt_update_old = $mysqli->prepare(
+      "UPDATE servico SET status_ficha = 'substituida' 
+             WHERE codigo_ficha = ? AND ID != ? AND status_ficha = 'publicado'"
+    );
+    $stmt_update_old->bind_param("si", $codigo_ficha, $id_nova_versao);
+    $stmt_update_old->execute();
+    $stmt_update_old->close();
+  }
 
   header("Location: ../list/manage_listservico.php?sucesso=1");
   exit;
@@ -979,7 +992,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         </label>
 
         <label>PO Responsável:
-          <select name="po_responsavel">
+          <select name="po_responsavel" required>
             <option value="">Selecione um PO...</option>
             <?php foreach ($lista_pos as $po): ?>
               <option value="<?= htmlspecialchars($po['nome']) ?>" <?= (($dados_edicao['po_responsavel'] ?? '') === $po['nome']) ? 'selected' : '' ?>>
