@@ -7,19 +7,16 @@ if ($mysqli->connect_errno) {
 
 $mensagem = '';
 
-// Lógica para EXCLUIR um PO
 if (isset($_GET['delete_id']) && is_numeric($_GET['delete_id'])) {
     $id_para_excluir = intval($_GET['delete_id']);
     $stmt = $mysqli->prepare("DELETE FROM pos WHERE ID = ?");
     $stmt->bind_param("i", $id_para_excluir);
     $stmt->execute();
     $stmt->close();
-    // Redireciona para limpar a URL e mostrar a mensagem
     header("Location: manage_pos.php?sucesso=excluido");
     exit;
 }
 
-// Lógica para ADICIONAR um novo PO
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome']) && isset($_POST['email'])) {
     $nome = trim($_POST['nome']);
     $email = trim($_POST['email']);
@@ -41,13 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome']) && isset($_PO
     }
 }
 
-// Mensagens de sucesso
 if (isset($_GET['sucesso'])) {
     if ($_GET['sucesso'] == 'adicionado') $mensagem = "<div class='mensagem'>PO cadastrado com sucesso!</div>";
     if ($_GET['sucesso'] == 'excluido') $mensagem = "<div class='mensagem'>PO excluído com sucesso!</div>";
 }
 
-// Busca todos os POs para listar na tabela
 $result = $mysqli->query("SELECT * FROM pos ORDER BY nome ASC");
 $pos = $result->fetch_all(MYSQLI_ASSOC);
 ?>
