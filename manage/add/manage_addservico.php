@@ -1274,6 +1274,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                 if ($status === 'publicado') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
                 }
+                if ($status === 'cancelada') {
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="reativar_para_revisao">Reativar e Enviar para Revisão</button>';
+                }
               }
 
               if ($tipo_usuario === 'revisor' && $status === 'em_revisao') {
