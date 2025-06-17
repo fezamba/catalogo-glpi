@@ -34,11 +34,11 @@ $revisores = $mysqli->query("SELECT * FROM revisores ORDER BY nome ASC");
 <head>
     <meta charset="UTF-8">
     <title>Gerenciamento de Revisores</title>
-    <link rel="stylesheet" href="../pos/manage_pos.css"> </head>
+    <link rel="stylesheet" href="manage_rev.css"> </head>
 <body>
     <div class="container">
         <h1>Gerenciamento de Revisores</h1>
-        <a href="../manage_index.php" class="btn-back">← Voltar</a>
+        <a href="../manage.php" class="btn-back">← Voltar</a>
 
         <div class="form-container">
             <h2>Cadastrar Novo Revisor</h2>
