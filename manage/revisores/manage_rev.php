@@ -23,6 +23,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_id'])) {
     exit;
 }
 
+if (isset($_GET['sucesso'])) {
+    if ($_GET['sucesso'] == 'adicionado') $mensagem = "<div class='mensagem'>Revisor cadastrado com sucesso!</div>";
+    if ($_GET['sucesso'] == 'excluido') $mensagem = "<div class='mensagem'>Revisor excluído com sucesso!</div>";
+}
+
 $revisores = $mysqli->query("SELECT * FROM revisores ORDER BY nome ASC");
 ?>
 
