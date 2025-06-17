@@ -1,8 +1,3 @@
-/* ========================================================= */
-/* === CSS para a Página de Gerenciamento de Revisores === */
-/* ========================================================= */
-
-/* --- ESTRUTURA GERAL --- */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -16,7 +11,6 @@ body {
     padding: 20px;
 }
 
-/* --- CABEÇALHO E BOTÕES --- */
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -52,7 +46,6 @@ body {
     background-color: #cfcfcf;
 }
 
-/* --- FORMULÁRIO DE ADIÇÃO --- */
 .form-add-revisor {
     background-color: #fff;
     padding: 25px;
@@ -100,7 +93,6 @@ body {
     background-color: #d89a00;
 }
 
-/* --- TABELA DE REVISORES --- */
 .table-wrapper {
     background-color: #fff;
     border-radius: 8px;
@@ -133,7 +125,6 @@ body {
     background-color: #f2f6fa;
 }
 
-/* Largura das colunas */
 .tabela-revisores th:nth-child(1), .tabela-revisores td:nth-child(1) { width: 10%; text-align: center; }
 .tabela-revisores th:nth-child(2), .tabela-revisores td:nth-child(2) { width: 35%; }
 .tabela-revisores th:nth-child(3), .tabela-revisores td:nth-child(3) { width: 35%; }
@@ -143,7 +134,7 @@ body {
     text-align: center !important;
 }
 
-.btn-danger, .btn-excluir { /* Estilizando ambas as classes para garantir */
+.btn-danger, .btn-excluir {
     padding: 8px 16px;
     background-color: #dc3545;
     color: #fff;

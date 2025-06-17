@@ -1,7 +1,6 @@
 <?php
-require_once '../../conexao.php'; // Garanta que o caminho para a conexão está correto
+require_once '../../conexao.php';
 
-// Lógica de adicionar e excluir (mantida como está)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_revisor'])) {
     $nome = $_POST['nome'];
     $email = $_POST['email'];
@@ -24,17 +23,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_id'])) {
     exit;
 }
 
-// Busca todos os revisores
 $revisores = $mysqli->query("SELECT * FROM revisores ORDER BY nome ASC");
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Gerenciamento de Revisores</title>
-    <link rel="stylesheet" href="manage_rev.css"> 
+    <link rel="stylesheet" href="manage_rev.css">
 </head>
+
 <body>
     <div class="container">
         <div class="top-bar">
@@ -73,9 +73,7 @@ $revisores = $mysqli->query("SELECT * FROM revisores ORDER BY nome ASC");
                                 <td><?= htmlspecialchars($revisor['nome']) ?></td>
                                 <td><?= htmlspecialchars($revisor['email']) ?></td>
                                 <td class="actions">
-                                    <form method="post" style="display:inline;">
-                                        <input type="hidden" name="delete_id" value="<?= $revisor['ID'] ?>">
-                                        <button type="submit" class="btn-danger" onclick="return confirm('Tem certeza?');">Excluir</button>
+                                    <a href="manage_rev.php?delete_id=<?= $revisor['ID'] ?>" class="btn-danger" onclick="return confirm('Tem certeza que deseja excluir este revisor?');">Excluir</a>
                                     </form>
                                 </td>
                             </tr>
@@ -90,4 +88,5 @@ $revisores = $mysqli->query("SELECT * FROM revisores ORDER BY nome ASC");
         </div>
     </div>
 </body>
+
 </html>
