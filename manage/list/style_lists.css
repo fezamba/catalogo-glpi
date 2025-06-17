@@ -83,7 +83,6 @@ tr:hover {
   margin-bottom: 20px;
 }
 
-/* botão amarelo criar */
 .btn-criar {
   padding: 10px 20px;
   background-color: #f9b000;
@@ -99,7 +98,6 @@ tr:hover {
   background-color: #d89a00;
 }
 
-/* botão cinza voltar */
 .btn-voltar {
   padding: 10px 20px;
   background-color: #e0e0e0;
@@ -143,7 +141,6 @@ tr:hover {
   text-align: center;
 }
 
-/* TABELA */
 .tabela-servicos {
   width: 100%;
   border-collapse: collapse;
@@ -160,73 +157,62 @@ tr:hover {
   white-space: normal;
 }
 
-/* Nome */
 .tabela-servicos th:nth-child(1),
 .tabela-servicos td:nth-child(1) {
   width: 20%;
 }
 
-/* ID */
 .tabela-servicos th:nth-child(2),
 .tabela-servicos td:nth-child(2) {
   width: 50px;
   text-align: center;
 }
 
-/* Categoria */
 .tabela-servicos th:nth-child(3),
 .tabela-servicos td:nth-child(3) {
   width: 15%;
 }
 
-/* Subcategoria */
 .tabela-servicos th:nth-child(4),
 .tabela-servicos td:nth-child(4) {
   width: 15%;
 }
 
-/* Última Att */
 .tabela-servicos th:nth-child(5),
 .tabela-servicos td:nth-child(5) {
   width: 120px;
 }
 
-/* Status */
 .tabela-servicos th:nth-child(6),
 .tabela-servicos td:nth-child(6) {
   width: 140px;
   text-align: center;
 }
 
-/* Descrição */
 .tabela-servicos th:nth-child(7),
 .tabela-servicos td:nth-child(7) {
   width: 20%;
   text-align: left;
 }
 
-/* Código */
 .tabela-servicos th:nth-child(8),
 .tabela-servicos td:nth-child(8) {
   width: 80px;
   text-align: center;
 }
 
-/* Versão */
 .tabela-servicos th:nth-child(9),
 .tabela-servicos td:nth-child(9) {
   width: 60px;
   text-align: center;
 }
 
-/* Versão */
 .tabela-servicos th:nth-child(10),
 .tabela-servicos td:nth-child(10) {
   width: 60px;
   text-align: center;
 }
 
-/* TAG DE STATUS */
 .status-tag {
   display: inline-block;
   padding: 4px 8px;
@@ -259,7 +245,6 @@ tr:hover {
   background-color: #dc3545;
 }
 
-/* TABELA SUBCATEGORIAS */
 .tabela-subcategorias {
   width: 100%;
   border-collapse: collapse;
@@ -276,50 +261,42 @@ tr:hover {
   white-space: normal;
 }
 
-/* Nome */
 .tabela-subcategorias th:nth-child(1),
 .tabela-subcategorias td:nth-child(1) {
   width: 20%;
 }
 
-/* ID */
 .tabela-subcategorias th:nth-child(2),
 .tabela-subcategorias td:nth-child(2) {
   width: 50px;
 }
 
-/* Categoria Pai */
 .tabela-subcategorias th:nth-child(3),
 .tabela-subcategorias td:nth-child(3) {
   width: 15%;
 }
 
-/* Última Att */
 .tabela-subcategorias th:nth-child(4),
 .tabela-subcategorias td:nth-child(4) {
   width: 120px;
 }
 
-/* Descrição */
 .tabela-subcategorias th:nth-child(5),
 .tabela-subcategorias td:nth-child(5) {
   width: 30%;
   text-align: left;
 }
 
-/* Qtd Serviços */
 .tabela-subcategorias th:nth-child(6),
 .tabela-subcategorias td:nth-child(6) {
   width: 100px;
 }
 
-/* Edição */
 .tabela-subcategorias th:nth-child(7),
 .tabela-subcategorias td:nth-child(7) {
   width: 60px;
 }
 
-/* TABELA CATEGORIAS */
 .tabela-categorias {
   width: 100%;
   border-collapse: collapse;
@@ -336,50 +313,42 @@ tr:hover {
   white-space: normal;
 }
 
-/* Nome */
 .tabela-categorias th:nth-child(1),
 .tabela-categorias td:nth-child(1) {
   width: 20%;
 }
 
-/* ID */
 .tabela-categorias th:nth-child(2),
 .tabela-categorias td:nth-child(2) {
   width: 50px;
 }
 
-/* Última Att */
 .tabela-categorias th:nth-child(3),
 .tabela-categorias td:nth-child(3) {
   width: 120px;
 }
 
-/* Descrição */
 .tabela-categorias th:nth-child(4),
 .tabela-categorias td:nth-child(4) {
   width: 30%;
   text-align: left;
 }
 
-/* Qtd Serviços */
 .tabela-categorias th:nth-child(5),
 .tabela-categorias td:nth-child(5) {
   width: 100px;
 }
 
-/* Qtd Subcategorias */
 .tabela-categorias th:nth-child(6),
 .tabela-categorias td:nth-child(6) {
   width: 120px;
 }
 
-/* Edição */
 .tabela-categorias th:nth-child(7),
 .tabela-categorias td:nth-child(7) {
   width: 60px;
 }
 
-/* Estilo para botão de nova versão */
 .btn-nova-versao {
   display: inline-flex;
   align-items: center;

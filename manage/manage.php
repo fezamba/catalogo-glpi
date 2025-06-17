@@ -93,6 +93,13 @@ while ($cat = $result->fetch_assoc()) {
           </div>
           <p>Gerencie os Product Owners e seus dados de contato.</p>
         </div>
+        <div class="card-button" onclick="window.location.href='revisores/manage_rev.php'">
+          <div class="card-header">
+            <h3>Revisores</h3>
+            <img src="../img/edit.png" alt="Revisores">
+          </div>
+          <p>Gerencie os Revisores e seus dados de contato.</p>
+        </div>
       </div>
     </section>
   </div>

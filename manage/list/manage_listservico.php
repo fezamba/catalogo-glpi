@@ -14,7 +14,6 @@ $totalResult = $mysqli->query("SELECT COUNT(*) as total FROM servico");
 $totalRows = $totalResult->fetch_assoc()['total'];
 $totalPages = ceil($totalRows / $limit);
 
-// Consulta com JOIN usando ID_Subcategoria → subcategoria → categoria
 $query = "
   SELECT 
     s.*,
@@ -149,7 +148,6 @@ while ($srv = $result->fetch_assoc()) {
       </tbody>
     </table>
 
-    <!-- Paginação -->
     <div class="pagination-controls" id="paginacao">
       <span>Exibindo <?php echo $offset + 1; ?> a <?php echo min($offset + $limit, $totalRows); ?> de <?php echo $totalRows; ?> linhas</span>
       <div class="page-links">

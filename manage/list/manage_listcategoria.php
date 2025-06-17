@@ -15,10 +15,8 @@ if (isset($_GET["excluido"]) && $_GET["excluido"] == "1") {
 
 $result = $mysqli->query("SELECT * FROM categoria");
 
-// Monta os dados com contagens
 $categorias = [];
 while ($cat = $result->fetch_assoc()) {
-  // Conta serviços via subcategoria
   $serv = $mysqli->query("
         SELECT COUNT(*) as total 
         FROM servico s

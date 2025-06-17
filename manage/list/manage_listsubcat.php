@@ -119,7 +119,6 @@ while ($sub = $result->fetch_assoc()) {
     const termoBusca = this.value.trim();
 
     if (termoBusca === '') {
-      // campo de busca apagado: recarrega a página
       location.reload();
       return;
     }
