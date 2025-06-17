@@ -103,6 +103,5 @@ $revisores = $result->fetch_all(MYSQLI_ASSOC);
         </table>
     </div>
 </div>
-
 </body>
 </html>
