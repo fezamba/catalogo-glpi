@@ -126,6 +126,12 @@ if ($res_pos) {
   }
 }
 
+$lista_revisores = [];
+$res_revisores = $mysqli->query("SELECT ID, nome FROM revisores ORDER BY nome ASC");
+if ($res_revisores) {
+    $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
+}
+
 $dados_edicao = null;
 if (isset($_GET['id'])) {
   $id = intval($_GET['id']);
@@ -283,7 +289,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   $subcategoria = $_POST['id_subcategoria'];
   $kbs = $_POST['base_conhecimento'];
   $anexo = $_POST['anexo'];
-  $area = $_POST['area_especialista'];
+  $area = $_POST['area_especialista'] ?? null;
   $po = $_POST['po_responsavel'];
   $alcadas = $_POST['alcadas'];
   $excecao = $_POST['procedimento_excecao'];
