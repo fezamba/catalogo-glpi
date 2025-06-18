@@ -347,3 +347,49 @@ textarea {
   background-color: #f5f5f5 !important;
   cursor: not-allowed;
 }
+
+#debug-panel {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    width: 250px;
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+#debug-panel h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    border-bottom: 1px solid #4a627a;
+    padding-bottom: 5px;
+    font-weight: bold;
+}
+#debug-panel label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+#debug-panel select,
+#debug-panel button {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #7f8c8d;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+#debug-panel button {
+    background-color: #f9b000;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+}
+#debug-panel button:hover {
+    background-color: #d89a00;
+}
