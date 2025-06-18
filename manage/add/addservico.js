@@ -83,25 +83,3 @@ function mostrarJustificativa(tipo) {
 
   formReprovacao.scrollIntoView({ behavior: 'smooth' });
 }
-
-document.getElementById('debug-apply-btn').addEventListener('click', function() {
-
-    let baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-
-    const params = new URLSearchParams(window.location.search);
-
-    const novoTipo = document.getElementById('debug-tipo-usuario').value;
-    params.set('tipo', novoTipo);
-
-    const statusSelect = document.getElementById('debug-status-ficha');
-    if (statusSelect) {
-        const novoStatus = statusSelect.value;
-        if (novoStatus) {
-            params.set('forcar_status', novoStatus);
-        } else {
-            params.delete('forcar_status');
-        }
-    }
-
-    window.location.href = baseUrl + '?' + params.toString();
-});

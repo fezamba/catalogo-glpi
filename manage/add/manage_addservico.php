@@ -69,7 +69,7 @@ if ($res_pos) {
 $lista_revisores = [];
 $res_revisores = $mysqli->query("SELECT ID, nome FROM revisores ORDER BY nome ASC");
 if ($res_revisores) {
-    $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
+  $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
 }
 
 $dados_edicao = null;
@@ -432,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
     $criador,
     $id
   );
-  
+
   $stmt->execute();
   $stmt->close();
 
@@ -711,15 +711,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       <label for="debug-status-ficha">Forçar Status:</label>
       <select id="debug-status-ficha">
         <option value="">-- Status Atual --</option>
-        <?php foreach ($todos_status as $status): ?>
-          <option value="<?= $status ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status) ? 'selected' : '' ?>>
-            <?= ucfirst(str_replace('_', ' ', $status)) ?>
+        <?php
+        $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida'];
+        foreach ($todos_status as $status_opcao): ?>
+          <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>>
+            <?= ucfirst(str_replace('_', ' ', $status_opcao)) ?>
           </option>
         <?php endforeach; ?>
       </select>
     <?php endif; ?>
 
     <button id="debug-apply-btn">Aplicar e Recarregar</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const applyBtn = document.getElementById('debug-apply-btn');
+
+      if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+          const currentUrl = new URL(window.location.href);
+          const params = currentUrl.searchParams;
+
+          const novoTipo = document.getElementById('debug-tipo-usuario').value;
+          params.set('tipo', novoTipo);
+
+          const statusSelect = document.getElementById('debug-status-ficha');
+          if (statusSelect) {
+            const novoStatus = statusSelect.value;
+            if (novoStatus) {
+              params.set('forcar_status', novoStatus);
+            } else {
+              params.delete('forcar_status');
+            }
+          }
+
+          window.location.href = currentUrl.pathname + '?' + params.toString();
+        });
+      }
+    });
+  </script>
   </div>
   <div class="form-wrapper">
     <h2 class="form-title">
