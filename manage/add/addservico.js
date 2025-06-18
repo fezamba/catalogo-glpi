@@ -64,9 +64,12 @@ document.addEventListener('DOMContentLoaded', function () {
         'textarea[name^="diretrizes"][name$="[titulo]"]'
       );
 
-      if (diretrizesTitulos.length > 0) {
+      if (diretrizesTitulos.length === 0) {
+        alert('Erro: É necessário adicionar pelo menos uma Diretriz.');
+        event.preventDefault();
+        return;
+      } else {
         let peloMenosUmTituloPreenchido = false;
-
         diretrizesTitulos.forEach((textarea) => {
           if (textarea.value.trim() !== '') {
             peloMenosUmTituloPreenchido = true;
@@ -74,7 +77,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (!peloMenosUmTituloPreenchido) {
-          alert('Erro: O campo "Título" da diretriz é obrigatório.');
+          alert(
+            'Erro: Você precisa preencher o título de pelo menos uma diretriz.'
+          );
           event.preventDefault();
           return;
         }
