@@ -20,33 +20,6 @@ function adicionarItemDiretriz(index) {
   );
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  const form = document.getElementById('form-ficha');
-
-  if (form) {
-    form.addEventListener('submit', function (event) {
-      const diretrizesTitulos = document.querySelectorAll(
-        'textarea[name^="diretrizes"][name$="[titulo]"]'
-      );
-
-      let peloMenosUmTituloPreenchido = false;
-
-      if (diretrizesTitulos.length > 0) {
-        diretrizesTitulos.forEach((textarea) => {
-          if (textarea.value.trim() !== '') {
-            peloMenosUmTituloPreenchido = true;
-          }
-        });
-
-        if (!peloMenosUmTituloPreenchido) {
-          alert('Erro: O campo "Título" da diretriz é obrigatório.');
-          event.preventDefault();
-        }
-      }
-    });
-  }
-});
-
 function adicionarPadrao() {
   const index = contPadrao++;
   const container = document.createElement('div');
@@ -82,17 +55,47 @@ function adicionarChecklist() {
   document.getElementById('checklist').appendChild(container);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('form-ficha');
 
-  form.addEventListener('submit', function (e) {
-    if (!form.querySelector("input[name='usuario_criador']")) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'usuario_criador';
-      input.value = 'Service-Desk/WD';
-      form.appendChild(input);
-    }
+  if (form) {
+    form.addEventListener('submit', function (event) {
+      const diretrizesTitulos = document.querySelectorAll(
+        'textarea[name^="diretrizes"][name$="[titulo]"]'
+      );
+
+      if (diretrizesTitulos.length > 0) {
+        let peloMenosUmTituloPreenchido = false;
+
+        diretrizesTitulos.forEach((textarea) => {
+          if (textarea.value.trim() !== '') {
+            peloMenosUmTituloPreenchido = true;
+          }
+        });
+
+        if (!peloMenosUmTituloPreenchido) {
+          alert('Erro: O campo "Título" da diretriz é obrigatório.');
+          event.preventDefault();
+          return;
+        }
+      }
+
+      if (!form.querySelector("input[name='usuario_criador']")) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'usuario_criador';
+        input.value = 'Service-Desk/WD';
+        form.appendChild(input);
+      }
+    });
+  }
+
+  document.querySelectorAll('.subcat').forEach((link) => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const url = this.getAttribute('href');
+      window.location.href = url;
+    });
   });
 });
 
