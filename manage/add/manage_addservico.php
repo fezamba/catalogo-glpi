@@ -977,25 +977,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
             </select>
           </label>
 
-        <div class="form-group revisores-container">
-          <label class="form-label">Revisores Responsáveis:</label>
-          <select name="revisores[]" id="seletor-revisores" class="form-control" multiple required>
-            <?php if (!empty($lista_revisores)): ?>
+          <div class="revisores-container">
+            <label for="seletor-revisores">Revisores Designados</label>
+            <p class="form-text">Selecione um ou mais revisores da lista. Você pode digitar para buscar.</p>
+
+            <select name="revisores_ids[]" id="seletor-revisores" multiple="multiple">
               <?php foreach ($lista_revisores as $revisor): ?>
-                <option value="<?= $revisor['ID'] ?>"
+                <option
+                  value="<?= $revisor['ID'] ?>"
                   <?= in_array($revisor['ID'], $revisores_servico) ? 'selected' : '' ?>>
                   <?= htmlspecialchars($revisor['nome']) ?>
-                  <?php if (!empty($revisor['email'])): ?>
-                    (<?= htmlspecialchars($revisor['email']) ?>)
-                  <?php endif; ?>
                 </option>
               <?php endforeach; ?>
-            <?php else: ?>
-              <option disabled>Nenhum revisor disponível</option>
-            <?php endif; ?>
-          </select>
-          <span class="form-text">Selecione um ou mais revisores (segure Ctrl para múltipla seleção)</span>
-        </div>
+            </select>
+          </div>
 
           <h3>Diretrizes</h3>
           <div id="diretrizes">
@@ -1144,18 +1139,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
       $(document).ready(function() {
-        $('.select-revisores').select2({
-          placeholder: "Selecione os revisores",
-          allowClear: true,
-          width: 'resolve',
-          templateResult: function(data) {
-            if (!data.id) return data.text;
-            var $result = $('<span>').text(data.text.split(' (')[0]);
-            return $result;
-          }
+        $('#seletor-revisores').select2({
+          placeholder: "Selecione ou digite o nome de um revisor",
+          allowClear: true
         });
-
-        $('.select2-container').css('z-index', '9999');
       });
     </script>
     <input type="hidden" id="justificativa-submit-acao" value="">
