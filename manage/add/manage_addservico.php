@@ -676,7 +676,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
   ?>
   <div id="debug-panel">
     <h4>Painel de Testes</h4>
-
     <label for="debug-tipo-usuario">Simular como:</label>
     <select id="debug-tipo-usuario">
       <option value="criador" <?= ($tipo_usuario === 'criador') ? 'selected' : '' ?>>Criador</option>
