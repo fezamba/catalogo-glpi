@@ -989,7 +989,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               if ($tipo_usuario === 'po') {
                 if ($status === 'em_aprovacao') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar Ficha</button>';
-                  echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="margin-right: 4px; background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
+                  echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
                 }
                 if ($status === 'aprovada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar Ficha</button>';
