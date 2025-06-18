@@ -66,10 +66,12 @@ if ($res_pos) {
   }
 }
 
-$lista_revisores = [];
-$res_revisores = $mysqli->query("SELECT ID, nome FROM revisores ORDER BY nome ASC");
-if ($res_revisores) {
-  $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
+$revisores_servico = [];
+if ($modo_edicao) {
+  $res = $mysqli->query("SELECT revisor_id FROM servico_revisore WHERE servico_id = $id");
+  while ($row = $res->fetch_assoc()) {
+    $revisores_servico[] = $row['revisor_id'];
+  }
 }
 
 $dados_edicao = null;
@@ -436,6 +438,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
   $stmt->execute();
   $stmt->close();
 
+  $mysqli->query("DELETE FROM servico_revisore WHERE servico_id = $id");
+
+  if (!empty($_POST['revisores'])) {
+    $stmt_revisores = $mysqli->prepare("INSERT INTO servico_revisore (servico_id, revisor_id) VALUES (?, ?)");
+
+    $revisores_validos = array_column($lista_revisores, 'ID');
+    $revisores_selecionados = array_intersect($_POST['revisores'], $revisores_validos);
+
+    foreach ($revisores_selecionados as $revisor_id) {
+      $stmt_revisores->bind_param("ii", $id, $revisor_id);
+      $stmt_revisores->execute();
+    }
+    $stmt_revisores->close();
+  }
+
   $res = $mysqli->query("SELECT codigo_ficha FROM servico WHERE ID = $id LIMIT 1");
   if ($row = $res->fetch_assoc()) {
     $codigo_ficha = $mysqli->real_escape_string($row['codigo_ficha']);
@@ -631,6 +648,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       .radio-group label {
         margin-right: 16px;
         font-weight: normal;
+      }
+
+      .select-revisores {
+        width: 100%;
+        min-height: 100px;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
       }
     </style>
   <?php endif; ?>
@@ -857,6 +882,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
             <?php endforeach; ?>
           </select>
         </label>
+
+        <?php if ($tipo_usuario === 'criador' && ($dados_edicao['status_ficha'] ?? '') === 'rascunho'): ?>
+          <h3>Selecionar Revisores</h3>
+          <label>Escolha os revisores para esta ficha:
+            <select name="revisores[]" multiple class="select-revisores" required>
+              <?php foreach ($lista_revisores as $revisor): ?>
+                <option value="<?= $revisor['ID'] ?>"
+                  <?= (isset($revisores_servico) && in_array($revisor['ID'], $revisores_servico) ? 'selected' : '') ?>>
+                  <?= htmlspecialchars($revisor['nome']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+        <?php endif; ?>
 
         <?php if (false): ?> <!-- Trocar para $tipo_usuario === 'super_admim' ou um cargo com as devidas permissões -->
           <label>Status da Ficha:
