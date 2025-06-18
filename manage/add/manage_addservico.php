@@ -12,7 +12,7 @@ $ficha_publicada = false;
 
 $id = null;
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $id = intval($_GET['id']);
+  $id = intval($_GET['id']);
 }
 
 $eh_publicada = false;
@@ -645,6 +645,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
   <meta charset="UTF-8">
   <title>Adicionar Serviço</title>
   <link rel="stylesheet" href="style_manage_add.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <?php if (in_array($tipo_usuario, ['revisor', 'po'])): ?>
     <style>
       form#form-ficha textarea:not(#justificativa),
@@ -671,6 +672,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         padding: 8px;
         border-radius: 4px;
         border: 1px solid #ddd;
+      }
+
+      .select2-container {
+        width: 100% !important;
+        margin-bottom: 20px;
+      }
+
+      .select2-selection {
+        min-height: 38px;
+        padding: 5px;
+      }
+
+      .select2-selection__choice {
+        background-color: #e3f2fd !important;
+        border-color: #bbdefb !important;
+        color: #0d47a1 !important;
       }
     </style>
   <?php endif; ?>
@@ -734,6 +751,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       font-weight: bold;
       cursor: pointer;
       border: none;
+    }
+
+    .revisores-container {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      border: 1px solid #eee;
+    }
+
+    .revisores-container label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .revisores-container .form-text {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+
+    .select2-selection--multiple {
+      min-height: 42px !important;
+      border: 1px solid #ced4da !important;
+      border-radius: 4px !important;
     }
   </style>
 
@@ -898,19 +942,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           </select>
         </label>
 
-        <?php if ($tipo_usuario === 'criador' && ($dados_edicao['status_ficha'] ?? '') === 'rascunho'): ?>
-          <h3>Selecionar Revisores</h3>
-          <label>Escolha os revisores para esta ficha:
-            <select name="revisores[]" multiple class="select-revisores" required>
-              <?php foreach ($lista_revisores as $revisor): ?>
-                <option value="<?= $revisor['ID'] ?>"
-                  <?= (isset($revisores_servico) && in_array($revisor['ID'], $revisores_servico) ? 'selected' : '') ?>>
-                  <?= htmlspecialchars($revisor['nome']) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-          </label>
-        <?php endif; ?>
+        <div class="form-group revisores-container">
+          <label class="form-label">Revisores Responsáveis:</label>
+          <select name="revisores[]" class="form-control select-revisores" multiple="multiple" required>
+            <?php foreach ($lista_revisores as $revisor): ?>
+              <option value="<?= $revisor['ID'] ?>"
+                <?= in_array($revisor['ID'], $revisores_servico) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($revisor['nome']) ?>
+                <?php if (!empty($revisor['email'])): ?>
+                  (<?= htmlspecialchars($revisor['email']) ?>)
+                <?php endif; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <small class="form-text text-muted">Selecione um ou mais revisores</small>
+        </div>
 
         <?php if (false): ?> <!-- Trocar para $tipo_usuario === 'super_admim' ou um cargo com as devidas permissões -->
           <label>Status da Ficha:
@@ -1082,6 +1128,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       let contChecklist = <?= count($checklist) ?>;
     </script>
     <script src="addservico.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.select-revisores').select2({
+          placeholder: "Selecione os revisores",
+          allowClear: true,
+          width: 'resolve',
+          templateResult: function(data) {
+            if (!data.id) return data.text;
+            var $result = $('<span>').text(data.text.split(' (')[0]);
+            return $result;
+          }
+        });
+
+        $('.select2-container').css('z-index', '9999');
+      });
+    </script>
     <input type="hidden" id="justificativa-submit-acao" value="">
 </body>
 
