@@ -32,10 +32,6 @@ if (!$servico) {
     die("Serviço não encontrado.");
 }
 
-// O resto da sua lógica de busca de dados continua aqui...
-$atendimentos = $mysqli->query("SELECT atendimento, descricao_tecnica FROM servico_atendimento WHERE id_servico = $id_servico ORDER BY FIELD(atendimento, 'N1', 'N2', 'N3', 'WD')")->fetch_all(MYSQLI_ASSOC);
-$software = $mysqli->query("SELECT nome_software, versao_software FROM servico_software WHERE id_servico = $id_servico LIMIT 1")->fetch_assoc();
-$sistema_info = $mysqli->query("SELECT si.nome_sistema, se.nome_equipe FROM servico_sistema si LEFT JOIN servico_equipe_externa se ON si.id = se.id_sistema WHERE si.id_servico = $id_servico LIMIT 1")->fetch_assoc();
 $diretrizes = [];
 $res_dir = $mysqli->query("SELECT ID, Titulo FROM diretriz WHERE ID_Servico = $id_servico ORDER BY ID");
 while ($d = $res_dir->fetch_assoc()) {
