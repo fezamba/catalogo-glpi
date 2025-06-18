@@ -71,17 +71,26 @@ if ($res_pos) {
   }
 }
 
+$lista_revisores = [];
+$res_revisores = $mysqli->query("SELECT ID, nome, email FROM revisores ORDER BY nome ASC");
+if (!$res_revisores) {
+  die("Erro ao buscar revisores: " . $mysqli->error);
+}
+while ($row = $res_revisores->fetch_assoc()) {
+  $lista_revisores[] = $row;
+}
+
 $revisores_servico = [];
 if ($modo_edicao && $id) {
-  $stmt_revisores = $mysqli->prepare("SELECT revisor_id FROM servico_revisores WHERE servico_id = ?");
-  $stmt_revisores->bind_param("i", $id);
-  $stmt_revisores->execute();
-  $result = $stmt_revisores->get_result();
+  $stmt = $mysqli->prepare("SELECT revisor_id FROM servico_revisores WHERE servico_id = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   while ($row = $result->fetch_assoc()) {
     $revisores_servico[] = $row['revisor_id'];
   }
-  $stmt_revisores->close();
+  $stmt->close();
 }
 
 $dados_edicao = null;
@@ -944,18 +953,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
 
         <div class="form-group revisores-container">
           <label class="form-label">Revisores Responsáveis:</label>
-          <select name="revisores[]" class="form-control select-revisores" multiple="multiple" required>
-            <?php foreach ($lista_revisores as $revisor): ?>
-              <option value="<?= $revisor['ID'] ?>"
-                <?= in_array($revisor['ID'], $revisores_servico) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($revisor['nome']) ?>
-                <?php if (!empty($revisor['email'])): ?>
-                  (<?= htmlspecialchars($revisor['email']) ?>)
-                <?php endif; ?>
-              </option>
-            <?php endforeach; ?>
+          <select name="revisores[]" id="seletor-revisores" class="form-control" multiple required>
+            <?php if (!empty($lista_revisores)): ?>
+              <?php foreach ($lista_revisores as $revisor): ?>
+                <option value="<?= $revisor['ID'] ?>"
+                  <?= in_array($revisor['ID'], $revisores_servico) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($revisor['nome']) ?>
+                  <?php if (!empty($revisor['email'])): ?>
+                    (<?= htmlspecialchars($revisor['email']) ?>)
+                  <?php endif; ?>
+                </option>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <option disabled>Nenhum revisor disponível</option>
+            <?php endif; ?>
           </select>
-          <small class="form-text text-muted">Selecione um ou mais revisores</small>
+          <small class="form-text">Selecione um ou mais revisores (segure Ctrl para múltipla seleção)</small>
         </div>
 
         <?php if (false): ?> <!-- Trocar para $tipo_usuario === 'super_admim' ou um cargo com as devidas permissões -->
