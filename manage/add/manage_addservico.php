@@ -21,66 +21,6 @@ if ($modo_edicao) {
   $stmt->execute();
   $dados_edicao = $stmt->get_result()->fetch_assoc();
   $ficha_publicada = $dados_edicao['status_ficha'] === 'publicado';
-
-
-  $dados_atendimento = [
-    'atendimento' => '',
-    'descricao_tecnica' => ''
-  ];
-
-  $res = $mysqli->query("SELECT atendimento, descricao_tecnica FROM servico_atendimento WHERE id_servico = " . intval($_GET['id']) . " LIMIT 1");
-  if ($res && $res->num_rows > 0) {
-    $dados_atendimento = $res->fetch_assoc();
-  }
-}
-
-$eh_software = 'nao';
-$versao_software = '';
-$eh_sistema = 'nao';
-$sistema_portal = '';
-$equipe_solucionadora_externa = '';
-
-if ($modo_edicao) {
-  $id = intval($_GET['id']);
-
-  $atendimentos_tecnicos = [];
-
-  $stmt = $mysqli->prepare("SELECT atendimento, descricao_tecnica FROM servico_atendimento WHERE id_servico = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $res = $stmt->get_result();
-
-  while ($row = $res->fetch_assoc()) {
-    $atendimentos_tecnicos[$row['atendimento']] = $row['descricao_tecnica'];
-  }
-
-  $stmt->close();
-
-  $res = $mysqli->query("SELECT versao_software FROM servico_software WHERE id_servico = $id LIMIT 1");
-  if ($row = $res->fetch_assoc()) {
-    $eh_software = 'sim';
-    $versao_software = $row['versao_software'];
-  }
-
-  $res = $mysqli->query("SELECT id, nome_sistema FROM servico_sistema WHERE id_servico = $id LIMIT 1");
-  if ($row = $res->fetch_assoc()) {
-    $eh_sistema = 'sim';
-    $sistema_portal = $row['nome_sistema'];
-
-    $id_sistema = $row['id'];
-    $res2 = $mysqli->query("SELECT nome_equipe FROM servico_equipe_externa WHERE id_sistema = $id_sistema LIMIT 1");
-    if ($row2 = $res2->fetch_assoc()) {
-      $equipe_solucionadora_externa = $row2['nome_equipe'];
-    }
-  }
-}
-
-$atendimentos_salvos = [];
-if ($modo_edicao) {
-  $res_att = $mysqli->query("SELECT atendimento, descricao_tecnica FROM servico_atendimento WHERE id_servico = " . intval($_GET['id']));
-  while ($row_att = $res_att->fetch_assoc()) {
-    $atendimentos_salvos[] = $row_att;
-  }
 }
 
 $modo_edicao = isset($_GET['id']);
@@ -150,36 +90,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $_POST['acao'] === 'nova_versao_aut
   $partes = explode('.', $versao_atual);
   $nova_versao = ((int)$partes[0] + 1) . '.0';
 
-  $atendimentos_post = $_POST['atendimentos'] ?? [];
-
-  $eh_software  = $_POST['eh_software'] ?? 'nao';
-  $versao_software = $_POST['versao_software'] ?? '';
-
-  $eh_sistema   = $_POST['eh_sistema'] ?? 'nao';
-  $sistema_portal = $_POST['sistema_portal'] ?? '';
-  $equipe_solucionadora_externa = $_POST['equipe_solucionadora_externa'] ?? '';
-
   $titulo       = $_POST['nome_servico'];
   $descricao    = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
   $kbs          = $_POST['base_conhecimento'];
-  $anexo        = $_POST['anexo'];
   $area         = $_POST['area_especialista'];
   $po           = $_POST['po_responsavel'];
   $alcadas      = $_POST['alcadas'];
   $excecao      = $_POST['procedimento_excecao'];
   $obs          = $_POST['observacoes_gerais'];
-  $tipo         = $_POST['tipo'];
-  $norma        = $_POST['determinacao_orientacao_norma'];
   $criador      = $_SESSION['username'];
 
   $stmt = $mysqli->prepare("INSERT INTO servico (
         codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista,
-        po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, tipo, determinacao_orientacao_norma, status_ficha, anexo
-    ) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', ?)");
+        po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha
+    ) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
 
   $stmt->bind_param(
-    "ssssissssssssss",
+    "ssssissssssss",
     $codigo_ficha,
     $nova_versao,
     $titulo,
@@ -191,57 +119,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $_POST['acao'] === 'nova_versao_aut
     $alcadas,
     $excecao,
     $obs,
-    $criador,
-    $tipo,
-    $norma,
-    $anexo
+    $criador
   );
 
   if ($stmt->execute()) {
     $id_atual = intval($_GET['id']);
 
     $novo_id = $stmt->insert_id;
-
-    if (!empty($atendimentos_post)) {
-      $stmtAtt = $mysqli->prepare("INSERT INTO servico_atendimento (id_servico, atendimento, descricao_tecnica) VALUES (?, ?, ?)");
-      foreach ($atendimentos_post as $att) {
-        $tipo = trim($att['tipo'] ?? '');
-        $desc = trim($att['descricao'] ?? '');
-        if ($tipo !== '' && $desc !== '') {
-          $stmtAtt->bind_param("iss", $novo_id, $tipo, $desc);
-          $stmtAtt->execute();
-        }
-      }
-      $stmtAtt->close();
-    }
-
-    if (!empty($dados_edicao['Anexo'])) {
-      $anexo = $mysqli->real_escape_string($dados_edicao['Anexo']);
-      $mysqli->query("UPDATE servico SET Anexo = '$anexo' WHERE ID = $novo_id");
-    }
-
-
-    if ($eh_software === 'sim' && !empty($versao_software)) {
-      $stmt_sw = $mysqli->prepare("INSERT INTO servico_software (id_servico, nome_software, versao_software) VALUES (?, ?, ?)");
-      $stmt_sw->bind_param("iss", $novo_id, $titulo, $versao_software);
-      $stmt_sw->execute();
-      $stmt_sw->close();
-    }
-
-    if ($eh_sistema === 'sim' && !empty($sistema_portal)) {
-      $stmt = $mysqli->prepare("INSERT INTO servico_sistema (id_servico, nome_sistema) VALUES (?, ?)");
-      $stmt->bind_param("is", $novo_id, $sistema_portal);
-      $stmt->execute();
-      $id_sistema = $stmt->insert_id;
-      $stmt->close();
-
-      if (!empty($equipe_solucionadora_externa)) {
-        $stmt = $mysqli->prepare("INSERT INTO servico_equipe_externa (id_servico, id_sistema, nome_equipe) VALUES (?, ?, ?)");
-        $stmt->bind_param("iis", $novo_id, $id_sistema, $equipe_solucionadora_externa);
-        $stmt->execute();
-        $stmt->close();
-      }
-    }
 
     $res = $mysqli->query("SELECT * FROM diretriz WHERE ID_Servico = $id_atual");
     while ($d = $res->fetch_assoc()) {
@@ -288,31 +172,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   $descricao = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
   $kbs = $_POST['base_conhecimento'];
-  $anexo = $_POST['anexo'];
   $area = $_POST['area_especialista'] ?? null;
   $po = $_POST['po_responsavel'];
   $alcadas = $_POST['alcadas'];
   $excecao = $_POST['procedimento_excecao'];
   $obs = $_POST['observacoes_gerais'];
-  $tipo = $_POST['tipo'];
-  $norma = $_POST['determinacao_orientacao_norma'];
   $criador = $_POST['usuario_criador'];
   $versao = "1.0";
-
-  $eh_software = $_POST['eh_software'] ?? 'nao';
-  $versao_software = $_POST['versao_software'] ?? '';
-  $eh_sistema = $_POST['eh_sistema'] ?? 'nao';
-  $sistema_portal = $_POST['sistema_portal'] ?? '';
-  $equipe_solucionadora_externa = $_POST['equipe_solucionadora_externa'] ?? '';
 
   $stmt_insert = $mysqli->prepare("INSERT INTO servico 
         (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, 
         area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, 
-        usuario_criador, tipo, determinacao_orientacao_norma, status_ficha, anexo) 
-        VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', ?)");
+        usuario_criador, status_ficha) 
+        VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
 
   $stmt_insert->bind_param(
-    "sssissssssssss",
+    "sssisssssssss",
     $versao,
     $titulo,
     $descricao,
@@ -323,10 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
     $alcadas,
     $excecao,
     $obs,
-    $criador,
-    $tipo,
-    $norma,
-    $anexo
+    $criador
   );
 
   if ($stmt_insert->execute()) {
@@ -339,17 +211,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
     $stmt_update->bind_param("si", $codigo_ficha, $id_servico);
     $stmt_update->execute();
     $stmt_update->close();
-
-    if (!empty($_POST['atendimentos'])) {
-      foreach ($_POST['atendimentos'] as $att) {
-        if (!empty($att['tipo']) && !empty($att['descricao'])) {
-          $stmt_at = $mysqli->prepare("INSERT INTO servico_atendimento (id_servico, atendimento, descricao_tecnica) VALUES (?, ?, ?)");
-          $stmt_at->bind_param("iss", $id_servico, $att['tipo'], $att['descricao']);
-          $stmt_at->execute();
-          $stmt_at->close();
-        }
-      }
-    }
 
     if (!empty($_POST['diretrizes'])) {
       foreach ($_POST['diretrizes'] as $diretriz) {
@@ -394,28 +255,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
           $obs_item = $mysqli->real_escape_string($item['observacao']);
           $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($id_servico, '$nome', '$obs_item')");
         }
-      }
-    }
-
-    if ($eh_software === 'sim' && !empty($versao_software)) {
-      $stmt = $mysqli->prepare("INSERT INTO servico_software (id_servico, nome_software, versao_software) VALUES (?, ?, ?)");
-      $stmt->bind_param("iss", $id_servico, $titulo, $versao_software);
-      $stmt->execute();
-      $stmt->close();
-    }
-
-    if ($eh_sistema === 'sim' && !empty($sistema_portal)) {
-      $stmt = $mysqli->prepare("INSERT INTO servico_sistema (id_servico, nome_sistema) VALUES (?, ?)");
-      $stmt->bind_param("is", $id_servico, $sistema_portal);
-      $stmt->execute();
-      $id_sistema = $stmt->insert_id;
-      $stmt->close();
-
-      if (!empty($equipe_solucionadora_externa)) {
-        $stmt = $mysqli->prepare("INSERT INTO servico_equipe_externa (id_servico, id_sistema, nome_equipe) VALUES (?, ?, ?)");
-        $stmt->bind_param("iis", $id_servico, $id_sistema, $equipe_solucionadora_externa);
-        $stmt->execute();
-        $stmt->close();
       }
     }
 
@@ -565,34 +404,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
   $descricao = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
   $kbs       = $_POST['base_conhecimento'];
-  $anexo = $_POST['anexo'];
   $area      = $_POST['area_especialista'];
   $po        = $_POST['po_responsavel'];
   $alcadas   = $_POST['alcadas'];
   $excecao   = $_POST['procedimento_excecao'];
   $obs       = $_POST['observacoes_gerais'];
-  $tipo      = $_POST['tipo'];
-  $norma     = $_POST['determinacao_orientacao_norma'];
   $criador   = $_POST['usuario_criador'];
-
-  $eh_software  = $_POST['eh_software'] ?? 'nao';
-  $versao_software = $_POST['versao_software'] ?? '';
-
-  $eh_sistema   = $_POST['eh_sistema'] ?? 'nao';
-  $sistema_portal = $_POST['sistema_portal'] ?? '';
-  $equipe_solucionadora_externa = $_POST['equipe_solucionadora_externa'] ?? '';
 
   $stmt = $mysqli->prepare("UPDATE servico SET 
     Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
     UltimaAtualizacao = NOW(), area_especialista = ?, 
     po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, 
-    observacoes = ?, usuario_criador = ?, tipo = ?, 
-    determinacao_orientacao_norma = ?, status_ficha = 'em_revisao',
-    anexo = ?
+    observacoes = ?, usuario_criador = ?, status_ficha = 'em_revisao'
     WHERE ID = ?");
 
   $stmt->bind_param(
-    "ssissssssssssi",
+    "ssisssssssi",
     $titulo,
     $descricao,
     $subcategoria,
@@ -603,9 +430,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
     $excecao,
     $obs,
     $criador,
-    $tipo,
-    $norma,
-    $anexo,
     $id
   );
   $stmt->execute();
@@ -658,46 +482,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
     }
   }
 
-  $mysqli->query("DELETE FROM servico_atendimento WHERE id_servico = $id");
-  if (!empty($_POST['atendimentos']) && is_array($_POST['atendimentos'])) {
-    foreach ($_POST['atendimentos'] as $att) {
-      $tipo = trim($att['tipo'] ?? '');
-      $desc = trim($att['descricao'] ?? '');
-
-      if (!empty($tipo) && !empty($desc)) {
-        $stmt = $mysqli->prepare("INSERT INTO servico_atendimento (id_servico, atendimento, descricao_tecnica) VALUES (?, ?, ?)");
-        $stmt->bind_param("iss", $id, $tipo, $desc);
-        $stmt->execute();
-        $stmt->close();
-      }
-    }
-  }
-
   $mysqli->query("DELETE FROM servico_sistema WHERE id_servico = $id");
   $mysqli->query("DELETE FROM servico_equipe_externa WHERE id_servico = $id");
   $mysqli->query("DELETE FROM servico_software WHERE id_servico = $id");
-
-  if ($eh_software === 'sim' && !empty($versao_software)) {
-    $stmt = $mysqli->prepare("INSERT INTO servico_software (id_servico, nome_software, versao_software) VALUES (?, ?, ?)");
-    $stmt->bind_param("iss", $id, $titulo, $versao_software);
-    $stmt->execute();
-    $stmt->close();
-  }
-
-  if ($eh_sistema === 'sim' && !empty($sistema_portal)) {
-    $stmt = $mysqli->prepare("INSERT INTO servico_sistema (id_servico, nome_sistema) VALUES (?, ?)");
-    $stmt->bind_param("is", $id, $sistema_portal);
-    $stmt->execute();
-    $id_sistema = $stmt->insert_id;
-    $stmt->close();
-
-    if (!empty($equipe_solucionadora_externa)) {
-      $stmt = $mysqli->prepare("INSERT INTO servico_equipe_externa (id_servico, id_sistema, nome_equipe) VALUES (?, ?, ?)");
-      $stmt->bind_param("iis", $id, $id_sistema, $equipe_solucionadora_externa);
-      $stmt->execute();
-      $stmt->close();
-    }
-  }
 
   header("Location: ../list/manage_listservico.php?sucesso=1");
   exit;
@@ -705,8 +492,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor') {
   $id = intval($_GET['id']);
-  $nome_revisor = $_SESSION['username'] ?? 'revisor';
-  $email_revisor = $_SESSION['email_usuario'] ?? 'revisor@email.com';
+  $nome_revisor = $_SESSION['username'] ?? '';
+  $email_revisor = $_SESSION['email_usuario'] ?? '';
 
   $stmt = $mysqli->prepare("
         UPDATE servico SET 
@@ -1014,122 +801,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           <textarea name="descricao_servico" rows="4"><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea>
         </label>
 
-        <h3>Classificação Técnica</h3>
-
-        <div class="radio-group">
-          <label>É software?</label><br>
-          <label>
-            <input type="radio" name="eh_software" id="radio_software" value="sim"
-              onclick="toggleSoftware(true)"
-              <?= ($eh_software === 'sim') ? 'checked' : '' ?>
-              <?= campo_desabilitado($tipo_usuario) ?>>
-            Sim
-          </label>
-          <label>
-            <input type="radio" name="eh_software" value="nao"
-              onclick="toggleSoftware(false)"
-              <?= ($eh_software !== 'sim') ? 'checked' : '' ?>
-              <?= campo_desabilitado($tipo_usuario) ?>>
-            Não
-          </label>
-        </div>
-
-        <div id="campo-versao-software" style="display: none; margin-top: 5px;">
-          <label>Versão do Software:
-            <input type="text" name="versao_software" value="<?= htmlspecialchars($versao_software) ?>"
-              <?= campo_somente_leitura($tipo_usuario) ?>>
-          </label>
-        </div>
-
-        <div class="radio-group">
-          <label>É sistema ou portal?</label><br>
-          <label>
-            <input type="radio" name="eh_sistema" id="radio_sistema" value="sim"
-              onclick="toggleSistema(true)"
-              <?= ($eh_sistema === 'sim') ? 'checked' : '' ?>
-              <?= campo_desabilitado($tipo_usuario) ?>>
-            Sim
-          </label>
-          <label>
-            <input type="radio" name="eh_sistema" value="nao"
-              onclick="toggleSistema(false)"
-              <?= ($eh_sistema !== 'sim') ? 'checked' : '' ?>
-              <?= campo_desabilitado($tipo_usuario) ?>>
-            Não
-          </label>
-        </div>
-
-        <div id="campo-sistema" style="display: none; margin-top: 10px;">
-          <label>Nome do Sistema/Portal:
-            <input type="text" name="sistema_portal" value="<?= htmlspecialchars($sistema_portal) ?>"
-              <?= campo_somente_leitura($tipo_usuario) ?>>
-          </label>
-          <label>Equipe Solucionadora (Externa):
-            <input type="text" name="equipe_solucionadora_externa" value="<?= htmlspecialchars($equipe_solucionadora_externa) ?>"
-              <?= campo_somente_leitura($tipo_usuario) ?>>
-          </label>
-        </div>
-
-        <h3>Descrição Técnica por Tipo de Atendimento</h3>
-        <div id="atendimentos-container">
-        </div>
-
-        <?php
-        $esta_desabilitado = campo_desabilitado($tipo_usuario);
-        if (empty($esta_desabilitado)) {
-          echo '<button type="button" class="btn-salvar" id="btn-adicionar-atendimento">+ Adicionar Atendimento</button>';
-        }
-        ?>
-
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('atendimentos-container');
-            const atendimentosIniciais = <?= json_encode($atendimentos_salvos); ?>;
-            const camposDevemSerDesabilitados = <?= !empty($esta_desabilitado) ? 'true' : 'false' ?>;
-            let atendimentoIndex = 0;
-
-            function criarBlocoAtendimento(tipo = '', descricao = '', desabilitado = false) {
-              const div = document.createElement('div');
-              div.className = 'grupo';
-              div.style.marginBottom = '15px';
-              const disabledAttr = desabilitado ? 'disabled' : '';
-
-              div.innerHTML = `
-                <label>Tipo de Atendimento:</label>
-                <select name="atendimentos[${atendimentoIndex}][tipo]" class="campo-dinamico" ${disabledAttr}>
-                    <option value="">-- Selecione --</option>
-                    <option value="N1" ${tipo === 'N1' ? 'selected' : ''}>N1</option>
-                    <option value="N2" ${tipo === 'N2' ? 'selected' : ''}>N2</option>
-                    <option value="N3" ${tipo === 'N3' ? 'selected' : ''}>N3</option>
-                    <option value="WD" ${tipo === 'WD' ? 'selected' : ''}>WD</option>
-                    <option value="ASSSI" ${tipo === 'ASSSI' ? 'selected' : ''}>ASSSI</option>
-                </select>
-                <label>Descrição Técnica:</label>
-                <textarea name="atendimentos[${atendimentoIndex}][descricao]" rows="3" class="campo-dinamico" ${disabledAttr}>${descricao}</textarea>
-                ${!desabilitado ? '<button type="button" class="btn-danger" style="margin-top: 10px;" onclick="this.parentElement.remove()">Remover</button>' : ''}
-            `;
-              container.appendChild(div);
-              atendimentoIndex++;
-            }
-
-            const botaoAdicionar = document.getElementById('btn-adicionar-atendimento');
-
-            if (botaoAdicionar) {
-              botaoAdicionar.addEventListener('click', function() {
-                criarBlocoAtendimento('', '', false);
-              });
-            }
-
-            if (atendimentosIniciais.length > 0) {
-              atendimentosIniciais.forEach(att => {
-                criarBlocoAtendimento(att.atendimento, att.descricao_tecnica, camposDevemSerDesabilitados);
-              });
-            } else if (!camposDevemSerDesabilitados) {
-              criarBlocoAtendimento('', '', false);
-            }
-          });
-        </script>
-
         <h3>Informações Adicionais</h3>
 
         <label>Área Especialista:
@@ -1148,17 +819,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           <textarea name="base_conhecimento" rows="1" oninput="autoResize(this)"><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea>
         </label>
 
-        <label>Anexo:
-          <textarea name="anexo" rows="1" oninput="autoResize(this)"><?php echo htmlspecialchars($dados_edicao['Anexo'] ?? '') ?></textarea>
-        </label>
-
-        <label>Tipo de Ficha:
-          <select name="tipo">
-            <option value="Requisição" <?= strtolower($dados_edicao['tipo'] ?? '') === 'requisicao' ? 'selected' : '' ?>>Requisição</option>
-            <option value="Incidente" <?= strtolower($dados_edicao['tipo'] ?? '') === 'incidente' ? 'selected' : '' ?>>Incidente</option>
-          </select>
-        </label>
-
         <label>PO Responsável:
           <select name="po_responsavel" required>
             <option value="">Selecione um PO...</option>
@@ -1168,10 +828,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               </option>
             <?php endforeach; ?>
           </select>
-        </label>
-
-        <label>Determinação / Orientação / Norma:
-          <textarea name="determinacao_orientacao_norma" rows="1" oninput="autoResize(this)"><?= htmlspecialchars($dados_edicao['determinacao_orientacao_norma'] ?? '') ?></textarea>
         </label>
 
         <?php if (false): ?> <!-- Trocar para $tipo_usuario === 'super_admim' ou um cargo com as devidas permissões -->
