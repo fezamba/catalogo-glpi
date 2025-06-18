@@ -107,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $_POST['acao'] === 'nova_versao_aut
     ) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
 
   $stmt->bind_param(
-    "ssssissssssss",
+    "ssssisssssss",
     $codigo_ficha,
     $nova_versao,
     $titulo,
@@ -187,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
         VALUES (?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
 
   $stmt_insert->bind_param(
-    "sssisssssssss",
+    "sssisssssss",
     $versao,
     $titulo,
     $descricao,
@@ -432,6 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
     $criador,
     $id
   );
+  
   $stmt->execute();
   $stmt->close();
 
