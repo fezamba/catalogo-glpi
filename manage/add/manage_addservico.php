@@ -698,77 +698,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         border-color: #bbdefb !important;
         color: #0d47a1 !important;
       }
-
-      #debug-panel {
-        position: fixed;
-        bottom: 15px;
-        right: 15px;
-        background-color: #2c3e50;
-        color: white;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-      }
-
-      #debug-panel h4 {
-        margin: 0 0 10px 0;
-        font-size: 16px;
-        border-bottom: 1px solid #4a627a;
-        padding-bottom: 5px;
-      }
-
-      #debug-panel label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-
-      #debug-panel select,
-      #debug-panel button {
-        width: 100%;
-        padding: 8px;
-        border-radius: 4px;
-        border: 1px solid #7f8c8d;
-        margin-bottom: 10px;
-      }
-
-      #debug-panel button {
-        background-color: #f9b000;
-        color: #fff;
-        font-weight: bold;
-        cursor: pointer;
-        border: none;
-      }
-
-      .revisores-container {
-        margin: 20px 0;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        border: 1px solid #eee;
-      }
-
-      .revisores-container label {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 8px;
-        display: block;
-      }
-
-      .revisores-container .form-text {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-top: 5px;
-      }
-
-      .select2-selection--multiple {
-        min-height: 42px !important;
-        border: 1px solid #ced4da !important;
-        border-radius: 4px !important;
-      }
     </style>
   <?php endif; ?>
 </head>
@@ -788,6 +717,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
     'substituida'
   ];
   ?>
+  <style>
+    #debug-panel {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      background-color: #2c3e50;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    #debug-panel h4 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      border-bottom: 1px solid #4a627a;
+      padding-bottom: 5px;
+    }
+
+    #debug-panel label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    #debug-panel select,
+    #debug-panel button {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #7f8c8d;
+      margin-bottom: 10px;
+    }
+
+    #debug-panel button {
+      background-color: #f9b000;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    .revisores-container {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      border: 1px solid #eee;
+    }
+
+    .revisores-container label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .revisores-container .form-text {
+      font-size: 0.85rem;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+
+    .select2-selection--multiple {
+      min-height: 42px !important;
+      border: 1px solid #ced4da !important;
+      border-radius: 4px !important;
+    }
+  </style>
 
   <div id="debug-panel">
     <h4>Painel de Testes</h4>
@@ -950,6 +951,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           </select>
         </label>
 
+        <div class="form-group revisores-container">
+          <label class="form-label">Revisores Responsáveis:</label>
+          <select name="revisores[]" id="seletor-revisores" class="form-control" multiple required>
+            <?php if (!empty($lista_revisores)): ?>
+              <?php foreach ($lista_revisores as $revisor): ?>
+                <option value="<?= $revisor['ID'] ?>"
+                  <?= in_array($revisor['ID'], $revisores_servico) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($revisor['nome']) ?>
+                  <?php if (!empty($revisor['email'])): ?>
+                    (<?= htmlspecialchars($revisor['email']) ?>)
+                  <?php endif; ?>
+                </option>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <option disabled>Nenhum revisor disponível</option>
+            <?php endif; ?>
+          </select>
+          <small class="form-text">Selecione um ou mais revisores (segure Ctrl para múltipla seleção)</small>
+        </div>
+
         <?php if (false): ?> <!-- Trocar para $tipo_usuario === 'super_admim' ou um cargo com as devidas permissões -->
           <label>Status da Ficha:
             <select name="status_ficha">
@@ -976,21 +997,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               <?php endforeach; ?>
             </select>
           </label>
-
-          <div class="revisores-container">
-            <label for="seletor-revisores">Revisores Designados</label>
-            <p class="form-text">Selecione um ou mais revisores da lista. Você pode digitar para buscar.</p>
-
-            <select name="revisores_ids[]" id="seletor-revisores" multiple="multiple">
-              <?php foreach ($lista_revisores as $revisor): ?>
-                <option
-                  value="<?= $revisor['ID'] ?>"
-                  <?= in_array($revisor['ID'], $revisores_servico) ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($revisor['nome']) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-          </div>
 
           <h3>Diretrizes</h3>
           <div id="diretrizes">
@@ -1139,10 +1145,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
       $(document).ready(function() {
-        $('#seletor-revisores').select2({
-          placeholder: "Selecione ou digite o nome de um revisor",
-          allowClear: true
+        $('.select-revisores').select2({
+          placeholder: "Selecione os revisores",
+          allowClear: true,
+          width: 'resolve',
+          templateResult: function(data) {
+            if (!data.id) return data.text;
+            var $result = $('<span>').text(data.text.split(' (')[0]);
+            return $result;
+          }
         });
+
+        $('.select2-container').css('z-index', '9999');
       });
     </script>
     <input type="hidden" id="justificativa-submit-acao" value="">
