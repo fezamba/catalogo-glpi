@@ -482,10 +482,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
     }
   }
 
-  $mysqli->query("DELETE FROM servico_sistema WHERE id_servico = $id");
-  $mysqli->query("DELETE FROM servico_equipe_externa WHERE id_servico = $id");
-  $mysqli->query("DELETE FROM servico_software WHERE id_servico = $id");
-
   header("Location: ../list/manage_listservico.php?sucesso=1");
   exit;
 }
@@ -804,7 +800,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         <h3>Informações Adicionais</h3>
 
         <label>Área Especialista:
-          <textarea name="area_especialista" rows="1" oninput="autoResize(this)"><?php echo htmlspecialchars($dados_edicao['area_especialista'] ?? '') ?></textarea>
+          <textarea name="area_especialista" rows="1" oninput="autoResize(this)" required><?php echo htmlspecialchars($dados_edicao['area_especialista'] ?? '') ?></textarea>
         </label>
 
         <label>Alçadas:
