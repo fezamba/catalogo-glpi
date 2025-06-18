@@ -457,6 +457,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
   $stmt->execute();
   $stmt->close();
 
+  $revisores_selecionados = $_POST['revisores_ids'] ?? [];
+
   if ($id) {
     $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
     $stmt_delete->bind_param("i", $id);
