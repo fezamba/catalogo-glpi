@@ -10,6 +10,11 @@ if ($mysqli->connect_errno) {
 $modo_edicao = isset($_GET['id']);
 $ficha_publicada = false;
 
+$id = null;
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $id = intval($_GET['id']);
+}
+
 $eh_publicada = false;
 if ($modo_edicao && isset($dados_edicao) && isset($dados_edicao['status_ficha'])) {
   $eh_publicada = $dados_edicao['status_ficha'] === 'publicado';
