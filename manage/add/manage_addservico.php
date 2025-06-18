@@ -67,11 +67,16 @@ if ($res_pos) {
 }
 
 $revisores_servico = [];
-if ($modo_edicao) {
-  $res = $mysqli->query("SELECT revisor_id FROM servico_revisores WHERE servico_id = $id");
-  while ($row = $res->fetch_assoc()) {
+if ($modo_edicao && $id) {
+  $stmt_revisores = $mysqli->prepare("SELECT revisor_id FROM servico_revisores WHERE servico_id = ?");
+  $stmt_revisores->bind_param("i", $id);
+  $stmt_revisores->execute();
+  $result = $stmt_revisores->get_result();
+
+  while ($row = $result->fetch_assoc()) {
     $revisores_servico[] = $row['revisor_id'];
   }
+  $stmt_revisores->close();
 }
 
 $dados_edicao = null;
@@ -438,9 +443,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
   $stmt->execute();
   $stmt->close();
 
-  $mysqli->query("DELETE FROM servico_revisores WHERE servico_id = $id");
+  if ($id) {
+    $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
+    $stmt_delete->bind_param("i", $id);
+    $stmt_delete->execute();
+    $stmt_delete->close();
+  }
 
-  if (!empty($_POST['revisores'])) {
+  if (!empty($_POST['revisores']) && $id) {
     $stmt_revisores = $mysqli->prepare("INSERT INTO servico_revisores (servico_id, revisor_id) VALUES (?, ?)");
 
     $revisores_validos = array_column($lista_revisores, 'ID');
