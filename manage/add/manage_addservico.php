@@ -171,12 +171,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   $titulo = $_POST['nome_servico'];
   $descricao = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
-  $kbs = $_POST['base_conhecimento'];
-  $area = $_POST['area_especialista'] ?? null;
+  $kbs = $_POST['base_conhecimento'] ?? 'Não tem';
+  $area = $_POST['area_especialista'];
   $po = $_POST['po_responsavel'];
-  $alcadas = $_POST['alcadas'];
-  $excecao = $_POST['procedimento_excecao'];
-  $obs = $_POST['observacoes_gerais'];
+  $alcadas = $_POST['alcadas'] ?? 'Não tem';
+  $excecao = $_POST['procedimento_excecao'] ?? 'Não tem';
+  $obs = $_POST['observacoes_gerais'] ?? 'Não tem';
   $criador = $_POST['usuario_criador'];
   $versao = "1.0";
 

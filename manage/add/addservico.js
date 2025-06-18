@@ -83,3 +83,35 @@ function mostrarJustificativa(tipo) {
 
   formReprovacao.scrollIntoView({ behavior: 'smooth' });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('form-ficha');
+
+  if (form) {
+    form.addEventListener('submit', function (event) {
+      const diretrizesTitulos = document.querySelectorAll(
+        'textarea[name^="diretrizes"][name$="[titulo]"]'
+      );
+
+      let peloMenosUmTituloPreenchido = false;
+
+      if (diretrizesTitulos.length > 0) {
+        diretrizesTitulos.forEach((textarea) => {
+          if (textarea.value.trim() !== '') {
+            peloMenosUmTituloPreenchido = true;
+          }
+        });
+
+        if (!peloMenosUmTituloPreenchido) {
+          alert(
+            'Erro: Você precisa preencher o título de pelo menos uma diretriz.'
+          );
+          event.preventDefault();
+        }
+      } else {
+        alert('Erro: É necessário adicionar pelo menos uma Diretriz.');
+        event.preventDefault();
+      }
+    });
+  }
+});
