@@ -35,15 +35,6 @@ while ($cat = $result->fetch_assoc()) {
         <button class="menu-button" style="margin-bottom: 10px; font-weight: bold;" onclick="window.location.href='../index.php'">
           ← Voltar ao Catálogo
         </button>
-        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='../chatbot/chatbot.php'">
-          Assistente Virtual <img src="../img/chat.png" alt="Assistente-virtual" class="icon-left">
-        </button>
-        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='../chamado/abrir_chamado.php'">
-          Abrir Chamado <img src="../img/service.png" alt="Abrir-chamado" class="icon-left">
-        </button>
-        <button class="menu-button" onclick="window.location.href='../manage/manage.php'">
-          Edição <img src="../img/edit.png" alt="Editar-catalogo" class="icon-left">
-        </button>
       </div>
     </aside>
 
