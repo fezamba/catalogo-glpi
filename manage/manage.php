@@ -31,15 +31,18 @@ while ($cat = $result->fetch_assoc()) {
 
   <div class="layout">
     <aside class="sidebar">
-      <div class="menu-item fixed-bottom">
-        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='/chatbot/chatbot.php'">
-          Assistente Virtual <img src="img/chat.png" alt="Assistente-virtual" class="icon-left2">
+      <div class="menu-item">
+        <button class="menu-button" style="margin-bottom: 10px; background-color: #6c757d;" onclick="window.location.href='../index/index.php'">
+          ← Voltar ao Catálogo
         </button>
-        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='/chamado/abrir_chamado.php'">
-          Abrir Chamado <img src="img/service.png" alt="Abrir-chamado" class="icon-left2">
+        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='../chatbot/chatbot.php'">
+          Assistente Virtual <img src="../img/chat.png" alt="Assistente-virtual" class="icon-left2">
         </button>
-        <button class="menu-button" onclick="window.location.href='/manage/manage.php'">
-          Edição <img src="img/edit.png" alt="Editar-catalogo" class="icon-left">
+        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='../chamado/abrir_chamado.php'">
+          Abrir Chamado <img src="../img/service.png" alt="Abrir-chamado" class="icon-left2">
+        </button>
+        <button class="menu-button" onclick="window.location.href='../manage/manage.php'">
+          Edição <img src="../img/edit.png" alt="Editar-catalogo" class="icon-left">
         </button>
       </div>
     </aside>
