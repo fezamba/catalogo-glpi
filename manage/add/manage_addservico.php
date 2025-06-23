@@ -224,11 +224,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
 
   $revisores_selecionados = $_POST['revisores_ids'] ?? [];
 
-  $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
-  $stmt_delete->bind_param("i", $id);
-  $stmt_delete->execute();
-  $stmt_delete->close();
-
   if (!empty($revisores_selecionados)) {
     $stmt_assign = $mysqli->prepare("INSERT INTO servico_revisores (servico_id, revisor_id) VALUES (?, ?)");
     foreach ($revisores_selecionados as $revisor_id) {
