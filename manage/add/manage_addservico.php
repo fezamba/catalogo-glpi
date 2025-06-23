@@ -459,24 +459,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 
   $revisores_selecionados = $_POST['revisores_ids'] ?? [];
 
-  if ($id) {
-    $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
-    $stmt_delete->bind_param("i", $id);
-    $stmt_delete->execute();
-    $stmt_delete->close();
-  }
+  $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
+  $stmt_delete->bind_param("i", $id);
+  $stmt_delete->execute();
+  $stmt_delete->close();
 
-  if (!empty($_POST['revisores']) && $id) {
-    $stmt_revisores = $mysqli->prepare("INSERT INTO servico_revisores (servico_id, revisor_id) VALUES (?, ?)");
-
-    $revisores_validos = array_column($lista_revisores, 'ID');
-    $revisores_selecionados = array_intersect($_POST['revisores'], $revisores_validos);
-
+  if (!empty($revisores_selecionados)) {
+    $stmt_assign = $mysqli->prepare("INSERT INTO servico_revisores (servico_id, revisor_id) VALUES (?, ?)");
     foreach ($revisores_selecionados as $revisor_id) {
-      $stmt_revisores->bind_param("ii", $id, $revisor_id);
-      $stmt_revisores->execute();
+      $stmt_assign->bind_param("ii", $id, $revisor_id);
+      $stmt_assign->execute();
     }
-    $stmt_revisores->close();
+    $stmt_assign->close();
   }
 
   $res = $mysqli->query("SELECT codigo_ficha FROM servico WHERE ID = $id LIMIT 1");
@@ -656,7 +650,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
   <meta charset="UTF-8">
   <title>Adicionar Serviço</title>
   <link rel="stylesheet" href="style_manage_add.css">
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <?php if (in_array($tipo_usuario, ['revisor', 'po'])): ?>
   <?php endif; ?>
 </head>
@@ -866,20 +859,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           </label>
 
           <div class="revisores-container">
-            <label for="seletor-revisores">Revisores Designados</label>
-            <p class="form-text">Selecione um ou mais revisores da lista. Você pode digitar para buscar.</p>
+            <label>Revisores Designados</label>
+            <p class="form-text">Selecione um ou mais revisores da lista.</p>
 
-            <select name="revisores_ids[]" id="seletor-revisores" multiple="multiple" style="width: 100%;">
+            <div class="checkbox-list">
               <?php foreach ($lista_revisores as $revisor): ?>
-                <option
-                  value="<?= $revisor['ID'] ?>"
-                  <?= in_array($revisor['ID'], $revisores_servico) ? 'selected' : '' ?>>
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="revisores_ids[]"
+                    value="<?= $revisor['ID'] ?>"
+                    <?= in_array($revisor['ID'], $revisores_servico) ? 'checked' : '' ?>>
                   <?= htmlspecialchars($revisor['nome']) ?>
-                </option>
+                  <span class="revisor-email">(<?= htmlspecialchars($revisor['email']) ?>)</span>
+                </label>
               <?php endforeach; ?>
-            </select>
+            </div>
           </div>
-
           <h3>Diretrizes</h3>
           <div id="diretrizes">
             <?php $index = 0; ?>
@@ -1023,8 +1019,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       let contChecklist = <?= count($checklist) ?>;
     </script>
     <script src="addservico.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <input type="hidden" id="justificativa-submit-acao" value="">
 </body>
 

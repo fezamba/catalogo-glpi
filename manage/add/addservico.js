@@ -118,10 +118,3 @@ function mostrarJustificativa(tipo) {
 
   formReprovacao.scrollIntoView({ behavior: 'smooth' });
 }
-
-$(document).ready(function () {
-  $('#seletor-revisores').select2({
-    placeholder: 'Selecione ou digite o nome de um revisor',
-    allowClear: true,
-  });
-});
