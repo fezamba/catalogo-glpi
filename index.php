@@ -34,7 +34,6 @@ while ($cat = $result->fetch_assoc()) {
 <body>
 
   <div class="layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="menu-item">
         <button class="menu-button accordion-toggle" onclick="window.location.href='index.php'">
