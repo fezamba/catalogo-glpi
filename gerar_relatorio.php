@@ -45,15 +45,6 @@ foreach ($todos_servicos_ids as $servico_data) {
     echo "Categoria: " . htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') . "\n";
     echo "Subcategoria: " . htmlspecialchars($servico['subcategoria_titulo'] ?? 'N/A') . "\n\n";
 
-    $atendimentos = $mysqli->query("SELECT atendimento, descricao_tecnica FROM servico_atendimento WHERE id_servico = $id_servico ORDER BY FIELD(atendimento, 'N1', 'N2', 'N3')")->fetch_all(MYSQLI_ASSOC);
-    if (!empty($atendimentos)) {
-        echo "# PROCEDIMENTO POR EQUIPE DE ATENDIMENTO\n";
-        foreach ($atendimentos as $att) {
-            echo "- Nível " . htmlspecialchars($att['atendimento']) . ": " . htmlspecialchars(strip_tags($att['descricao_tecnica'])) . "\n";
-        }
-        echo "\n";
-    }
-
     $res_dir = $mysqli->query("SELECT ID, Titulo FROM diretriz WHERE ID_Servico = $id_servico ORDER BY ID");
     if ($res_dir && $res_dir->num_rows > 0) {
         echo "# DIRETRIZES\n";
