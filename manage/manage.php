@@ -30,34 +30,9 @@ while ($cat = $result->fetch_assoc()) {
 <body>
 
   <div class="layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="menu-item">
-        <button class="menu-button" onclick="window.location.href='../index.php'">
-          Todas Categorias <span class="badge"><?php echo count($categorias); ?></span>
-        </button>
-      </div>
-
-      <?php foreach ($categorias as $cat): ?>
-        <div class="menu-item">
-          <button class="menu-button">
-            <?php echo htmlspecialchars($cat['Titulo']); ?>
-            <span class="badge"><?php echo count($cat['subcategorias']); ?></span>
-          </button>
-          <?php if (count($cat['subcategorias'])): ?>
-            <div class="submenu">
-              <?php foreach ($cat['subcategorias'] as $sub): ?>
-                <a href="../index/subcategoria.php?id=<?php echo $sub['ID']; ?>">
-                  <?php echo htmlspecialchars($sub['Titulo']); ?>
-                </a>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
-        </div>
-      <?php endforeach; ?>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <section class="content">
       <h1>Gerenciamento do Catálogo de Serviços</h1>
       <p>Área criada para o gerenciamento do Catálogo de Serviços</p>
