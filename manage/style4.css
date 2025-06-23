@@ -41,14 +41,6 @@ body {
   font-weight: normal;
 }
 
-.menu-button:hover {
-  background-color: #f0f0f0;
-}
-
-.menu-button.active {
-  font-weight: bold;
-}
-
 .submenu {
   display: none;
   padding: 10px 15px;
@@ -105,7 +97,7 @@ body {
   border-radius: 8px;
   padding: 20px;
   text-align: left;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: 0.3s;
   display: flex;
@@ -114,7 +106,7 @@ body {
 }
 
 .card-button:hover {
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .card-header {
@@ -157,3 +149,30 @@ body {
   vertical-align: middle;
 }
 
+.menu-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+
+  background-color: #e9ecef;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: left;
+
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.menu-button:hover {
+  background-color: #dee2e6;
+  border-color: #ced4da;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
