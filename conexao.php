@@ -1,10 +1,10 @@
 <?php
 
-$host = getenv('MYSQLHOST');
-$user = getenv('MYSQLUSER');
-$pass = getenv('MYSQLPASSWORD');
-$db   = getenv('MYSQLDATABASE');
-$port = getenv('MYSQLPORT');
+$host = 'yamabiko.proxy.rlwy.net';
+$user = 'root';
+$pass = 'UeNxoVXpTBdeuPmEafuCxNKXCzbtxbaT';
+$db   = 'railway';
+$port = 15683;
 
 $mysqli = new mysqli($host, $user, $pass, $db, $port);
 
