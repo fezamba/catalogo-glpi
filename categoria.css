@@ -92,7 +92,6 @@ body {
   margin-bottom: 30px;
 }
 
-/* Cards das Subcategorias da CATEGORIA */
 .subcards-grid {
   display: flex;
   flex-direction: column;

@@ -1,4 +1,3 @@
-// Lógica de abrir/fechar submenus (mantida)
 document.querySelectorAll('.accordion-toggle').forEach((button) => {
   button.addEventListener('click', () => {
     const submenu = button.nextElementSibling;
@@ -18,7 +17,6 @@ document.querySelectorAll('.accordion-toggle').forEach((button) => {
   });
 });
 
-// NOVO: Atualiza automaticamente os números das badges
 document.querySelectorAll('.menu-item').forEach((item) => {
   const submenu = item.querySelector('.submenu');
   const badge = item.querySelector('.badge');
@@ -34,17 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     link.addEventListener('click', function (e) {
       e.preventDefault();
       const url = this.getAttribute('href');
-      window.location.href = url; // Redireciona a página para a URL
+      window.location.href = url;
     });
   });
 });
 
-// O ideal é ter apenas um listener de DOMContentLoaded para organizar o código
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Lógica para o menu sanfona e badges (você pode colocar aqui dentro) ---
-  // ... seu código de accordion e badges ...
-
-  // --- LÓGICA DA BUSCA (CORRIGIDA) ---
   const inputBusca = document.getElementById('busca-global');
   const resultadosBox = document.getElementById('resultados-busca');
 
@@ -58,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Lembre de usar o nome correto do seu arquivo PHP aqui
       fetch('buscar_servicos.php?termo=' + encodeURIComponent(termo))
         .then((res) => res.json())
         .then((data) => {
@@ -66,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resultadosBox.innerHTML =
               '<div class="resultado-item">Nenhum serviço encontrado.</div>';
           } else {
-            // Constrói o HTML usando <a> para cada resultado
             resultadosBox.innerHTML = data
               .map(
                 (serv) => `
@@ -93,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch((error) => console.error('Erro na busca:', error));
     });
 
-    // Fecha os resultados se clicar fora
     document.addEventListener('click', function (event) {
       if (
         !inputBusca.contains(event.target) &&

@@ -8,7 +8,6 @@ if ($mysqli->connect_errno) {
 
 $id_subcategoria = $_GET['id'] ?? 0;
 
-// --- Carrega categorias e subcategorias (sidebar) ---
 $categorias = [];
 $result = $mysqli->query("SELECT * FROM categoria");
 
@@ -23,7 +22,6 @@ while ($cat = $result->fetch_assoc()) {
   $categorias[] = $cat;
 }
 
-// --- Carrega Subcategoria Selecionada ---
 $stmt = $mysqli->prepare("SELECT Titulo, Descricao FROM subcategoria WHERE ID = ?");
 $stmt->bind_param("i", $id_subcategoria);
 $stmt->execute();
@@ -31,7 +29,6 @@ $stmt->bind_result($subtitulo, $subdescricao);
 $stmt->fetch();
 $stmt->close();
 
-// --- Carrega Serviços Relacionados ---
 $servicos = [];
 $stmt = $mysqli->prepare("SELECT ID, Titulo, Descricao FROM servico WHERE ID_SubCategoria = ?");
 $stmt->bind_param("i", $id_subcategoria);
@@ -56,7 +53,6 @@ $stmt->close();
 <body>
 
   <div class="layout">
-    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="menu-item">
         <button class="menu-button accordion-toggle" onclick="window.location.href='index.php'">
@@ -83,7 +79,6 @@ $stmt->close();
       <?php endforeach; ?>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <section class="content">
       <h1><?php echo htmlspecialchars($subtitulo); ?></h1>
       <p><?php echo htmlspecialchars($subdescricao); ?></p>

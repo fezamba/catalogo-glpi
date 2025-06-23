@@ -95,7 +95,6 @@ body {
   margin-bottom: 30px;
 }
 
-/* Cards do INDEX: lado a lado (grid) */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -162,58 +161,49 @@ body {
   vertical-align: middle;
 }
 
-/* --- INÍCIO: ESTILOS PARA OS RESULTADOS DA BUSCA --- */
-
-/* A caixa que envolve os links de resultado */
 #resultados-busca {
     background: white; 
     border: 1px solid #ddd; 
     border-radius: 6px; 
     text-align: left; 
-    display: none; /* Começa escondido */
-    margin-top: -1px; /* Encosta na barra de busca */
+    display: none;
+    margin-top: -1px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* O link de cada item do resultado */
 #resultados-busca a.resultado-item {
-    display: block; /* MUITO IMPORTANTE: faz cada item ocupar uma linha */
+    display: block;
     padding: 12px 15px;
-    color: #333; /* Cor preta para o texto */
-    text-decoration: none; /* Remove o sublinhado */
+    color: #333;
+    text-decoration: none;
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.2s ease;
 }
 
-/* Remove a borda do último item */
 #resultados-busca a.resultado-item:last-child {
     border-bottom: none;
 }
 
-/* Efeito de hover ao passar o mouse */
 #resultados-busca a.resultado-item:hover {
     background-color: #f8f9fa;
 }
 
-/* Título do serviço */
 .resultado-titulo {
     font-size: 1rem;
     font-weight: bold;
-    display: block; /* Garante que o título ocupe sua própria linha */
+    display: block;
     margin-bottom: 3px;
 }
 
-/* Contexto (em Categoria > Subcategoria) */
 .resultado-contexto {
     font-size: 0.8rem;
     color: #777;
-    display: block; /* Ocupa sua própria linha */
+    display: block;
     margin-bottom: 5px;
 }
 
-/* Descrição do serviço */
 .resultado-desc {
-    display: block; /* Ocupa sua própria linha */
+    display: block;
     font-size: 0.85rem;
     color: #555;
     line-height: 1.4;
