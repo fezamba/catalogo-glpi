@@ -69,11 +69,13 @@ $stmt_check->close();
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Visualizar: <?= htmlspecialchars($servico['Titulo'] ?? 'Serviço') ?></title>
     <link rel="stylesheet" href="view_servico.css">
 </head>
+
 <body>
     <div class="wrapper">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -84,14 +86,14 @@ $stmt_check->close();
         <div class="header">
             <div class="header-info">
                 <p class="meta breadcrumb">
-                    <a href="index.php">Categorias</a> &gt; 
-                    <a href="categoria.php?id=<?= $servico['categoria_id'] ?? '0' ?>"><?= htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') ?></a> &gt; 
+                    <a href="index.php">Categorias</a> &gt;
+                    <a href="categoria.php?id=<?= $servico['categoria_id'] ?? '0' ?>"><?= htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') ?></a> &gt;
                     <?= htmlspecialchars($servico['subcategoria_titulo'] ?? 'N/A') ?>
                 </p>
                 <h1><?= htmlspecialchars($servico['Titulo'] ?? 'Serviço Sem Título') ?></h1>
                 <p class="meta">
-                    Ficha: <strong><?= htmlspecialchars($servico['codigo_ficha'] ?? '-') ?></strong> | 
-                    Versão: <strong><?= htmlspecialchars($servico['versao'] ?? '-') ?></strong> | 
+                    Ficha: <strong><?= htmlspecialchars($servico['codigo_ficha'] ?? '-') ?></strong> |
+                    Versão: <strong><?= htmlspecialchars($servico['versao'] ?? '-') ?></strong> |
                     Status: <strong><?= htmlspecialchars(ucfirst($servico['status_ficha'] ?? '-')) ?></strong>
                 </p>
             </div>
@@ -112,7 +114,15 @@ $stmt_check->close();
             </div>
             <div class="info-item" style="grid-column: 1 / -1;">
                 <strong>Base de Conhecimento (KB):</strong>
-                <a href="<?= htmlspecialchars($servico['KBs']) ?>" target="_blank"><?= htmlspecialchars($servico['KBs']) ?></a>
+                <?php
+                $kb_link = $servico['KBs'] ?? '';
+
+                if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
+                ?>
+                    <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank"><?= htmlspecialchars($kb_link) ?></a>
+                <?php else: ?>
+                    <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -147,7 +157,7 @@ $stmt_check->close();
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
-        
+
         <?php if (!empty($checklist)): ?>
             <h2 class="section-title">Checklist de Verificação</h2>
             <div class="grupo">
@@ -173,4 +183,5 @@ $stmt_check->close();
         </div>
     </div>
 </body>
+
 </html>
