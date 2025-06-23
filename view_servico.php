@@ -80,7 +80,7 @@ $stmt_check->close();
     <div class="wrapper">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <a href="index.php" class="btn btn-back">← Voltar ao Catálogo</a>
-            <a href="../chamado/abrir_chamado.php?servico_id=<?= $servico['ID'] ?>" class="btn btn-primary">Criar Chamado</a>
+            <a href="../chamado/processar_chamado.php?servico_id=<?= $servico['ID'] ?>" class="btn btn-primary">Criar Chamado</a>
         </div>
 
         <div class="header">
