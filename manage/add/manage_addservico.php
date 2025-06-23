@@ -222,17 +222,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
     $criador
   );
 
-  $revisores_selecionados = $_POST['revisores_ids'] ?? [];
-
-  if (!empty($revisores_selecionados)) {
-    $stmt_assign = $mysqli->prepare("INSERT INTO servico_revisores (servico_id, revisor_id) VALUES (?, ?)");
-    foreach ($revisores_selecionados as $revisor_id) {
-      $stmt_assign->bind_param("ii", $id, $revisor_id);
-      $stmt_assign->execute();
-    }
-    $stmt_assign->close();
-  }
-
   if ($stmt_insert->execute()) {
     $id_servico = $stmt_insert->insert_id;
     $stmt_insert->close();
@@ -868,25 +857,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               <?php endforeach; ?>
             </select>
           </label>
+          <?php 
+          if ($modo_edicao): 
+          ?>
+            <div class="revisores-container">
+              <label>Revisores Designados</label>
+              <p class="form-text">Selecione um ou mais revisores da lista.</p>
 
-          <div class="revisores-container">
-            <label>Revisores Designados</label>
-            <p class="form-text">Selecione um ou mais revisores da lista.</p>
-
-            <div class="checkbox-list">
-              <?php foreach ($lista_revisores as $revisor): ?>
-                <label class="checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="revisores_ids[]"
-                    value="<?= $revisor['ID'] ?>"
-                    <?= in_array($revisor['ID'], $revisores_servico) ? 'checked' : '' ?>>
-                  <?= htmlspecialchars($revisor['nome']) ?>
-                  <span class="revisor-email">(<?= htmlspecialchars($revisor['email']) ?>)</span>
-                </label>
-              <?php endforeach; ?>
+              <div class="checkbox-list">
+                <?php foreach ($lista_revisores as $revisor): ?>
+                  <label class="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="revisores_ids[]"
+                      value="<?= $revisor['ID'] ?>"
+                      <?= in_array($revisor['ID'], $revisores_servico) ? 'checked' : '' ?>>
+                    <?= htmlspecialchars($revisor['nome']) ?>
+                    <span class="revisor-email">(<?= htmlspecialchars($revisor['email']) ?>)</span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
             </div>
-          </div>
+          <?php endif; ?>
           <h3>Diretrizes</h3>
           <div id="diretrizes">
             <?php $index = 0; ?>
