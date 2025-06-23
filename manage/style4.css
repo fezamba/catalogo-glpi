@@ -141,7 +141,6 @@ body {
   line-height: 1.4;
 }
 
-/* Força o botão final da sidebar a ficar no rodapé */
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -151,7 +150,6 @@ body {
   margin-top: auto;
 }
 
-/* Ícone ao lado do texto */
 .icon-left {
   width: 16px;
   height: 16px;
