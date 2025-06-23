@@ -32,9 +32,9 @@ while ($cat = $result->fetch_assoc()) {
   <div class="layout">
     <aside class="sidebar">
       <div class="menu-item">
-        <button class="menu-button" onclick="window.location.href='../index.php'">
+        <a href="../index/index.php" class="menu-button">
           ← Voltar ao Catálogo
-        </button>
+        </a>
       </div>
     </aside>
 
