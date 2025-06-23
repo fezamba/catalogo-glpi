@@ -6,97 +6,94 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 $id_servico = intval($_GET['id']);
 
-$query = "
+$query_principal = "
     SELECT 
         s.*, 
         sub.Titulo as subcategoria_titulo, 
         cat.Titulo as categoria_titulo,
-        cat.ID as categoria_id,
-        d.ID as diretriz_id, d.Titulo as diretriz_titulo, i_dir.Conteudo as item_diretriz_conteudo,
-        p.ID as padrao_id, p.Titulo as padrao_titulo, i_pad.Conteudo as item_padrao_conteudo,
-        ck.NomeItem as checklist_item, ck.Observacao as checklist_obs
+        cat.ID as categoria_id
     FROM servico s
     LEFT JOIN subcategoria sub ON s.ID_SubCategoria = sub.ID
     LEFT JOIN categoria cat ON sub.ID_Categoria = cat.ID
-    LEFT JOIN diretriz d ON s.ID = d.ID_Servico
-    LEFT JOIN itemdiretriz i_dir ON d.ID = i_dir.ID_Diretriz
-    LEFT JOIN padrao p ON s.ID = p.ID_Servico
-    LEFT JOIN itempadrao i_pad ON p.ID = i_pad.ID_Padrao
-    LEFT JOIN checklist ck ON s.ID = ck.ID_Servico
     WHERE s.ID = ?
-    ORDER BY d.ID, i_dir.ID, p.ID, i_pad.ID, ck.ID
 ";
-
-$stmt = $mysqli->prepare($query);
+$stmt = $mysqli->prepare($query_principal);
 $stmt->bind_param("i", $id_servico);
 $stmt->execute();
-$result = $stmt->get_result();
-
-$servico = null;
-$diretrizes = [];
-$padroes = [];
-$checklist = [];
-
-while ($row = $result->fetch_assoc()) {
-    if ($servico === null) {
-        $servico = $row;
-    }
-
-    if (!empty($row['diretriz_id']) && !isset($diretrizes[$row['diretriz_id']])) {
-        $diretrizes[$row['diretriz_id']] = ['titulo' => $row['diretriz_titulo'], 'itens' => []];
-    }
-    if (!empty($row['item_diretriz_conteudo'])) {
-        $diretrizes[$row['diretriz_id']]['itens'][] = $row['item_diretriz_conteudo'];
-    }
-
-    if (!empty($row['padrao_id']) && !isset($padroes[$row['padrao_id']])) {
-        $padroes[$row['padrao_id']] = ['titulo' => $row['padrao_titulo'], 'itens' => []];
-    }
-    if (!empty($row['item_padrao_conteudo'])) {
-        $padroes[$row['padrao_id']]['itens'][] = $row['item_padrao_conteudo'];
-    }
-
-    if (!empty($row['checklist_item']) && !in_array($row, $checklist)) {
-        $checklist[] = ['NomeItem' => $row['checklist_item'], 'Observacao' => $row['checklist_obs']];
-    }
-}
+$servico = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$servico) {
     die("Serviço não encontrado.");
 }
+
+$diretrizes = [];
+$stmt_dir = $mysqli->prepare("SELECT ID, Titulo FROM diretriz WHERE ID_Servico = ? ORDER BY ID");
+$stmt_dir->bind_param("i", $id_servico);
+$stmt_dir->execute();
+$result_dir = $stmt_dir->get_result();
+while ($d = $result_dir->fetch_assoc()) {
+    $stmt_item_dir = $mysqli->prepare("SELECT Conteudo FROM itemdiretriz WHERE ID_Diretriz = ? ORDER BY ID");
+    $stmt_item_dir->bind_param("i", $d['ID']);
+    $stmt_item_dir->execute();
+    $result_item_dir = $stmt_item_dir->get_result();
+    $d['itens'] = $result_item_dir->fetch_all(MYSQLI_ASSOC);
+    $diretrizes[] = $d;
+    $stmt_item_dir->close();
+}
+$stmt_dir->close();
+
+$padroes = [];
+$stmt_pad = $mysqli->prepare("SELECT ID, Titulo FROM padrao WHERE ID_Servico = ? ORDER BY ID");
+$stmt_pad->bind_param("i", $id_servico);
+$stmt_pad->execute();
+$result_pad = $stmt_pad->get_result();
+while ($p = $result_pad->fetch_assoc()) {
+    $stmt_item_pad = $mysqli->prepare("SELECT Conteudo FROM itempadrao WHERE ID_Padrao = ? ORDER BY ID");
+    $stmt_item_pad->bind_param("i", $p['ID']);
+    $stmt_item_pad->execute();
+    $result_item_pad = $stmt_item_pad->get_result();
+    $p['itens'] = $result_item_pad->fetch_all(MYSQLI_ASSOC);
+    $padroes[] = $p;
+    $stmt_item_pad->close();
+}
+$stmt_pad->close();
+
+$checklist = [];
+$stmt_check = $mysqli->prepare("SELECT NomeItem, Observacao FROM checklist WHERE ID_Servico = ? ORDER BY ID");
+$stmt_check->bind_param("i", $id_servico);
+$stmt_check->execute();
+$result_check = $stmt_check->get_result();
+$checklist = $result_check->fetch_all(MYSQLI_ASSOC);
+$stmt_check->close();
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <title>Visualizar: <?= htmlspecialchars($servico['Titulo'] ?? 'Serviço') ?></title>
     <link rel="stylesheet" href="view_servico.css">
 </head>
-
 <body>
     <div class="wrapper">
-        <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <a href="index.php" class="btn btn-back">← Voltar ao Catálogo</a>
+            <a href="../chamado/abrir_chamado.php?servico_id=<?= $servico['ID'] ?>" class="btn btn-primary">Criar Chamado</a>
         </div>
 
         <div class="header">
             <div class="header-info">
                 <p class="meta breadcrumb">
-                    <a href="index.php">Categorias</a> &gt;
-                    <a href="categoria.php?id=<?= $servico['categoria_id'] ?? '0' ?>"><?= htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') ?></a> &gt;
+                    <a href="index.php">Categorias</a> &gt; 
+                    <a href="categoria.php?id=<?= $servico['categoria_id'] ?? '0' ?>"><?= htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') ?></a> &gt; 
                     <?= htmlspecialchars($servico['subcategoria_titulo'] ?? 'N/A') ?>
                 </p>
                 <h1><?= htmlspecialchars($servico['Titulo'] ?? 'Serviço Sem Título') ?></h1>
                 <p class="meta">
-                    Ficha: <strong><?= htmlspecialchars($servico['codigo_ficha'] ?? '-') ?></strong> |
-                    Versão: <strong><?= htmlspecialchars($servico['versao'] ?? '-') ?></strong> |
+                    Ficha: <strong><?= htmlspecialchars($servico['codigo_ficha'] ?? '-') ?></strong> | 
+                    Versão: <strong><?= htmlspecialchars($servico['versao'] ?? '-') ?></strong> | 
                     Status: <strong><?= htmlspecialchars(ucfirst($servico['status_ficha'] ?? '-')) ?></strong>
                 </p>
-            </div>
-            <div class="header-actions">
-                <a href="../chamado/abrir_chamado.php?servico_id=<?= $servico['ID'] ?>" class="btn btn-primary">Criar Chamado</a>
             </div>
         </div>
 
@@ -115,11 +112,7 @@ if (!$servico) {
             </div>
             <div class="info-item" style="grid-column: 1 / -1;">
                 <strong>Base de Conhecimento (KB):</strong>
-                <?php if (!empty($servico['KBs']) && filter_var($servico['KBs'], FILTER_VALIDATE_URL)): ?>
-                    <a href="<?= htmlspecialchars($servico['KBs']) ?>" target="_blank">Acessar Documentação</a>
-                <?php else: ?>
-                    <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
-                <?php endif; ?>
+                <a href="<?= htmlspecialchars($servico['KBs']) ?>" target="_blank"><?= htmlspecialchars($servico['KBs']) ?></a>
             </div>
         </div>
 
@@ -127,11 +120,11 @@ if (!$servico) {
             <h2 class="section-title">Diretrizes</h2>
             <?php foreach ($diretrizes as $dir): ?>
                 <div class="grupo">
-                    <h4><?= htmlspecialchars($dir['titulo']) ?></h4>
+                    <h4><?= htmlspecialchars($dir['Titulo']) ?></h4>
                     <?php if (!empty($dir['itens'])): ?>
                         <ul>
                             <?php foreach ($dir['itens'] as $item): ?>
-                                <li><?= htmlspecialchars($item) ?></li>
+                                <li><?= htmlspecialchars($item['Conteudo']) ?></li>
                             <?php endforeach; ?>
                         </ul>
                     <?php endif; ?>
@@ -143,18 +136,18 @@ if (!$servico) {
             <h2 class="section-title">Padrões</h2>
             <?php foreach ($padroes as $pad): ?>
                 <div class="grupo">
-                    <h4><?= htmlspecialchars($pad['titulo']) ?></h4>
+                    <h4><?= htmlspecialchars($pad['Titulo']) ?></h4>
                     <?php if (!empty($pad['itens'])): ?>
                         <ul>
                             <?php foreach ($pad['itens'] as $item): ?>
-                                <li><?= htmlspecialchars($item) ?></li>
+                                <li><?= htmlspecialchars($item['Conteudo']) ?></li>
                             <?php endforeach; ?>
                         </ul>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
-
+        
         <?php if (!empty($checklist)): ?>
             <h2 class="section-title">Checklist de Verificação</h2>
             <div class="grupo">
@@ -178,11 +171,6 @@ if (!$servico) {
             <h4>Procedimento de Exceção</h4>
             <p><?= nl2br(htmlspecialchars($servico['procedimento_excecao'] ?? 'Não informado.')) ?></p>
         </div>
-        <div class="grupo">
-            <h4>Observações Gerais</h4>
-            <p><?= nl2br(htmlspecialchars($servico['observacoes'] ?? 'Não informado.')) ?></p>
-        </div>
     </div>
 </body>
-
 </html>
