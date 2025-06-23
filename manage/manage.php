@@ -23,7 +23,7 @@ while ($cat = $result->fetch_assoc()) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style4.css" />
+  <link rel="stylesheet" href="style4.css"/>
   <title>Gerenciamento do Catálogo de Serviços</title>
 </head>
 
@@ -32,9 +32,9 @@ while ($cat = $result->fetch_assoc()) {
   <div class="layout">
     <aside class="sidebar">
       <div class="menu-item">
-        <a href="../index/index.php" class="menu-button">
+        <button class="menu-button" onclick="window.location.href='../index.php'">
           ← Voltar ao Catálogo
-        </a>
+        </button>
       </div>
     </aside>
 
