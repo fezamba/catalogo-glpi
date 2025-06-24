@@ -22,14 +22,16 @@
 
   <body>
 
-    <div class="container">
-      <h2 class="titulo">Assistente Virtual</h2>
-      <div id="chatbot-container">
-        <div id="chatbot-output"></div>
-        <form id="chatbot-form">
-          <input type="text" id="chatbot-input" placeholder="Digite sua dúvida..." required>
-          <button type="submit" class="botao">Enviar</button>
-        </form>
+    <div class="page-wrapper">
+      <div class="container">
+        <h2 class="titulo">Assistente Virtual</h2>
+        <div id="chatbot-container">
+          <div id="chatbot-output"></div>
+          <form id="chatbot-form">
+            <input type="text" id="chatbot-input" placeholder="Digite sua dúvida..." required>
+            <button type="submit" class="botao">Enviar</button>
+          </form>
+        </div>
       </div>
 
       <div style="margin-top: 20px;">
@@ -39,5 +41,6 @@
 
     <script src="chatbot.js"></script>
   </body>
+
 
   </html>

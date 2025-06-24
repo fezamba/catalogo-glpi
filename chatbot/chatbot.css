@@ -2,16 +2,26 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: #f0f2f5;
     margin: 0;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.page-wrapper {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .container {
     width: 100%;
-    max-width: 600px;
-    height: 90vh;
+    height: 80vh; /* Ajuste a altura conforme necessário */
+    max-height: 700px;
     display: flex;
     flex-direction: column;
     background-color: #fff;
@@ -154,4 +164,3 @@ body {
     0%, 100% { opacity: 0.3; transform: scale(0.8); }
     50% { opacity: 1; transform: scale(1); }
 }
-

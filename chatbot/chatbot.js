@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             contextData = await response.text();
             isDataLoaded = true;
             input.placeholder = 'Digite sua dúvida sobre os serviços...';
+            input.disabled = false;
             addMessage('Base de dados carregada com sucesso. Estou pronto para suas perguntas.', 'bot');
         } catch (error) {
             console.error("Erro ao buscar dados do endpoint:", error);
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        const apiKey = "AIzaSyCENY8DOpZzIGbd2EQnjyO403M--zbAuFs";
+        const apiKey = ""; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         try {
@@ -104,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return "Desculpe, não consegui gerar uma resposta. Tente novamente.";
             }
         } catch (error) {
-            console.error("Erro na API:", error);
+            console.error("Erro na API Gemini:", error);
             return "Ocorreu um erro de conexão com a IA. Por favor, tente mais tarde.";
         }
     };
