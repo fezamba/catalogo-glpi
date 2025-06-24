@@ -78,10 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiKey = "AIzaSyDicYZKS_GmaidTbQSV5GftYUG0SzKnxJ0";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-        if (!apiKey || apiKey === "AIzaSyDicYZKS_GmaidTbQSV5GftYUG0SzKnxJ0") {
-             return "Erro de configuração: A chave da API da IA não foi definida pelo administrador.";
-        }
-
         try {
             const response = await fetch(apiUrl, {
                 method: 'POST',
