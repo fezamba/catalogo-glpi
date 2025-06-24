@@ -9,7 +9,7 @@ if (isset($_GET['fetch_data']) && $_GET['fetch_data'] === 'true') {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     
     $data = curl_exec($ch);
     $error = curl_error($ch);

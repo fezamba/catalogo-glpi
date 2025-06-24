@@ -21,18 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadingDiv = document.createElement('div');
                 loadingDiv.id = 'loading-indicator';
                 loadingDiv.classList.add('message', 'bot-message');
-                loadingDiv.innerHTML = `
-                    <div class="typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                `;
+                loadingDiv.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
                 output.appendChild(loadingDiv);
                 output.scrollTop = output.scrollHeight;
             }
         } else {
-            if (loadingDiv) {
-                loadingDiv.remove();
-            }
+            if (loadingDiv) loadingDiv.remove();
         }
         isLoading = show;
         input.disabled = show;
@@ -40,20 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadContextData = async () => {
-        const reportUrl = 'https://catalogo-glpi-production.up.railway.app/gerar_relatorio.php';
+        const reportUrl = 'chatbot.php?fetch_data=true';
         try {
             const response = await fetch(reportUrl);
-            if (!response.ok) {
-                throw new Error(`Erro ao carregar o relatório. Status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Erro ao carregar o relatório. Status: ${response.status}`);
             contextData = await response.text();
             isDataLoaded = true;
             input.placeholder = 'Digite sua dúvida sobre os serviços...';
             input.disabled = false;
-            addMessage('Base de dados carregada com sucesso. Estou pronto para suas perguntas.', 'bot');
+            addMessage('Base de dados carregada. Estou pronto para suas perguntas.', 'bot');
         } catch (error) {
-            console.error("Erro ao buscar dados do endpoint:", error);
-            addMessage('ERRO: Não foi possível carregar os dados do sistema. O endpoint pode estar inacessível ou com uma política de CORS restritiva.', 'bot');
+            addMessage('ERRO: Não foi possível carregar os dados do sistema. Verifique o log do servidor.', 'bot');
             input.placeholder = 'Erro ao carregar dados.';
             input.disabled = true;
         }
@@ -61,23 +52,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getBotResponse = async (userMessage, context) => {
         const prompt = `
-            Você é um assistente virtual especialista e altamente preciso, focado nos procedimentos internos da Secretaria de Fazenda do RJ (SEFAZ-RJ). Sua única fonte de conhecimento é o conjunto de FICHAS DE SERVIÇO fornecido abaixo. Sua tarefa é responder às perguntas dos usuários de forma clara, concisa e estruturada.
+            Você é um assistente virtual especialista da SEFAZ-RJ.
 
-            **Instruções de Comportamento:**
+            **Regra Principal:** Sua única fonte de conhecimento é o CONTEXTO das fichas de serviço abaixo.
 
-            1.  **Baseie-se APENAS no Contexto:** NUNCA invente informações. Todas as suas respostas devem ser derivadas diretamente do texto das fichas.
-            2.  **Identifique a Ficha Correta:** Ao receber uma pergunta, primeiro identifique a(s) ficha(s) mais relevante(s) (pelo título, descrição ou código) para a resposta.
-            3.  **Respostas Estruturadas:**
-                * Para perguntas sobre um serviço específico (ex: "O que é a FCH-0004?"), forneça um resumo claro, incluindo:
-                    * **Serviço:** (Título do Serviço)
-                    * **Código:** (ID da Ficha, ex: FCH-0004)
-                    * **Descrição:** (Descrição completa do serviço)
-                    * **Área Responsável:** (Área Especialista)
-                * Para perguntas comparativas ou complexas (ex: "Qual a diferença entre os serviços de VPN?" ou "Quais serviços são de responsabilidade do Service Desk?"), sintetize a informação de todas as fichas relevantes e apresente a resposta em formato de lista ou tabela para fácil comparação.
-            4.  **Seja Direto:** Responda à pergunta do usuário diretamente, sem rodeios.
-            5.  **Caso Não Encontre:** Se a informação solicitada não estiver explicitamente contida nas fichas, responda de forma educada e clara: "Não encontrei essa informação específica nas fichas de serviço fornecidas."
+            **Instruções de Conversa:**
+            1.  **Saudações:** Se o usuário iniciar com uma saudação (como "bom dia", "olá"), responda de forma educada e pergunte como pode ajudar. Ex: "Bom dia! Como posso ajudar você com os serviços da SEFAZ-RJ?".
+            2.  **Análise de Perguntas:** Para qualquer outra pergunta, siga estritamente as regras abaixo.
+            
+            **Regras de Resposta Baseada em Contexto:**
+            - **Base Exclusiva:** NUNCA invente informações. Baseie-se APENAS no CONTEXTO.
+            - **Identificação:** Identifique a(s) ficha(s) relevante(s) para a pergunta.
+            - **Resposta Direta:** Para perguntas sobre uma ficha (ex: "o que é FCH-0010?"), resuma o serviço, código, descrição e área responsável.
+            - **Resposta Comparativa:** Para perguntas complexas (ex: "diferença entre MFA para Microsoft e Gitlab"), sintetize e compare as informações das fichas relevantes.
+            - **Não Encontrado:** Se a resposta não estiver no CONTEXTO, diga: "Não encontrei essa informação específica nas fichas de serviço fornecidas."
 
-            --- CONTEXTO (Fichas de Serviço do arquivo) ---
+            --- CONTEXTO (Fichas de Serviço) ---
             ${context}
             --- FIM DO CONTEXTO ---
 
@@ -85,8 +75,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        const apiKey = "AIzaSyCENY8DOpZzIGbd2EQnjyO403M--zbAuFs"; 
+        const apiKey = "AIzaSyDicYZKS_GmaidTbQSV5GftYUG0SzKnxJ0";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        if (!apiKey || apiKey === "AIzaSyDicYZKS_GmaidTbQSV5GftYUG0SzKnxJ0") {
+             return "Erro de configuração: A chave da API da IA não foi definida pelo administrador.";
+        }
 
         try {
             const response = await fetch(apiUrl, {
@@ -99,14 +93,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const result = await response.json();
             
-            if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
+            if (result.candidates && result.candidates.length > 0) {
                 return result.candidates[0].content.parts[0].text;
+            } else if (result.promptFeedback) {
+                return `A sua pergunta não pôde ser processada. Motivo: ${result.promptFeedback.blockReason}`;
             } else {
-                return "Desculpe, não consegui gerar uma resposta. Tente novamente.";
+                return "Desculpe, não consegui gerar uma resposta inteligível. Tente reformular sua pergunta.";
             }
         } catch (error) {
-            console.error("Erro na API Gemini:", error);
-            return "Ocorreu um erro de conexão com a IA. Por favor, tente mais tarde.";
+            return "Ocorreu um erro de conexão com a IA. Verifique se a chave de API é válida e tente novamente mais tarde.";
         }
     };
 
