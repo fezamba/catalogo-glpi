@@ -54,15 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const prompt = `
             Você é um assistente virtual especialista da SEFAZ-RJ.
 
-            **Regra Principal:** Sua única fonte de conhecimento é o CONTEXTO das fichas de serviço abaixo.
+            **Regra Principal:** Sua única fonte de conhecimento é o CONTEXTO das fichas de serviço abaixo. Você é amigável, mas sempre profissional e focado no seu objetivo.
 
             **Instruções de Conversa:**
             1.  **Saudações:** Se o usuário iniciar com uma saudação (como "bom dia", "olá"), responda de forma educada e pergunte como pode ajudar. Ex: "Bom dia! Como posso ajudar você com os serviços da SEFAZ-RJ?".
-            2.  **Análise de Perguntas:** Para qualquer outra pergunta, siga estritamente as regras abaixo.
+            2.  **Conversa Casual:** Se o usuário fizer um comentário casual ou expressar um sentimento (ex: "estou triste", "que legal", "obrigado"), dê uma resposta curta, empática e rapidamente volte ao seu propósito. Ex: "Entendo. Em que posso te ajudar com os serviços da SEFAZ hoje?" ou "De nada! Posso ajudar com mais alguma informação sobre as fichas de serviço?".
+            3.  **Análise de Perguntas:** Para qualquer outra pergunta, interprete a intenção do usuário mesmo que use linguagem informal ou com erros de digitação. Siga estritamente as regras abaixo.
             
             **Regras de Resposta Baseada em Contexto:**
             - **Base Exclusiva:** NUNCA invente informações. Baseie-se APENAS no CONTEXTO.
-            - **Identificação:** Identifique a(s) ficha(s) relevante(s) para a pergunta.
+            - **Identificação:** Identifique a(s) ficha(s) relevante(s) para a pergunta. Por exemplo, se o usuário perguntar sobre "mfa", procure por fichas que contenham "MFA" ou "autenticação multifatorial".
             - **Resposta Direta:** Para perguntas sobre uma ficha (ex: "o que é FCH-0010?"), resuma o serviço, código, descrição e área responsável.
             - **Resposta Comparativa:** Para perguntas complexas (ex: "diferença entre MFA para Microsoft e Gitlab"), sintetize e compare as informações das fichas relevantes.
             - **Não Encontrado:** Se a resposta não estiver no CONTEXTO, diga: "Não encontrei essa informação específica nas fichas de serviço fornecidas."
@@ -75,7 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        const apiKey = "AIzaSyDicYZKS_GmaidTbQSV5GftYUG0SzKnxJ0";
+        
+        const apiKey = "AIzaSyDIv6mrcNRY873oxwknL6knLPIqyP6WVVs";
+
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         try {
@@ -85,11 +88,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error(`API error: ${response.status}`);
+            if (!response.ok) {
+                 const errorBody = await response.json();
+                 console.error("API Error Response:", errorBody);
+                 const errorText = errorBody?.error?.message || `API error: ${response.status}`;
+                 return `Ocorreu um erro ao comunicar com a IA. Detalhes: ${errorText}`;
+            }
             
             const result = await response.json();
             
-            if (result.candidates && result.candidates.length > 0) {
+            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content?.parts[0]?.text) {
                 return result.candidates[0].content.parts[0].text;
             } else if (result.promptFeedback) {
                 return `A sua pergunta não pôde ser processada. Motivo: ${result.promptFeedback.blockReason}`;
@@ -97,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return "Desculpe, não consegui gerar uma resposta inteligível. Tente reformular sua pergunta.";
             }
         } catch (error) {
+            console.error("Catch Error:", error);
             return "Ocorreu um erro de conexão com a IA. Verifique se a chave de API é válida e tente novamente mais tarde.";
         }
     };
