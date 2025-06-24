@@ -1,8 +1,11 @@
 <?php
-if (isset($_GET['fetch_data']) && $_GET['fetch_data'] === 'true') {
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+function fetch_context_data() {
     $url = 'https://catalogo-glpi-production.up.railway.app/gerar_relatorio.php';
     
-    header("Access-Control-Allow-Origin: *");
     header("Content-Type: text/plain; charset=utf-8");
 
     $ch = curl_init();
@@ -16,28 +19,56 @@ if (isset($_GET['fetch_data']) && $_GET['fetch_data'] === 'true') {
     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    if ($error) {
+    if ($error || $httpcode >= 400) {
         http_response_code(500);
-        echo "cURL Error: " . $error;
-    } elseif ($httpcode >= 400) {
-        http_response_code($httpcode);
-        echo "HTTP Error: " . $httpcode;
-    }
-    else {
+        echo "Erro ao buscar dados do catálogo.";
+    } else {
         echo $data;
     }
     exit;
 }
+
+function call_gemini_api() {
+    $apiKey = "AIzaSyAk75hIVBP6fWCrv5o8v4x-8NJMLftNXNw";
+
+    $requestBody = file_get_contents('php://input');
+    $data = json_decode($requestBody, true);
+
+    $geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $apiKey;
+
+    $ch = curl_init($geminiUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+    $response = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    header('Content-Type: application/json');
+    http_response_code($httpcode);
+    echo $response;
+    exit;
+}
+
+if (isset($_GET['action'])) {
+    if ($_GET['action'] === 'fetch_context') {
+        fetch_context_data();
+    } elseif ($_GET['action'] === 'get_response') {
+        call_gemini_api();
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <title>Chatbot do Catálogo</title>
   <link rel="stylesheet" href="chatbot.css">
 </head>
-
 <body>
   <a href="../index.php" class="botao-voltar">← Voltar ao Catálogo</a>
   
@@ -56,5 +87,4 @@ if (isset($_GET['fetch_data']) && $_GET['fetch_data'] === 'true') {
 
   <script src="chatbot.js"></script>
 </body>
-
 </html>

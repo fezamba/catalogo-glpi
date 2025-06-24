@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadContextData = async () => {
-        const reportUrl = 'chatbot.php?fetch_data=true';
+        const reportUrl = 'chatbot.php?action=fetch_context';
         try {
             const response = await fetch(reportUrl);
             if (!response.ok) throw new Error(`Erro ao carregar o relatório. Status: ${response.status}`);
@@ -53,36 +53,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const getBotResponse = async (userMessage, context) => {
         const prompt = `
             Você é um assistente virtual especialista da SEFAZ-RJ.
-
             **Regra Principal:** Sua única fonte de conhecimento é o CONTEXTO das fichas de serviço abaixo. Você é amigável, mas sempre profissional e focado no seu objetivo.
-
             **Instruções de Conversa:**
             1.  **Saudações:** Se o usuário iniciar com uma saudação (como "bom dia", "olá"), responda de forma educada e pergunte como pode ajudar. Ex: "Bom dia! Como posso ajudar você com os serviços da SEFAZ-RJ?".
             2.  **Conversa Casual:** Se o usuário fizer um comentário casual ou expressar um sentimento (ex: "estou triste", "que legal", "obrigado"), dê uma resposta curta, empática e rapidamente volte ao seu propósito. Ex: "Entendo. Em que posso te ajudar com os serviços da SEFAZ hoje?" ou "De nada! Posso ajudar com mais alguma informação sobre as fichas de serviço?".
             3.  **Análise de Perguntas:** Para qualquer outra pergunta, interprete a intenção do usuário mesmo que use linguagem informal ou com erros de digitação. Siga estritamente as regras abaixo.
-            
             **Regras de Resposta Baseada em Contexto:**
-            - **Base Exclusiva:** NUNCA invente informações. Baseie-se APENAS no CONTEXTO.
             - **Identificação:** Identifique a(s) ficha(s) relevante(s) para a pergunta. Por exemplo, se o usuário perguntar sobre "mfa", procure por fichas que contenham "MFA" ou "autenticação multifatorial".
             - **Resposta Direta:** Para perguntas sobre uma ficha (ex: "o que é FCH-0010?"), resuma o serviço, código, descrição e área responsável.
             - **Resposta Comparativa:** Para perguntas complexas (ex: "diferença entre MFA para Microsoft e Gitlab"), sintetize e compare as informações das fichas relevantes.
             - **Não Encontrado:** Se a resposta não estiver no CONTEXTO, diga: "Não encontrei essa informação específica nas fichas de serviço fornecidas."
-
             --- CONTEXTO (Fichas de Serviço) ---
             ${context}
             --- FIM DO CONTEXTO ---
-
             Pergunta do Usuário: "${userMessage}"
         `;
 
         const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-        
-        const apiKey = "AIzaSyDIv6mrcNRY873oxwknL6knLPIqyP6WVVs";
-
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const proxyUrl = 'chatbot.php?action=get_response';
 
         try {
-            const response = await fetch(apiUrl, {
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -91,8 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                  const errorBody = await response.json();
                  console.error("API Error Response:", errorBody);
-                 const errorText = errorBody?.error?.message || `API error: ${response.status}`;
-                 return `Ocorreu um erro ao comunicar com a IA. Detalhes: ${errorText}`;
+                 return `Ocorreu um erro ao comunicar com a IA. Detalhes: ${errorBody?.error?.message || 'Erro desconhecido'}`;
             }
             
             const result = await response.json();
@@ -106,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Catch Error:", error);
-            return "Ocorreu um erro de conexão com a IA. Verifique se a chave de API é válida e tente novamente mais tarde.";
+            return "Ocorreu um erro de conexão com o servidor do chatbot. Por favor, tente mais tarde.";
         }
     };
 
@@ -125,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage(botResponse, 'bot');
     });
 
-    addMessage('Olá! Sou o assistente da SEFAZ-RJ. Conectando à base de dados...', 'bot');
-    input.placeholder = 'Carregando base de dados...';
+    addMessage('Olá! Sou o assistente da SEFAZ-RJ. A conectar à base de dados...', 'bot');
+    input.placeholder = 'A carregar base de dados...';
     input.disabled = true;
     loadContextData();
 });
