@@ -66,11 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
             3.  **Saudações:** Se o usuário disser "bom dia", "olá", etc., responda educadamente e pergunte como pode ajudar.
 
             4.  **Busca no Contexto (Sua Função Principal):** Para todas as outras perguntas, sua resposta deve ser estritamente baseada no CONTEXTO das fichas de serviço abaixo.
-                * **Base Exclusiva:** NUNCA invente informações. Baseie-se APENAS no CONTEXTO.
                 * **Identificação:** Identifique a(s) ficha(s) relevante(s) para a pergunta, mesmo que a escrita seja informal (ex: "mfa" busca por "MFA" e "autenticação multifatorial").
                 * **Resposta Direta:** Para perguntas sobre uma ficha, resuma o serviço, código, descrição e área responsável.
                 * **Resposta Comparativa:** Para perguntas complexas, sintetize e compare as informações das fichas relevantes.
-                * **Não Encontrado:** Se a resposta não estiver no CONTEXTO, diga: "Não encontrei essa informação específica nas fichas de serviço fornecidas."
 
             --- CONTEXTO (Fichas de Serviço) ---
             ${context}
