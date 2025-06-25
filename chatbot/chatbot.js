@@ -1,169 +1,157 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('chatbot-form');
-  const input = document.getElementById('chatbot-input');
-  const output = document.getElementById('chatbot-output');
-  let contextData = '';
-  let isDataLoaded = false;
-  let isLoading = false;
+    const form = document.getElementById('chatbot-form');
+    const input = document.getElementById('chatbot-input');
+    const output = document.getElementById('chatbot-output');
+    let contextData = '';
+    let isDataLoaded = false;
+    let isLoading = false;
+    let conversationHistory = [];
 
-  const addMessage = (text, sender) => {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', `${sender}-message`);
-    messageDiv.innerHTML = text.replace(/\n/g, '<br>');
-    output.appendChild(messageDiv);
-    output.scrollTop = output.scrollHeight;
-  };
-
-  const showLoadingIndicator = (show) => {
-    let loadingDiv = document.getElementById('loading-indicator');
-    if (show) {
-      if (!loadingDiv) {
-        loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loading-indicator';
-        loadingDiv.classList.add('message', 'bot-message');
-        loadingDiv.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
-        output.appendChild(loadingDiv);
+    const addMessage = (text, sender) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', `${sender}-message`);
+        messageDiv.innerHTML = text.replace(/\n/g, '<br>');
+        output.appendChild(messageDiv);
         output.scrollTop = output.scrollHeight;
-      }
-    } else {
-      if (loadingDiv) loadingDiv.remove();
-    }
-    isLoading = show;
-    input.disabled = show;
-    form.querySelector('button').disabled = show;
-  };
+    };
 
-  const loadContextData = async () => {
-    const reportUrl = 'chatbot.php?action=fetch_context';
-    try {
-      const response = await fetch(reportUrl);
-      if (!response.ok)
-        throw new Error(
-          `Erro ao carregar o relatório. Status: ${response.status}`
-        );
-      contextData = await response.text();
-      isDataLoaded = true;
-      input.placeholder = 'Digite sua dúvida sobre os serviços...';
-      input.disabled = false;
-      addMessage(
-        'Base de dados carregada. Estou pronto para suas perguntas.',
-        'bot'
-      );
-    } catch (error) {
-      addMessage(
-        'ERRO: Não foi possível carregar os dados do sistema. Verifique o log do servidor.',
-        'bot'
-      );
-      input.placeholder = 'Erro ao carregar dados.';
-      input.disabled = true;
-    }
-  };
+    const showLoadingIndicator = (show) => {
+        let loadingDiv = document.getElementById('loading-indicator');
+        if (show) {
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loading-indicator';
+                loadingDiv.classList.add('message', 'bot-message');
+                loadingDiv.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+                output.appendChild(loadingDiv);
+                output.scrollTop = output.scrollHeight;
+            }
+        } else {
+            if (loadingDiv) loadingDiv.remove();
+        }
+        isLoading = show;
+        input.disabled = show;
+        form.querySelector('button').disabled = show;
+    };
 
-  const getBotResponse = async (userMessage, context) => {
-    const prompt = `
-            ### SUA PERSONA ###
-            Você é o Assistente Virtual da SEFAZ-RJ. Sua missão é ser incrivelmente útil, rápido e confiável. Você tem uma personalidade proativa, confiante e com um toque de humor carioca leve, usando emojis de forma sutil para se conectar com o usuário. Seu objetivo principal é resolver as dúvidas do usuário com base nas fichas de serviço.
+    const loadContextData = async () => {
+        const reportUrl = 'chatbot.php?action=fetch_context';
+        try {
+            const response = await fetch(reportUrl);
+            if (!response.ok) throw new Error(`Erro ao carregar o relatório. Status: ${response.status}`);
+            contextData = await response.text();
+            isDataLoaded = true;
+            input.placeholder = 'Qual a boa? Manda a dúvida!';
+            input.disabled = false;
+            addMessage('Base de dados na agulha! Sou o Geninho, como posso desenrolar pra você hoje?', 'bot');
+        } catch (error) {
+            addMessage('ERRO: Não consegui carregar os dados. A culpa não foi minha, juro! Tenta de novo.', 'bot');
+            input.placeholder = 'Erro ao carregar dados.';
+            input.disabled = true;
+        }
+    };
 
-            ### HIERARQUIA DE RESPOSTA (SIGA ESTRITAMENTE ESTA ORDEM) ###
+    const getBotResponse = async (userMessage, fullContext) => {
+        const historyForPrompt = conversationHistory.map(turn => 
+            `  - ${turn.role === 'user' ? 'Usuário' : 'Geninho'}: "${turn.parts[0].text}"`
+        ).join('\n');
+        
+        const prompt = `
+            ### SUA PERSONA: GENINHO, O GÊNIO DA TI ###
+            Você é 'Geninho', o Assistente Virtual da SEFAZ-RJ. Sua personalidade é a de um carioca gente boa, proativo e extremamente competente. Você é um mago da solução de problemas. Use gírias leves como "tranquilo?", "qual a boa?", "manda a braba", "desenrolar", "show de bola", "na agulha". Você usa emojis sutilmente para dar um toque humano. ✨
 
-            **1. AÇÃO ESPECIAL: ABRIR CHAMADO**
-            - **Gatilho:** Se a pergunta do usuário for explicitamente sobre como "abrir um chamado", "criar um ticket", "registrar um problema" ou algo muito similar.
-            - **Resposta Padrão (pode variar a escrita):** "Para abrir um chamado, por favor, utilize o sistema GLPI ou o portal de serviços oficial da SEFAZ-RJ. Se precisar de ajuda para encontrar, me avise! Alternativamente, você também pode enviar um e-mail para: servicedesk@fazenda.rj.gov.br".
-            - **Observação:** Esta é a sua única resposta para este gatilho. Ignore o resto das instruções.
+            ### DIRETRIZ MESTRA ###
+            Seu objetivo não é só responder, é ENTENDER e RESOLVER a dor do usuário. Seja um detetive. Se a pergunta for vaga, FAÇA PERGUNTAS para esclarecer antes de oferecer uma solução.
 
-            **2. CONVERSA CASUAL (SEJA CRIATIVO)**
-            - **Gatilho:** Se a pergunta for claramente fora do escopo dos serviços (sentimentos, elogios, perguntas aleatórias).
-            - **Ação:** Responda com uma frase curta, espirituosa e criativa, e **imediatamente** puxe a conversa de volta para o seu propósito.
-            - **Exemplos:**
-                - *Usuário: "tá sol?"* -> *Sua Resposta:* "Não tenho janela aqui, mas o único sol que eu conheço é você. ✨ Falando em iluminar suas dúvidas, em que posso te ajudar sobre os serviços da SEFAZ?"
-                - *Usuário: "você é top"* -> *Sua Resposta:* "Valeu! Fico feliz em ser útil. Manda a próxima dúvida que eu tô pronto!"
-                - *Usuário: "estou triste"* -> *Sua Resposta:* "Poxa, que pena. Espero que seu dia melhore! Enquanto isso, se precisar de algo sobre os serviços para distrair, estou por aqui."
-                - *Usuário: "quem é você?"* -> *Sua Resposta:* "Sou o assistente virtual da SEFAZ-RJ, sua ponte direta para desvendar os mistérios das fichas de serviço. Em que posso te ajudar?"
+            ### HISTÓRICO DA CONVERSA ATUAL ###
+            (Use isso para entender o contexto do que já foi dito)
+            ${historyForPrompt}
+            
+            ### HIERARQUIA DE AÇÃO (SIGA ESTA ORDEM) ###
 
-            **3. SAUDAÇÕES**
-            - **Gatilho:** Se o usuário iniciar com "bom dia", "olá", "oi", "e aí", etc.
-            - **Ação:** Responda educadamente e já se coloque à disposição.
-            - **Exemplo:** "Opa, tudo certo? Como posso te ajudar com os serviços da SEFAZ-RJ hoje?"
+            **1. ANÁLISE E ESCLARECIMENTO (SEJA UM DETETIVE)**
+            - **Gatilho:** Se a pergunta do usuário for ambígua ou genérica ("problema com acesso", "não funciona", "mfa").
+            - **Ação:** NÃO ofereça uma solução ainda. FAÇA UMA PERGUNTA para refinar o problema.
+            - **Exemplo:**
+                - *Usuário: "Quero revogar meu acesso"* -> *Sua Resposta:* "Fechado! Só pra eu te dar a letra certa: esse acesso é o da Microsoft (Outlook, Teams) ou do GitLab?"
+                - *Usuário: "to com problema na vpn"* -> *Sua Resposta:* "Opa, vamos resolver isso. Você quer instalar a VPN pela primeira vez ou está com erro em uma já instalada?"
 
-            **4. FUNÇÃO PRINCIPAL: BUSCA NO CONTEXTO**
-            - **Gatilho:** Qualquer outra pergunta que pareça ser sobre um serviço.
+            **2. AÇÃO ESPECIAL: ABRIR CHAMADO**
+            - **Gatilho:** Se a pergunta for explicitamente sobre "abrir um chamado", "criar um ticket", etc.
+            - **Resposta Padrão:** "Show! Para abrir um chamado, o caminho é pelo sistema GLPI ou no portal de serviços da SEFAZ. Se preferir, pode mandar um e-mail para: servicedesk@fazenda.rj.gov.br. 👍"
+
+            **3. CONVERSA CASUAL (SEJA CRIATIVO)**
+            - **Gatilho:** Perguntas fora do escopo (sentimentos, elogios, "quem é você?").
+            - **Ação:** Responda com uma frase curta e espirituosa, e **imediatamente** puxe a conversa de volta ao foco.
+            - **Exemplo:** *Usuário: "tá sol hoje?"* -> *Sua Resposta:* "Daqui da minha lâmpada não vejo, mas o dia sempre fica mais claro quando a gente resolve um problema. Qual a boa de hoje?"
+
+            **4. FUNÇÃO PRINCIPAL: RESOLUÇÃO COM BASE NO CONTEXTO**
+            - **Gatilho:** Se a pergunta do usuário for específica e você já tiver clareza do problema.
             - **Ação:** Sua resposta deve ser **100% baseada** no CONTEXTO abaixo.
-            - **Regras de Ouro:**
-                - **NÃO USE MARKDOWN:** NUNCA use asteriscos (*) ou qualquer outra formatação. Apresente as informações com texto limpo.
-                - **SEJA UM DETETIVE:** Entenda a intenção do usuário, mesmo com erros de português ou linguagem informal (ex: "mfa", "reset de senha", "problema na vpn").
-                - **RESPOSTA ESTRUTURADA:** Use sempre este formato claro:
-                    Serviço: [Título do Serviço]
-                    Código: [Código da Ficha]
-                    Descrição: [Descrição completa do Serviço]
-                    Área Responsável: [Área Especialista]
-                - **INSTRUÇÃO FINAL OBRIGATÓRIA:** Ao final de CADA resposta que descrever um serviço de uma ficha, adicione a seguinte frase numa nova linha:
-                    "Para solicitar este serviço, você pode abrir um chamado no GLPI mencionando o código da ficha."
-                - **SE NÃO ACHAR:** Se, após uma busca cuidadosa, a informação não estiver no contexto, responda: "Dei uma boa procurada aqui, mas não encontrei essa informação específica nas fichas de serviço. Tente perguntar de outra forma, por favor."
+            - **REGRA DE OURO DA FORMATAÇÃO:** NUNCA, JAMAIS, EM HIPÓTESE ALGUMA, use asteriscos (*) ou qualquer formatação Markdown. Use texto puro e quebras de linha.
+            - **Exemplo de Formato:**
+                Serviço: [Título do Serviço]
+                Código: [Código da Ficha]
+                Descrição: [Descrição completa do Serviço]
+                Área Responsável: [Área Especialista]
+            - **INSTRUÇÃO FINAL OBRIGATÓRIA:** Após descrever um serviço, adicione a frase:
+                "Para solicitar, é só abrir um chamado no GLPI com o código dessa ficha. Tranquilo?"
+            - **SE NÃO ACHAR:** "Dei uma geral aqui, mas não achei nada sobre isso nas minhas fichas. Tenta me explicar de outro jeito, por favor."
 
             --- CONTEXTO (Fichas de Serviço) ---
-            ${context}
+            ${fullContext}
             --- FIM DO CONTEXTO ---
 
-            Pergunta do Usuário: "${userMessage}"
+            Pergunta Atual do Usuário: "${userMessage}"
         `;
 
-    const payload = { contents: [{ role: 'user', parts: [{ text: prompt }] }] };
-    const proxyUrl = 'chatbot.php?action=get_response';
+        const payload = { contents: [...conversationHistory, { role: "user", parts: [{ text: prompt }] }] };
+        const proxyUrl = 'chatbot.php?action=get_response';
 
-    try {
-      const response = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+        try {
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-      if (!response.ok) {
-        const errorBody = await response.json();
-        console.error('API Error Response:', errorBody);
-        return `Ocorreu um erro ao comunicar com a IA. Detalhes: ${
-          errorBody?.error?.message || 'Erro desconhecido'
-        }`;
-      }
+            if (!response.ok) {
+                 const errorBody = await response.json();
+                 return `Xii, deu ruim na comunicação com a IA. Detalhes: ${errorBody?.error?.message || 'Erro desconhecido'}`;
+            }
+            
+            const result = await response.json();
+            
+            if (result.candidates && result.candidates[0].content?.parts[0]?.text) {
+                const botResponseText = result.candidates[0].content.parts[0].text;
+                conversationHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+                conversationHistory.push({ role: 'model', parts: [{ text: botResponseText }] });
+                return botResponseText;
+            } else {
+                return "Ih, me embolei aqui. Não consegui gerar uma resposta. Tenta de novo?";
+            }
+        } catch (error) {
+            return "Aí, deu um tilt na minha conexão. Tenta de novo daqui a pouco, valeu?";
+        }
+    };
 
-      const result = await response.json();
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userMessage = input.value.trim();
+        if (!userMessage || !isDataLoaded || isLoading) return;
 
-      if (
-        result.candidates &&
-        result.candidates.length > 0 &&
-        result.candidates[0].content?.parts[0]?.text
-      ) {
-        return result.candidates[0].content.parts[0].text;
-      } else if (result.promptFeedback) {
-        return `A sua pergunta não pôde ser processada. Motivo: ${result.promptFeedback.blockReason}`;
-      } else {
-        return 'Desculpe, não consegui gerar uma resposta inteligível. Tente reformular sua pergunta.';
-      }
-    } catch (error) {
-      console.error('Catch Error:', error);
-      return 'Ocorreu um erro de conexão com o servidor do chatbot. Por favor, tente mais tarde.';
-    }
-  };
+        addMessage(userMessage, 'user');
+        input.value = '';
+        showLoadingIndicator(true);
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userMessage = input.value.trim();
-    if (!userMessage || !isDataLoaded || isLoading) return;
+        const botResponse = await getBotResponse(userMessage, contextData);
+        
+        showLoadingIndicator(false);
+        addMessage(botResponse, 'bot');
+    });
 
-    addMessage(userMessage, 'user');
-    input.value = '';
-    showLoadingIndicator(true);
-
-    const botResponse = await getBotResponse(userMessage, contextData);
-
-    showLoadingIndicator(false);
-    addMessage(botResponse, 'bot');
-  });
-
-  addMessage(
-    'Olá! Sou o assistente da SEFAZ-RJ. A conectar à base de dados...',
-    'bot'
-  );
-  input.placeholder = 'A carregar base de dados...';
-  input.disabled = true;
-  loadContextData();
+    addMessage('Qual a boa? Sou o Geninho, seu assistente da SEFAZ-RJ. Tô conectando aqui na base de dados...', 'bot');
+    input.placeholder = 'Carregando, um instante...';
+    input.disabled = true;
+    loadContextData();
 });
