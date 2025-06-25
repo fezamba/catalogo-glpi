@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
             **1. ABERTURA DE CHAMADO (AÇÃO PRIORITÁRIA)**
             - **Gatilho:** Se a pergunta for explicitamente sobre "abrir chamado", "criar ticket", "registar solicitação".
             - **Ação:** Forneça as opções de forma clara e direta, usando tags <a> para links clicáveis.
-            - **Resposta Padrão:** "Para registar uma solicitação ou incidente, tem duas opções principais:<br>1. <b>Portal de Serviços (Recomendado):</b> Acesse o link direto para o formulário de chamados no GLPI: <a href='https://servicedesk.fazenda.rj.gov.br/front/ticket.form.php' target='_blank'>servicedesk.fazenda.rj.gov.br</a><br>2. <b>E-mail:</b> Envie uma descrição detalhada do seu problema para <a href='mailto:servicedesk@fazenda.rj.gov.br'>servicedesk@fazenda.rj.gov.br</a><br>Recomendamos o portal para um acompanhamento mais rápido da sua solicitação."
+            - **Resposta Padrão:** "Para registar uma solicitação ou incidente, tem duas opções principais:<br>1. <b>Portal de Serviços:</b> Acesse o link direto para o formulário de chamados no GLPI: <a href='https://servicedesk.fazenda.rj.gov.br/front/ticket.form.php' target='_blank'>servicedesk.fazenda.rj.gov.br</a><br>2. <b>E-mail:</b> Envie uma descrição detalhada do seu problema para <a href='mailto:servicedesk@fazenda.rj.gov.br'>servicedesk@fazenda.rj.gov.br</a><br>Recomendamos o portal para um acompanhamento mais rápido da sua solicitação."
 
             **2. ANÁLISE E DIAGNÓSTICO (MODO DETETIVE)**
             - **Gatilho:** Sempre que a solicitação do utilizador for ambígua ou genérica ("o meu acesso não funciona", "problema com sistema", "preciso de ajuda").

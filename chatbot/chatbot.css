@@ -167,3 +167,14 @@ body {
     0%, 100% { opacity: 0.3; transform: scale(0.8); }
     50% { opacity: 1; transform: scale(1); }
 }
+
+.bot-message a {
+    color: #0056b3;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.bot-message a:hover {
+    color: #003d7e;
+    text-decoration: none;
+}
