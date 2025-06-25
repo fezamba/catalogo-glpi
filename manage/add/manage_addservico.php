@@ -533,7 +533,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor
             data_revisao = NOW() 
         WHERE ID = ?
     ");
-  $stmt->bind_param("ssi", $id);
+  $stmt->bind_param("i", $id);
   $stmt->execute();
   $stmt->close();
 
