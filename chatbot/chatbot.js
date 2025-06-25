@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isDataLoaded = true;
             input.placeholder = 'Descreva sua necessidade ou problema...';
             input.disabled = false;
-            addMessage('Olá! Sou o assistente virtual da equipe de TI da SEFAZ-RJ. Como posso ajudar hoje?', 'bot');
+            addMessage('Pode me contar sobre o seu problema?', 'bot');
         } catch (error) {
             addMessage('ERRO: Ocorreu uma falha ao carregar a base de conhecimento. A equipe técnica já foi notificada.', 'bot');
             input.placeholder = 'Serviço temporariamente indisponível.';
