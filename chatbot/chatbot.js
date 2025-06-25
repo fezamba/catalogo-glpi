@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isDataLoaded = true;
             input.placeholder = 'Descreva sua necessidade ou problema...';
             input.disabled = false;
-            addMessage('Pronto" Pode me contar sobre o seu problema?', 'bot');
+            addMessage('Pronto! Pode me contar sobre o seu problema?', 'bot');
         } catch (error) {
             addMessage('ERRO: Ocorreu uma falha ao carregar a base de conhecimento. A equipe técnica já foi notificada.', 'bot');
             input.placeholder = 'Serviço temporariamente indisponível.';
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage(botResponse, 'bot');
     });
 
-    addMessage('Olá! Sou o assistente virtual da equipe de TI. Carregando base de conhecimento...', 'bot');
+    addMessage('Olá! Sou o assistente virtual da equipe de TI. Espere um pouco enquanto carrego a base de conhecimento...', 'bot');
     input.placeholder = 'Carregando base de conhecimento...';
     input.disabled = true;
     loadContextData();
