@@ -29,7 +29,7 @@ function fetch_context_data() {
 }
 
 function call_gemini_api() {
-    $apiKey = "AIzaSyAk75hIVBP6fWCrv5o8v4x-8NJMLftNXNw";
+    $apiKey = "AIzaSyD5nmuNijtSJVpHe28ztDAXtMQBTkNxyNQ";
 
     $requestBody = file_get_contents('php://input');
     $data = json_decode($requestBody, true);
