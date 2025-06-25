@@ -189,16 +189,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $_POST['acao'] === 'nova_versao_aut
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' && !$modo_edicao) {
-  $titulo = $_POST['nome_servico'];
-  $descricao = $_POST['descricao_servico'];
+  $titulo      = $_POST['nome_servico'];
+  $descricao   = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
-  $kbs = $_POST['base_conhecimento'] ?? 'Não tem';
-  $area = $_POST['area_especialista'];
-  $po = $_POST['po_responsavel'];
-  $alcadas = $_POST['alcadas'] ?? 'Não tem';
-  $excecao = $_POST['procedimento_excecao'] ?? 'Não tem';
-  $obs = $_POST['observacoes_gerais'] ?? 'Não tem';
-  $criador = $_POST['usuario_criador'];
+  $kbs         = $_POST['base_conhecimento']    ?? 'Nenhum KB';
+  $area        = $_POST['area_especialista'];
+  $po          = $_POST['po_responsavel'];
+  $alcadas     = $_POST['alcadas']              ?? 'Sem alçada';
+  $excecao     = $_POST['procedimento_excecao'] ?? 'Sem exceção';
+  $obs         = $_POST['observacoes_gerais']   ?? 'Sem observações';
+  $criador     = $_POST['usuario_criador']      ?? 'Service-Desk/WD';
   $versao = "1.0";
 
   $stmt_insert = $mysqli->prepare("INSERT INTO servico 
@@ -421,16 +421,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'publicar_ficha'
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao') {
   $id = intval($_GET['id']);
 
-  $titulo    = $_POST['nome_servico'];
-  $descricao = $_POST['descricao_servico'];
+  $titulo      = $_POST['nome_servico'];
+  $descricao   = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
-  $kbs       = $_POST['base_conhecimento'];
-  $area      = $_POST['area_especialista'];
-  $po        = $_POST['po_responsavel'];
-  $alcadas   = $_POST['alcadas'];
-  $excecao   = $_POST['procedimento_excecao'];
-  $obs       = $_POST['observacoes_gerais'];
-  $criador   = $_POST['usuario_criador'];
+  $kbs         = $_POST['base_conhecimento']    ?? 'Nenhum KB';
+  $area        = $_POST['area_especialista'];
+  $po          = $_POST['po_responsavel'];
+  $alcadas     = $_POST['alcadas']              ?? 'Sem alçada';
+  $excecao     = $_POST['procedimento_excecao'] ?? 'Sem exceção';
+  $obs         = $_POST['observacoes_gerais']   ?? 'Sem observações';
+  $criador     = $_POST['usuario_criador']      ?? 'Service-Desk/WD';
 
   $stmt = $mysqli->prepare("UPDATE servico SET 
     Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
@@ -853,8 +853,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               <?php endforeach; ?>
             </select>
           </label>
-          <?php 
-          if ($modo_edicao): 
+          <?php
+          if ($modo_edicao):
           ?>
             <div class="revisores-container">
               <label>Revisores Designados</label>
