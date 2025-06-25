@@ -532,8 +532,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor
   $stmt = $mysqli->prepare("
         UPDATE servico SET 
             status_ficha = 'revisada', 
-            revisor_nome = ?, 
-            revisor_email = ?, 
             data_revisao = NOW() 
         WHERE ID = ?
     ");
