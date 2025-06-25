@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 * **Identificação:** Identifique a(s) ficha(s) relevante(s) para a pergunta, mesmo que a escrita seja informal (ex: "mfa" busca por "MFA" e "autenticação multifatorial").
                 * **Resposta Direta:** Para perguntas sobre uma ficha, resuma o serviço, código, descrição e área responsável.
                 * **Resposta Comparativa:** Para perguntas complexas, sintetize e compare as informações das fichas relevantes.
+                * **Instruir o usuário:** Ao final de cada resposta envolvendo uma ficha de serviço, mostre como o usuario pode criar um chamado em cima desta ficha.
 
             --- CONTEXTO (Fichas de Serviço) ---
             ${context}
