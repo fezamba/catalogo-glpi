@@ -526,8 +526,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor') {
   $id = intval($_GET['id']);
-  $nome_revisor = $_SESSION['username'] ?? '';
-  $email_revisor = $_SESSION['email_usuario'] ?? '';
 
   $stmt = $mysqli->prepare("
         UPDATE servico SET 
@@ -535,7 +533,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor
             data_revisao = NOW() 
         WHERE ID = ?
     ");
-  $stmt->bind_param("ssi", $nome_revisor, $email_revisor, $id);
+  $stmt->bind_param("ssi", $id);
   $stmt->execute();
   $stmt->close();
 
