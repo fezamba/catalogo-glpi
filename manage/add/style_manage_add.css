@@ -376,14 +376,14 @@ textarea {
 }
 
 .checkbox-label {
-    display: flex;
-    align-items: center;
+    display: block;
     padding: 8px;
     font-size: 15px;
     font-weight: normal;
     cursor: pointer;
     border-radius: 4px;
     transition: background-color 0.2s;
+    margin-left: 0;
 }
 
 .checkbox-label:hover {
@@ -392,9 +392,7 @@ textarea {
 
 .checkbox-label input[type="checkbox"] {
     margin-right: 10px;
-    width: auto;
-    height: 1.1em;
-    width: 1.1em;
+    vertical-align: middle;
 }
 
 .revisor-email {
