@@ -1,5 +1,4 @@
 <?php
-//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
 require_once '../../conexao.php';
 header('Content-Type: application/json');
 
