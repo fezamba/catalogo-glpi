@@ -119,15 +119,22 @@ function mostrarJustificativa(tipo) {
   formReprovacao.scrollIntoView({ behavior: 'smooth' });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  const params = new URLSearchParams(window.location.search);
-
-  if (params.has('erro') && params.get('erro') === 'sem_revisor') {
-    const popup = document.getElementById('error-popup');
-    const messageElement = document.getElementById('error-message');
-
-    messageElement.textContent =
-      'É obrigatório selecionar ao menos um revisor para enviar a ficha para revisão.';
-    popup.style.display = 'flex';
-  }
+document.addEventListener('DOMContentLoaded', function() {
+    const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
+    
+    if (btnEnviarRevisao) {
+        btnEnviarRevisao.addEventListener('click', function(event) {
+            
+            const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
+            
+            if (revisoresMarcados === 0) {
+                event.preventDefault(); 
+                
+                const popup = document.getElementById('error-popup');
+                const messageElement = document.getElementById('error-message');
+                messageElement.textContent = 'É obrigatório selecionar ao menos um revisor para enviar a ficha para revisão.';
+                popup.style.display = 'flex';
+            }
+        });
+    }
 });
