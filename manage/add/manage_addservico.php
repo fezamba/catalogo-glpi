@@ -810,7 +810,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
   <?php endif; ?>
 </head>
 
-<body class="<?= ($tipo_usuario === 'revisor') ? 'modo-visualizacao' : '' ?>">
+<body>
   <?php
   $todos_status = [
     'rascunho',
