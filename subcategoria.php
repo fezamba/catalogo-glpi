@@ -30,7 +30,7 @@ $stmt->fetch();
 $stmt->close();
 
 $servicos = [];
-$stmt = $mysqli->prepare("SELECT ID, Titulo, Descricao FROM servico WHERE ID_SubCategoria = ?");
+$stmt = $mysqli->prepare("SELECT ID, Titulo, Descricao FROM servico WHERE ID_SubCategoria = ? AND status_ficha = 'publicado'");
 $stmt->bind_param("i", $id_subcategoria);
 $stmt->execute();
 $result = $stmt->get_result();
