@@ -126,8 +126,8 @@ while ($srv = $result->fetch_assoc()) {
                 case 'substituida':
                   echo "♻️ Substituída";
                   break;
-                case 'inativa':
-                  echo '🚫 Inativa';
+                case 'descontinuada':
+                  echo '🚫 Descontinuada';
                   break;
                 default:
                   echo '—';

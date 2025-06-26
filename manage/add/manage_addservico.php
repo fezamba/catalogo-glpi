@@ -417,10 +417,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'publicar_ficha'
   exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'inativar_ficha') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'descontinuar_ficha') {
   $id = intval($_GET['id']);
 
-  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'inativa' WHERE ID = ?");
+  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'descontinuada' WHERE ID = ?");
   $stmt->bind_param("i", $id);
   $stmt->execute();
   $stmt->close();
@@ -809,7 +809,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
     'reprovado_revisor',
     'reprovado_po',
     'substituida',
-    'inativa'
+    'descontinuada'
   ];
   ?>
 
@@ -828,7 +828,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       <select id="debug-status-ficha">
         <option value="">-- Status Atual --</option>
         <?php
-        $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'inativa'];
+        $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'descontinuada'];
         foreach ($todos_status as $status_opcao): ?>
           <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>>
             <?= ucfirst(str_replace('_', ' ', $status_opcao)) ?>
@@ -907,8 +907,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           case 'substituida':
             echo "♻️ Substituída";
             break;
-          case 'inativa':
-            echo "⏳ Inativa";
+          case 'descontinuada':
+            echo "⏳ Descontinuada";
+            break;
           default:
             echo "—";
             break;
@@ -979,7 +980,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               <option value="reprovado_revisor" <?= ($dados_edicao['status_ficha'] ?? '') === 'reprovado_revisor' ? 'selected' : '' ?>>❌ Reprovado pelo Revisor</option>
               <option value="reprovado_po" <?= ($dados_edicao['status_ficha'] ?? '') === 'reprovado_po' ? 'selected' : '' ?>>❌ Reprovado pelo PO</option>
               <option value="substituida" <?= ($dados_edicao['status_ficha'] ?? '') === 'substituida' ? 'selected' : '' ?>>🔄 Substituída</option>
-              <option value="inativa" <?= ($dados_edicao['status_ficha'] ?? '') === 'inativa' ? 'selected' : '' ?>>⏳ Inativa</option>
+              <option value="descontinuada" <?= ($dados_edicao['status_ficha'] ?? '') === 'descontinuada' ? 'selected' : '' ?>>⏳ Descontinuada</option>
             </select>
           </label>
         <?php endif; ?>
@@ -1106,7 +1107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                 }
                 if ($status === 'publicado') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
-                  echo '<button type="submit" class="btn-danger" name="acao" value="inativar_ficha" onclick="return confirm(\'Tem certeza que deseja inativar esta ficha?\');">Inativar</button>';
+                  echo '<button type="submit" class="btn-danger" name="acao" value="descontinuar_ficha" onclick="return confirm(\'Tem certeza que deseja descontinuar esta ficha?\');">Descontinuar</button>';
                 }
                 if ($status === 'aprovada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar Ficha</button>';
