@@ -192,13 +192,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   $titulo      = $_POST['nome_servico'];
   $descricao   = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
-  $kbs         = $_POST['base_conhecimento']    ?? 'Nenhum KB';
+  $kbs         = $_POST['base_conhecimento'];
   $area        = $_POST['area_especialista'];
   $po          = $_POST['po_responsavel'];
-  $alcadas     = $_POST['alcadas']              ?? 'Sem alçada';
-  $excecao     = $_POST['procedimento_excecao'] ?? 'Sem exceção';
-  $obs         = $_POST['observacoes_gerais']   ?? 'Sem observações';
-  $criador     = $_POST['usuario_criador']      ?? 'Service-Desk/WD';
+  $alcadas     = $_POST['alcadas'];
+  $excecao     = $_POST['procedimento_excecao'];
+  $obs         = $_POST['observacoes_gerais'];
+  $criador     = $_POST['usuario_criador'];
   $versao = "1.0";
 
   $stmt_insert = $mysqli->prepare("INSERT INTO servico 
@@ -413,6 +413,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'publicar_ficha'
     $stmt_update_old->execute();
     $stmt_update_old->close();
   }
+
+  header("Location: ../list/manage_listservico.php?sucesso=1");
+  exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'inativar_ficha') {
+  $id = intval($_GET['id']);
+
+  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'inativa' WHERE ID = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $stmt->close();
 
   header("Location: ../list/manage_listservico.php?sucesso=1");
   exit;
@@ -961,13 +973,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                 }
                 if ($status === 'revisada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_para_aprovacao" style="margin-right: 4px;">Enviar para Aprovação do PO</button>';
-                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar Ficha</button>';
+                  echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
                 }
                 if ($status === 'publicado') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
+                  echo '<button type="submit" class="btn-danger" name="acao" value="inativar_ficha" onclick="return confirm(\'Tem certeza que deseja inativar esta ficha?\');">Inativar</button>';
                 }
                 if ($status === 'cancelada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="reativar_para_revisao">Reativar e Enviar para Revisão</button>';
+                }
+                if ($status === 'aprovada') {
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar Ficha</button>';
+                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar</button>';
                 }
               }
 
@@ -981,23 +998,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                   echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar Ficha</button>';
                   echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
                 }
-                if ($status === 'aprovada') {
-                  echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar Ficha</button>';
-                  echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar</button>';
-                }
               }
             }
             ?>
             <?php
             $pode_excluir = false;
             if (isset($status)) {
-              if ($tipo_usuario === 'po') {
-                $pode_excluir = true;
-              } elseif ($tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po', 'em_revisao'])) {
+              if ($tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po', 'em_revisao'])) {
                 $pode_excluir = true;
               }
             }
-
             if ($modo_edicao && $pode_excluir):
             ?>
               <button type="submit" class="btn-danger" name="acao" value="excluir" onclick="return confirm('Tem certeza que deseja excluir permanentemente este serviço? Esta ação não pode ser desfeita.');">Excluir</button>
