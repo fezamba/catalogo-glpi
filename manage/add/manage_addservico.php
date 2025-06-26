@@ -673,7 +673,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
     'cancelada',
     'reprovado_revisor',
     'reprovado_po',
-    'substituida'
+    'substituida',
+    'inativa'
   ];
   ?>
 
@@ -692,7 +693,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       <select id="debug-status-ficha">
         <option value="">-- Status Atual --</option>
         <?php
-        $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida'];
+        $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'inativa'];
         foreach ($todos_status as $status_opcao): ?>
           <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>>
             <?= ucfirst(str_replace('_', ' ', $status_opcao)) ?>
@@ -771,6 +772,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           case 'substituida':
             echo "♻️ Substituída";
             break;
+          case 'inativa':
+            echo "⏳ Inativa";
           default:
             echo "—";
             break;
@@ -850,6 +853,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               <option value="cancelada" <?= ($dados_edicao['status_ficha'] ?? '') === 'cancelada' ? 'selected' : '' ?>>🚫 Cancelada</option>
               <option value="reprovado_revisor" <?= ($dados_edicao['status_ficha'] ?? '') === 'reprovado_revisor' ? 'selected' : '' ?>>❌ Reprovado pelo Revisor</option>
               <option value="reprovado_po" <?= ($dados_edicao['status_ficha'] ?? '') === 'reprovado_po' ? 'selected' : '' ?>>❌ Reprovado pelo PO</option>
+              <option value="substituida" <?= ($dados_edicao['status_ficha'] ?? '') === 'substituida' ? 'selected' : '' ?>>🔄 Substituída</option>
+              <option value="inativa" <?= ($dados_edicao['status_ficha'] ?? '') === 'inativa' ? 'selected' : '' ?>>⏳ Inativa</option>
             </select>
           </label>
         <?php endif; ?>
@@ -979,6 +984,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                   echo '<button type="submit" class="btn-danger" name="acao" value="inativar_ficha" onclick="return confirm(\'Tem certeza que deseja inativar esta ficha?\');">Inativar</button>';
                 }
                 if ($status === 'cancelada') {
+                  echo '<button type="submit" class="btn-salvar" name="acao" value="reativar_para_revisao">Reativar e Enviar para Revisão</button>';
+                }
+                if ($status === 'inativa') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="reativar_para_revisao">Reativar e Enviar para Revisão</button>';
                 }
                 if ($status === 'aprovada') {
