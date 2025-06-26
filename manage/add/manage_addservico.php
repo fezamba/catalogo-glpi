@@ -1108,12 +1108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                   echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
                   echo '<button type="submit" class="btn-danger" name="acao" value="inativar_ficha" onclick="return confirm(\'Tem certeza que deseja inativar esta ficha?\');">Inativar</button>';
                 }
-                if ($status === 'cancelada') {
-                  echo '<button type="submit" class="btn-salvar" name="acao" value="reativar_para_revisao">Reativar e Enviar para Revisão</button>';
-                }
-                if ($status === 'inativa') {
-                  echo '<button type="submit" class="btn-salvar" name="acao" value="reativar_para_revisao">Reativar e Enviar para Revisão</button>';
-                }
                 if ($status === 'aprovada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="publicar_ficha" style="margin-right: 4px;">Publicar Ficha</button>';
                   echo '<button type="submit" class="btn-danger" name="acao" value="cancelar_ficha" onclick="return confirm(\'Tem certeza que deseja cancelar esta ficha?\');">Cancelar</button>';
