@@ -759,18 +759,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_reviso
   exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reativar_para_revisao') {
-  $id = intval($_GET['id']);
-
-  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'rascunho' WHERE ID = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $stmt->close();
-
-  header("Location: ../list/manage_listservico.php?sucesso=1");
-  exit;
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha') {
   $id = intval($_GET['id']);
 
