@@ -139,7 +139,7 @@ while ($srv = $result->fetch_assoc()) {
             <td><?php echo htmlspecialchars($srv['codigo_ficha'] ?? '—'); ?></td>
             <td><?php echo htmlspecialchars($srv['versao'] ?? '—'); ?></td>
             <td><?php if ($srv['status_ficha'] === 'publicado'): ?>
-                <a href="../add/manage_addservico.php?id=<?php echo $srv['ID']; ?>&nova_versao=1" class="btn-nova-versao">Nova versão</a>
+                <a href="../add/manage_addservico.php?id=<?php echo $srv['ID']; ?>&nova_versao=1" class="btn-nova-versao">✏️</a>
               <?php else: ?>
                 <a href="../add/manage_addservico.php?id=<?php echo $srv['ID']; ?>" class="btn-editar">✏️</a>
               <?php endif; ?>
