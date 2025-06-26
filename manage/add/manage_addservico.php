@@ -1034,6 +1034,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       <input type="hidden" name="acao" id="justificativa-submit-acao" value="">
       <button type="submit" class="btn-danger">Enviar Reprovação</button>
     </form>
+    <script>
+      let contDiretriz = <?= count($diretrizes) ?>;
+      let contPadrao = <?= count($padroes) ?>;
+      let contChecklist = <?= count($checklist) ?>;
+    </script>
+    <script src="addservico.js"></script>
     <div id="error-popup" class="popup-overlay" style="display:none;">
       <div class="popup-content">
         <h3>Erro de Validação</h3>
@@ -1041,12 +1047,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         <button class="btn-salvar" onclick="document.getElementById('error-popup').style.display='none'">Fechar</button>
       </div>
     </div>
-    <script>
-      let contDiretriz = <?= count($diretrizes) ?>;
-      let contPadrao = <?= count($padroes) ?>;
-      let contChecklist = <?= count($checklist) ?>;
-    </script>
-    <script src="addservico.js"></script>
     <input type="hidden" id="justificativa-submit-acao" value="">
 </body>
 
