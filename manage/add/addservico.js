@@ -1,3 +1,15 @@
+function showErrorPopup(message) {
+    const popup = document.getElementById('error-popup');
+    const messageElement = document.getElementById('error-message');
+    
+    if (popup && messageElement) {
+        messageElement.textContent = message;
+        popup.style.display = 'flex';
+    } else {
+        alert(message);
+    }
+}
+
 function adicionarDiretriz() {
   const index = contDiretriz++;
   const container = document.createElement('div');
@@ -55,55 +67,6 @@ function adicionarChecklist() {
   document.getElementById('checklist').appendChild(container);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  const form = document.getElementById('form-ficha');
-
-  if (form) {
-    form.addEventListener('submit', function (event) {
-      const diretrizesTitulos = document.querySelectorAll(
-        'textarea[name^="diretrizes"][name$="[titulo]"]'
-      );
-
-      if (diretrizesTitulos.length === 0) {
-        alert('Erro: É necessário adicionar pelo menos uma Diretriz.');
-        event.preventDefault();
-        return;
-      } else {
-        let peloMenosUmTituloPreenchido = false;
-        diretrizesTitulos.forEach((textarea) => {
-          if (textarea.value.trim() !== '') {
-            peloMenosUmTituloPreenchido = true;
-          }
-        });
-
-        if (!peloMenosUmTituloPreenchido) {
-          alert(
-            'Erro: Você precisa preencher o título de pelo menos uma diretriz.'
-          );
-          event.preventDefault();
-          return;
-        }
-      }
-
-      if (!form.querySelector("input[name='usuario_criador']")) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'usuario_criador';
-        input.value = 'Service-Desk/WD';
-        form.appendChild(input);
-      }
-    });
-  }
-
-  document.querySelectorAll('.subcat').forEach((link) => {
-    link.addEventListener('click', function (e) {
-      e.preventDefault();
-      const url = this.getAttribute('href');
-      window.location.href = url;
-    });
-  });
-});
-
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = el.scrollHeight + 'px';
@@ -120,21 +83,43 @@ function mostrarJustificativa(tipo) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
+    contPadrao = document.querySelectorAll('#padroes .grupo').length;
+    contChecklist = document.querySelectorAll('#checklist .grupo').length;
+
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
     
     if (btnEnviarRevisao) {
         btnEnviarRevisao.addEventListener('click', function(event) {
             
             const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
-            
             if (revisoresMarcados === 0) {
-                event.preventDefault(); 
-                
-                const popup = document.getElementById('error-popup');
-                const messageElement = document.getElementById('error-message');
-                messageElement.textContent = 'É obrigatório selecionar ao menos um revisor para enviar a ficha para revisão.';
-                popup.style.display = 'flex';
+                event.preventDefault();
+                showErrorPopup('É obrigatório selecionar ao menos um revisor.');
+                return;
             }
+
+            const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
+            let peloMenosUmTituloPreenchido = false;
+            
+            if (diretrizesTitulos.length === 0) {
+                 event.preventDefault();
+                 showErrorPopup('É necessário adicionar pelo menos uma Diretriz.');
+                 return;
+            }
+
+            diretrizesTitulos.forEach((textarea) => {
+                if (textarea.value.trim() !== '') {
+                    peloMenosUmTituloPreenchido = true;
+                }
+            });
+
+            if (!peloMenosUmTituloPreenchido) {
+                event.preventDefault();
+                showErrorPopup('Você precisa preencher o título de pelo menos uma diretriz.');
+                return;
+            }
+            
         });
     }
 });
