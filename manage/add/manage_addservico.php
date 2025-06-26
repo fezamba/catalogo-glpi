@@ -1,7 +1,6 @@
 <?php
 session_start();
 $_SESSION['username'] = 'Service-Desk/WD'; // Simulação de usuário logado
-//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
 require_once '../../conexao.php';
 if ($mysqli->connect_errno) {
   die("Erro: " . $mysqli->connect_error);
@@ -114,12 +113,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $_POST['acao'] === 'nova_versao_aut
   $titulo       = $_POST['nome_servico'];
   $descricao    = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
-  $kbs          = $_POST['base_conhecimento'];
-  $area         = $_POST['area_especialista'];
-  $po           = $_POST['po_responsavel'];
-  $alcadas      = $_POST['alcadas'];
-  $excecao      = $_POST['procedimento_excecao'];
-  $obs          = $_POST['observacoes_gerais'];
+  $kbs          = !empty($_POST['base_conhecimento']) ? $_POST['base_conhecimento'] : null;
+  $area         = !empty($_POST['area_especialista']) ? $_POST['area_especialista'] : null;
+  $po           = !empty($_POST['po_responsavel']) ? $_POST['po_responsavel'] : null;
+  $alcadas      = !empty($_POST['alcadas']) ? $_POST['alcadas'] : null;
+  $excecao      = !empty($_POST['procedimento_excecao']) ? $_POST['procedimento_excecao'] : null;
+  $obs          = !empty($_POST['observacoes_gerais']) ? $_POST['observacoes_gerais'] : null;
   $criador      = $_SESSION['username'];
 
   $stmt = $mysqli->prepare("INSERT INTO servico (
@@ -192,13 +191,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'criar_servico' 
   $titulo      = $_POST['nome_servico'];
   $descricao   = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
-  $kbs         = $_POST['base_conhecimento'];
-  $area        = $_POST['area_especialista'];
-  $po          = $_POST['po_responsavel'];
-  $alcadas     = $_POST['alcadas'];
-  $excecao     = $_POST['procedimento_excecao'];
-  $obs         = $_POST['observacoes_gerais'];
-  $criador     = $_POST['usuario_criador'];
+  $kbs         = !empty($_POST['base_conhecimento']) ? $_POST['base_conhecimento'] : null;
+  $area        = !empty($_POST['area_especialista']) ? $_POST['area_especialista'] : null;
+  $po          = !empty($_POST['po_responsavel']) ? $_POST['po_responsavel'] : null;
+  $alcadas     = !empty($_POST['alcadas']) ? $_POST['alcadas'] : null;
+  $excecao     = !empty($_POST['procedimento_excecao']) ? $_POST['procedimento_excecao'] : null;
+  $obs         = !empty($_POST['observacoes_gerais']) ? $_POST['observacoes_gerais'] : null;
+  $criador     = $_SESSION['username'];
   $versao = "1.0";
 
   $stmt_insert = $mysqli->prepare("INSERT INTO servico 
@@ -436,13 +435,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
   $titulo      = $_POST['nome_servico'];
   $descricao   = $_POST['descricao_servico'];
   $subcategoria = $_POST['id_subcategoria'];
-  $kbs         = $_POST['base_conhecimento']    ?? 'Nenhum KB';
+  $kbs         = $_POST['base_conhecimento'];
   $area        = $_POST['area_especialista'];
   $po          = $_POST['po_responsavel'];
-  $alcadas     = $_POST['alcadas']              ?? 'Sem alçada';
-  $excecao     = $_POST['procedimento_excecao'] ?? 'Sem exceção';
-  $obs         = $_POST['observacoes_gerais']   ?? 'Sem observações';
-  $criador     = $_POST['usuario_criador']      ?? 'Service-Desk/WD';
+  $alcadas     = $_POST['alcadas'];
+  $excecao     = $_POST['procedimento_excecao'];
+  $obs         = $_POST['observacoes_gerais'];
+  $criador     = $_SESSION['username'];
 
   $stmt = $mysqli->prepare("UPDATE servico SET 
     Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
