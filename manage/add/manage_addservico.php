@@ -866,7 +866,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         <?php
         switch ($dados_edicao['status_ficha']) {
           case 'rascunho':
-            echo "📝 Rascunho";
+            echo "📝 Em Cadastro";
             break;
           case 'em_revisao':
             echo "🔍 Em revisão";
@@ -958,7 +958,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         <?php if (false): ?> <!-- Trocar para $tipo_usuario === 'super_admim' ou um cargo com as devidas permissões -->
           <label>Status da Ficha:
             <select name="status_ficha">
-              <option value="rascunho" <?= ($dados_edicao['status_ficha'] ?? '') === 'rascunho' ? 'selected' : '' ?>>📝 Rascunho</option>
+              <option value="rascunho" <?= ($dados_edicao['status_ficha'] ?? '') === 'rascunho' ? 'selected' : '' ?>>📝 Em Cadastro</option>
               <option value="em_revisao" <?= ($dados_edicao['status_ficha'] ?? '') === 'em_revisao' ? 'selected' : '' ?>>🔍 Em revisão</option>
               <option value="revisada" <?= ($dados_edicao['status_ficha'] ?? '') === 'revisada' ? 'selected' : '' ?>>✅ Revisada</option>
               <option value="em_aprovacao" <?= ($dados_edicao['status_ficha'] ?? '') === 'em_aprovacao' ? 'selected' : '' ?>>🕒 Em aprovação</option>

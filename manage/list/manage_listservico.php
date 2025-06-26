@@ -97,7 +97,7 @@ while ($srv = $result->fetch_assoc()) {
               <?php
               switch ($srv['status_ficha']) {
                 case 'rascunho':
-                  echo '📝 Rascunho';
+                  echo '📝 Em Cadastro';
                   break;
                 case 'em_revisao':
                   echo '🔍 Em revisão';
@@ -201,7 +201,7 @@ while ($srv = $result->fetch_assoc()) {
 
           let statusTexto = '—';
           switch (servico.status_ficha) {
-            case 'rascunho': statusTexto = '📝 Rascunho'; break;
+            case 'rascunho': statusTexto = '📝 Em Cadastro'; break;
             case 'em_revisao': statusTexto = '🔍 Em revisão'; break;
             case 'revisada': statusTexto = '✅ Revisada'; break;
             case 'em_aprovacao': statusTexto = '🕒 Em aprovação'; break;
