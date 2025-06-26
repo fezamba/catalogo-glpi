@@ -538,15 +538,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_revisor') {
   $id = intval($_GET['id']);
 
-  $stmt = $mysqli->prepare("
-        UPDATE servico SET 
-            status_ficha = 'revisada', 
-            data_revisao = NOW() 
-        WHERE ID = ?
-    ");
-  $stmt->bind_param("i", $id);
+  $titulo       = $_POST['nome_servico'];
+  $descricao    = $_POST['descricao_servico'];
+  $subcategoria = $_POST['id_subcategoria'];
+  $kbs          = !empty($_POST['base_conhecimento']) ? $_POST['base_conhecimento'] : null;
+  $area         = $_POST['area_especialista'];
+  $po           = $_POST['po_responsavel'];
+  $alcadas      = !empty($_POST['alcadas']) ? $_POST['alcadas'] : null;
+  $excecao      = !empty($_POST['procedimento_excecao']) ? $_POST['procedimento_excecao'] : null;
+  $obs          = !empty($_POST['observacoes_gerais']) ? $_POST['observacoes_gerais'] : null;
+  $criador      = $_SESSION['username'];
+
+  $stmt = $mysqli->prepare("UPDATE servico SET
+        Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?,
+        UltimaAtualizacao = NOW(), area_especialista = ?,
+        po_responsavel = ?, alcadas = ?, procedimento_excecao = ?,
+        observacoes = ?, usuario_criador = ?, status_ficha = 'revisada', data_revisao = NOW()
+        WHERE ID = ?");
+  $stmt->bind_param(
+    "ssisssssssi",
+    $titulo,
+    $descricao,
+    $subcategoria,
+    $kbs,
+    $area,
+    $po,
+    $alcadas,
+    $excecao,
+    $obs,
+    $criador,
+    $id
+  );
   $stmt->execute();
   $stmt->close();
+
+  $revisores_selecionados = $_POST['revisores_ids'] ?? [];
+  $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
+  $stmt_delete->bind_param("i", $id);
+  $stmt_delete->execute();
+  $stmt_delete->close();
+  if (!empty($revisores_selecionados)) {
+    $stmt_assign = $mysqli->prepare("INSERT INTO servico_revisores (servico_id, revisor_id) VALUES (?, ?)");
+    foreach ($revisores_selecionados as $revisor_id) {
+      $stmt_assign->bind_param("ii", $id, $revisor_id);
+      $stmt_assign->execute();
+    }
+    $stmt_assign->close();
+  }
+
+  $mysqli->query("DELETE FROM diretriz WHERE ID_Servico = $id");
+  $mysqli->query("DELETE FROM padrao WHERE ID_Servico = $id");
+  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $id");
+
+  if (!empty($_POST['diretrizes'])) {
+    foreach ($_POST['diretrizes'] as $diretriz) {
+      if (!empty($diretriz['titulo'])) {
+        $titulo_dir = $mysqli->real_escape_string($diretriz['titulo']);
+        $mysqli->query("INSERT INTO diretriz (Titulo, ID_Servico) VALUES ('$titulo_dir', $id)");
+        $id_diretriz = $mysqli->insert_id;
+        if (!empty($diretriz['itens'])) {
+          foreach ($diretriz['itens'] as $item) {
+            if (!empty($item)) {
+              $conteudo = $mysqli->real_escape_string($item);
+              $mysqli->query("INSERT INTO itemdiretriz (ID_Diretriz, Conteudo) VALUES ($id_diretriz, '$conteudo')");
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (!empty($_POST['padroes'])) {
+    foreach ($_POST['padroes'] as $padrao) {
+      if (!empty($padrao['titulo'])) {
+        $titulo_pad = $mysqli->real_escape_string($padrao['titulo']);
+        $mysqli->query("INSERT INTO padrao (Titulo, ID_Servico) VALUES ('$titulo_pad', $id)");
+        $id_padrao = $mysqli->insert_id;
+        if (!empty($padrao['itens'])) {
+          foreach ($padrao['itens'] as $item) {
+            if (!empty($item)) {
+              $conteudo = $mysqli->real_escape_string($item);
+              $mysqli->query("INSERT INTO itempadrao (ID_Padrao, Conteudo) VALUES ($id_padrao, '$conteudo')");
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (!empty($_POST['checklist'])) {
+    foreach ($_POST['checklist'] as $item) {
+      if (!empty($item['item'])) {
+        $nome = $mysqli->real_escape_string($item['item']);
+        $obs_item = $mysqli->real_escape_string($item['observacao']);
+        $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($id, '$nome', '$obs_item')");
+      }
+    }
+  }
 
   header("Location: ../list/manage_listservico.php?sucesso=1");
   exit;
@@ -565,46 +653,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_para_apr
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_po') {
-  $id_servico_aprovado = intval($_GET['id']);
+  $id = intval($_GET['id']);
 
-  $nome_po_responsavel = null;
-  $stmt_find_resp = $mysqli->prepare("SELECT po_responsavel FROM servico WHERE ID = ?");
-  $stmt_find_resp->bind_param("i", $id_servico_aprovado);
-  $stmt_find_resp->execute();
-  $result_resp = $stmt_find_resp->get_result();
-  if ($servico_row = $result_resp->fetch_assoc()) {
-    $nome_po_responsavel = $servico_row['po_responsavel'];
+  $titulo       = $_POST['nome_servico'];
+  $descricao    = $_POST['descricao_servico'];
+  $subcategoria = $_POST['id_subcategoria'];
+  $kbs          = !empty($_POST['base_conhecimento']) ? $_POST['base_conhecimento'] : null;
+  $area         = $_POST['area_especialista'];
+  $po           = $_POST['po_responsavel'];
+  $alcadas      = !empty($_POST['alcadas']) ? $_POST['alcadas'] : null;
+  $excecao      = !empty($_POST['procedimento_excecao']) ? $_POST['procedimento_excecao'] : null;
+  $obs          = !empty($_POST['observacoes_gerais']) ? $_POST['observacoes_gerais'] : null;
+  $criador      = $_SESSION['username'];
+
+  $email_po_aprovador = null;
+  $stmt_find_email = $mysqli->prepare("SELECT email FROM pos WHERE nome = ?");
+  $stmt_find_email->bind_param("s", $po);
+  $stmt_find_email->execute();
+  $result_email = $stmt_find_email->get_result();
+  if ($po_row = $result_email->fetch_assoc()) {
+    $email_po_aprovador = $po_row['email'];
   }
-  $stmt_find_resp->close();
+  $stmt_find_email->close();
 
-  if ($nome_po_responsavel) {
-    $email_po_aprovador = null;
-    $stmt_find_email = $mysqli->prepare("SELECT email FROM pos WHERE nome = ?");
-    $stmt_find_email->bind_param("s", $nome_po_responsavel);
-    $stmt_find_email->execute();
-    $result_email = $stmt_find_email->get_result();
-    if ($po_row = $result_email->fetch_assoc()) {
-      $email_po_aprovador = $po_row['email'];
+  $stmt = $mysqli->prepare("UPDATE servico SET
+        Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?,
+        UltimaAtualizacao = NOW(), area_especialista = ?,
+        po_responsavel = ?, alcadas = ?, procedimento_excecao = ?,
+        observacoes = ?, usuario_criador = ?, status_ficha = 'aprovada',
+        po_aprovador_nome = ?, po_aprovador_email = ?, data_aprovacao = NOW()
+        WHERE ID = ?");
+  $stmt->bind_param(
+    "ssisssssssssi",
+    $titulo,
+    $descricao,
+    $subcategoria,
+    $kbs,
+    $area,
+    $po,
+    $alcadas,
+    $excecao,
+    $obs,
+    $criador,
+    $po,
+    $email_po_aprovador,
+    $id
+  );
+  $stmt->execute();
+  $stmt->close();
+
+  $mysqli->query("DELETE FROM diretriz WHERE ID_Servico = $id");
+  $mysqli->query("DELETE FROM padrao WHERE ID_Servico = $id");
+  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $id");
+
+  if (!empty($_POST['diretrizes'])) {
+    foreach ($_POST['diretrizes'] as $diretriz) {
+      if (!empty($diretriz['titulo'])) {
+        $titulo_dir = $mysqli->real_escape_string($diretriz['titulo']);
+        $mysqli->query("INSERT INTO diretriz (Titulo, ID_Servico) VALUES ('$titulo_dir', $id)");
+        $id_diretriz = $mysqli->insert_id;
+        if (!empty($diretriz['itens'])) {
+          foreach ($diretriz['itens'] as $item) {
+            if (!empty($item)) {
+              $conteudo = $mysqli->real_escape_string($item);
+              $mysqli->query("INSERT INTO itemdiretriz (ID_Diretriz, Conteudo) VALUES ($id_diretriz, '$conteudo')");
+            }
+          }
+        }
+      }
     }
-    $stmt_find_email->close();
-
-    $stmt_update = $mysqli->prepare("
-            UPDATE servico SET 
-                status_ficha = 'aprovada', 
-                po_aprovador_nome = ?, 
-                po_aprovador_email = ?, 
-                data_aprovacao = NOW() 
-            WHERE ID = ?
-        ");
-    $stmt_update->bind_param("ssi", $nome_po_responsavel, $email_po_aprovador, $id_servico_aprovado);
-    $stmt_update->execute();
-    $stmt_update->close();
-
-    header("Location: ../list/manage_listservico.php?sucesso=1");
-    exit;
-  } else {
-    die("Erro: Não foi possível aprovar. Nenhum PO Responsável está definido para este serviço.");
   }
+
+  if (!empty($_POST['padroes'])) {
+    foreach ($_POST['padroes'] as $padrao) {
+      if (!empty($padrao['titulo'])) {
+        $titulo_pad = $mysqli->real_escape_string($padrao['titulo']);
+        $mysqli->query("INSERT INTO padrao (Titulo, ID_Servico) VALUES ('$titulo_pad', $id)");
+        $id_padrao = $mysqli->insert_id;
+        if (!empty($padrao['itens'])) {
+          foreach ($padrao['itens'] as $item) {
+            if (!empty($item)) {
+              $conteudo = $mysqli->real_escape_string($item);
+              $mysqli->query("INSERT INTO itempadrao (ID_Padrao, Conteudo) VALUES ($id_padrao, '$conteudo')");
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (!empty($_POST['checklist'])) {
+    foreach ($_POST['checklist'] as $item) {
+      if (!empty($item['item'])) {
+        $nome = $mysqli->real_escape_string($item['item']);
+        $obs_item = $mysqli->real_escape_string($item['observacao']);
+        $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($id, '$nome', '$obs_item')");
+      }
+    }
+  }
+
+  header("Location: ../list/manage_listservico.php?sucesso=1");
+  exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_revisor') {
@@ -792,16 +941,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
         <?php echo htmlspecialchars($mensagem); ?>
       </div>
     <?php endif; ?>
-    <?php
-    function campo_desabilitado($tipo_usuario)
-    {
-      return in_array($tipo_usuario, ['revisor', 'po']) ? 'disabled' : '';
-    }
-    function campo_somente_leitura($tipo_usuario)
-    {
-      return in_array($tipo_usuario, ['revisor', 'po']) ? 'readonly' : '';
-    }
-    ?>
     <form id="form-ficha" method="post" class="form-grid">
       <div class="form-column">
         <label>Nome do Serviço:
