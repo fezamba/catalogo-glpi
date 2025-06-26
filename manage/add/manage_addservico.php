@@ -445,11 +445,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 
   $revisores_selecionados = $_POST['revisores_ids'] ?? [];
 
-  if (empty($revisores_selecionados)) {
-    die("Erro: Ação bloqueada. É obrigatório selecionar ao menos um revisor para continuar.");
-    exit;
-  }
-
   $stmt = $mysqli->prepare("UPDATE servico SET 
     Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
     UltimaAtualizacao = NOW(), area_especialista = ?, 
