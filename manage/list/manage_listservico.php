@@ -1,5 +1,4 @@
 <?php
-//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
 require_once '../../conexao.php';
 if ($mysqli->connect_errno) {
   die("Erro: " . $mysqli->connect_error);
@@ -127,6 +126,9 @@ while ($srv = $result->fetch_assoc()) {
                 case 'substituida':
                   echo "♻️ Substituída";
                   break;
+                case 'inativa':
+                  echo '🚫 Inativa';
+                  break;
                 default:
                   echo '—';
                   break;
@@ -209,6 +211,7 @@ while ($srv = $result->fetch_assoc()) {
             case 'reprovado_revisor': statusTexto = '❌ Reprovado pelo revisor'; break;
             case 'reprovado_po': statusTexto = '❌ Reprovado pelo PO'; break;
             case 'substituida': statusTexto = '♻️ Substituída'; break;
+            case 'inativa': statusTexto = '🚫 Inativa'; break;
           }
 
           const ultimaAtt = servico.UltimaAtualizacao
