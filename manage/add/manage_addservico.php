@@ -437,12 +437,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
     $titulo      = $_POST['nome_servico'];
     $descricao   = $_POST['descricao_servico'];
     $subcategoria = $_POST['id_subcategoria'];
-    $kbs         = $_POST['base_conhecimento'];
+    $kbs = !empty($_POST['base_conhecimento']) ? $_POST['base_conhecimento'] : null;
     $area        = $_POST['area_especialista'];
     $po          = $_POST['po_responsavel'];
-    $alcadas     = $_POST['alcadas'];
-    $excecao     = $_POST['procedimento_excecao'];
-    $obs         = $_POST['observacoes_gerais'];
+    $alcadas     = !empty($_POST['alcadas']) ? $_POST['alcadas'] : null;
+    $excecao     = !empty($_POST['procedimento_excecao']) ? $_POST['procedimento_excecao'] : null;
+    $obs         = !empty($_POST['observacoes_gerais']) ? $_POST['observacoes_gerais'] : null;
     $criador     = $_SESSION['username'];
 
     $revisores_selecionados = $_POST['revisores_ids'] ?? [];
@@ -655,6 +655,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao'])) {
     exit;
   }
 }
+
 ?>
 
 <!DOCTYPE html>
