@@ -1011,7 +1011,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
             <?php
             $pode_excluir = false;
             if (isset($status)) {
-              if ($tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po', 'em_revisao'])) {
+              if ($tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po'])) {
                 $pode_excluir = true;
               }
             }
