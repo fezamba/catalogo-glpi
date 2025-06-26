@@ -1034,13 +1034,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       let contPadrao = <?= count($padroes) ?>;
       let contChecklist = <?= count($checklist) ?>;
     </script>
-    <div id="error-popup" class="popup-overlay" style="display:none;">
-      <div class="popup-content">
-        <h3>Erro de Validação</h3>
-        <p id="error-message"></p>
-        <button class="btn-salvar" onclick="document.getElementById('error-popup').style.display='none'">Fechar</button>
-      </div>
-    </div>
     <script src="addservico.js"></script>
     <input type="hidden" id="justificativa-submit-acao" value="">
 </body>

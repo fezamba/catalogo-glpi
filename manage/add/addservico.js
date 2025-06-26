@@ -1,21 +1,5 @@
-function showErrorPopup(message) {
-    const popup = document.getElementById('error-popup');
-    const messageElement = document.getElementById('error-message');
-    
-    if (popup && messageElement) {
-        messageElement.textContent = message;
-        popup.style.display = 'flex';
-    } else {
-        alert(message);
-    }
-}
-
-function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-}
-
 function adicionarDiretriz() {
+    contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
     const index = contDiretriz++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -36,6 +20,7 @@ function adicionarItemDiretriz(index) {
 }
 
 function adicionarPadrao() {
+    contPadrao = document.querySelectorAll('#padroes .grupo').length;
     const index = contPadrao++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -56,6 +41,7 @@ function adicionarItemPadrao(index) {
 }
 
 function adicionarChecklist() {
+    contChecklist = document.querySelectorAll('#checklist .grupo').length;
     const index = contChecklist++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -68,53 +54,69 @@ function adicionarChecklist() {
     document.getElementById('checklist').appendChild(container);
 }
 
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+
 function mostrarJustificativa(tipo) {
     const formReprovacao = document.getElementById('form-reprovacao');
     const campoAcao = document.getElementById('justificativa-submit-acao');
-
-    formReprovacao.style.display = 'block';
-    campoAcao.value = tipo;
-    formReprovacao.scrollIntoView({ behavior: 'smooth' });
+    if (formReprovacao && campoAcao) {
+        formReprovacao.style.display = 'block';
+        campoAcao.value = tipo;
+        formReprovacao.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
-    contPadrao = document.querySelectorAll('#padroes .grupo').length;
-    contChecklist = document.querySelectorAll('#checklist .grupo').length;
+    const form = document.getElementById('form-ficha');
+    const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
-    const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
-    
-    if (btnEnviarRevisao) {
-        btnEnviarRevisao.addEventListener('click', function(event) {
-            
-            const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
-            if (revisoresMarcados === 0) {
-                event.preventDefault();
-                showErrorPopup('É obrigatório selecionar ao menos um revisor.');
-                return;
-            }
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            const actionTrigger = event.submitter;
 
-            const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
-            let peloMenosUmTituloPreenchido = false;
-            
-            if (diretrizesTitulos.length === 0) {
-                 event.preventDefault();
-                 showErrorPopup('É necessário adicionar pelo menos uma Diretriz.');
-                 return;
-            }
-
-            diretrizesTitulos.forEach((textarea) => {
-                if (textarea.value.trim() !== '') {
-                    peloMenosUmTituloPreenchido = true;
+            if (actionTrigger && actionTrigger.value === 'enviar_revisao') {
+                
+                const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
+                if (revisoresMarcados === 0 && firstRevisorCheckbox) {
+                    event.preventDefault();
+                    firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
+                    firstRevisorCheckbox.reportValidity();
+                    return;
+                } else if (firstRevisorCheckbox) {
+                    firstRevisorCheckbox.setCustomValidity('');
                 }
-            });
 
-            if (!peloMenosUmTituloPreenchido) {
-                event.preventDefault();
-                showErrorPopup('Você precisa preencher o título de pelo menos uma diretriz.');
-                return; 
+                const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"]');
+                if (diretrizesTitulos.length === 0) {
+                    event.preventDefault();
+                    alert('Erro: É necessário adicionar pelo menos uma Diretriz.');
+                    return;
+                }
+                
+                let peloMenosUmTituloPreenchido = false;
+                diretrizesTitulos.forEach((textarea) => {
+                    if (textarea.value.trim() !== '') {
+                        peloMenosUmTituloPreenchido = true;
+                    }
+                });
+
+                if (!peloMenosUmTituloPreenchido) {
+                    event.preventDefault();
+                    alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
+                }
             }
-            
         });
+
+        if (firstRevisorCheckbox) {
+            const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
+            allRevisorCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('input', () => {
+                    firstRevisorCheckbox.setCustomValidity('');
+                });
+            });
+        }
     }
 });
