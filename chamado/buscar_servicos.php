@@ -1,7 +1,6 @@
 <?php
 header('Content-Type: application/json');
 
-//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
 require_once '../conexao.php';
 if ($mysqli->connect_errno) {
     echo json_encode(['error' => 'Erro de conexão']);
@@ -48,8 +47,8 @@ $query = "
     JOIN subcategoria sub ON s.ID_SubCategoria = sub.ID
     JOIN categoria cat ON sub.ID_Categoria = cat.ID
     WHERE 
-        ($whereClause) -- A condição de busca permanece
-    -- A LINHA 'AND s.status_ficha = 'publicado'' FOI REMOVIDA DAQUI
+        ($whereClause)
+    AND s.status_ficha = 'publicado'
     LIMIT 10
 ";
 
@@ -58,7 +57,7 @@ $stmt = $mysqli->prepare($query);
 if ($stmt) {
 
     $stmt->bind_param($types, ...$params);
-    
+
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -80,4 +79,3 @@ if ($stmt) {
 } else {
     echo json_encode(['error' => 'Erro na preparação da consulta']);
 }
-?>

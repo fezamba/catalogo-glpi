@@ -1,5 +1,4 @@
 <?php
-//$mysqli = new mysqli("localhost", "root", "sefazfer123@", "catalogo-teste");
 require_once 'conexao.php';
 header('Content-Type: application/json');
 
@@ -34,7 +33,9 @@ $query = "
     FROM servico s
     JOIN subcategoria sub ON s.ID_SubCategoria = sub.ID
     JOIN categoria cat ON sub.ID_Categoria = cat.ID
-    WHERE $where
+    WHERE
+        ($where)
+    AND s.status_ficha = 'publicado'
     LIMIT 10
 ";
 
