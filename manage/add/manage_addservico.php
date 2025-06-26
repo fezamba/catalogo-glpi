@@ -443,6 +443,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
   $obs         = $_POST['observacoes_gerais'];
   $criador     = $_SESSION['username'];
 
+  $revisores_selecionados = $_POST['revisores_ids'] ?? [];
+
+  if (empty($revisores_selecionados)) {
+    header("Location: manage_addservico.php?id=$id&erro=sem_revisor");
+    exit;
+  }
+
   $stmt = $mysqli->prepare("UPDATE servico SET 
     Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
     UltimaAtualizacao = NOW(), area_especialista = ?, 
@@ -467,13 +474,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 
   $stmt->execute();
   $stmt->close();
-
-  $revisores_selecionados = $_POST['revisores_ids'] ?? [];
-
-  if (empty($revisores_selecionados)) {
-    header("Location: manage_addservico.php?id=$id&erro=sem_revisor");
-    exit;
-  }
 
   $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
   $stmt_delete->bind_param("i", $id);
@@ -1034,6 +1034,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       <input type="hidden" name="acao" id="justificativa-submit-acao" value="">
       <button type="submit" class="btn-danger">Enviar Reprovação</button>
     </form>
+    <div id="error-popup" class="popup-overlay" style="display:none;">
+      <div class="popup-content">
+        <h3>Erro de Validação</h3>
+        <p id="error-message"></p>
+        <button class="btn-salvar" onclick="document.getElementById('error-popup').style.display='none'">Fechar</button>
+      </div>
+    </div>
     <script>
       let contDiretriz = <?= count($diretrizes) ?>;
       let contPadrao = <?= count($padroes) ?>;

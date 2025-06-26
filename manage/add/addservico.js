@@ -118,3 +118,16 @@ function mostrarJustificativa(tipo) {
 
   formReprovacao.scrollIntoView({ behavior: 'smooth' });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.has('erro') && params.get('erro') === 'sem_revisor') {
+    const popup = document.getElementById('error-popup');
+    const messageElement = document.getElementById('error-message');
+
+    messageElement.textContent =
+      'É obrigatório selecionar ao menos um revisor para enviar a ficha para revisão.';
+    popup.style.display = 'flex';
+  }
+});
