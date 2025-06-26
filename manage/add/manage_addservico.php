@@ -470,6 +470,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao'
 
   $revisores_selecionados = $_POST['revisores_ids'] ?? [];
 
+  if (empty($revisores_selecionados)) {
+    header("Location: manage_addservico.php?id=$id&erro=sem_revisor");
+    exit;
+  }
+
   $stmt_delete = $mysqli->prepare("DELETE FROM servico_revisores WHERE servico_id = ?");
   $stmt_delete->bind_param("i", $id);
   $stmt_delete->execute();
