@@ -390,7 +390,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_
         justificativa_rejeicao = ?
         WHERE ID = ?");
   $stmt->bind_param(
-    "ssisssssssssi",
+    "ssissssssssi",
     $titulo,
     $descricao,
     $subcategoria,
