@@ -1,3 +1,7 @@
+let contDiretriz = 0;
+let contPadrao = 0;
+let contChecklist = 0;
+
 function adicionarDiretriz() {
     contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
     const index = contDiretriz++;
@@ -60,17 +64,18 @@ function autoResize(el) {
 }
 
 function mostrarJustificativa(acao) {
-    const formReprovacao = document.getElementById('form-reprovacao');
-    document.getElementById('justificativa-acao-escondida').value = acao;
-    formReprovacao.style.display = 'block';
-    document.getElementById('justificativa-texto').focus();
-    formReprovacao.scrollIntoView({ behavior: 'smooth' });
+    const justificativaBox = document.getElementById('justificativa-box');
+    const confirmarBtn = document.getElementById('confirmar-reprovacao-btn');
+    
+    confirmarBtn.value = acao; // Define a ação que será enviada (ex: 'reprovar_revisor')
+    justificativaBox.style.display = 'block';
+    document.getElementById('justificativa-input').focus();
+    justificativaBox.scrollIntoView({ behavior: 'smooth' });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     const formPrincipal = document.getElementById('form-ficha');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
-    const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
 
     if (formPrincipal) {
         formPrincipal.addEventListener('submit', function(event) {
@@ -110,38 +115,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         }
-    }
-
-    if (btnConfirmarReprovacao && formPrincipal) {
-        btnConfirmarReprovacao.addEventListener('click', function(event) {
-            event.preventDefault();
-
-            const justificativaTexto = document.getElementById('justificativa-texto').value;
-            const acao = document.getElementById('justificativa-acao-escondida').value;
-
-            if (justificativaTexto.trim() === '') {
-                alert('Por favor, preencha o campo de justificativa.');
-                return;
-            }
-            
-            const oldAction = formPrincipal.querySelector('input[name="acao"]');
-            if(oldAction) oldAction.remove();
-            const oldJustification = formPrincipal.querySelector('input[name="justificativa"]');
-            if(oldJustification) oldJustification.remove();
-
-            const inputAcao = document.createElement('input');
-            inputAcao.type = 'hidden';
-            inputAcao.name = 'acao';
-            inputAcao.value = acao;
-            formPrincipal.appendChild(inputAcao);
-
-            const inputJustificativa = document.createElement('input');
-            inputJustificativa.type = 'hidden';
-            inputJustificativa.name = 'justificativa';
-            inputJustificativa.value = justificativaTexto;
-            formPrincipal.appendChild(inputJustificativa);
-
-            formPrincipal.submit();
-        });
     }
 });
