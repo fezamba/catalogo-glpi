@@ -1237,6 +1237,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
             <?php endif; ?>
           </div>
         </div>
+        <!-- Coloque este bloco DENTRO do seu <form id="form-ficha"> -->
+        <div id="justificativa-box" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
+            <label for="justificativa-input" style="font-weight: bold;">Justificativa (Obrigatório):</label><br>
+            
+            <!-- Este textarea agora faz parte do formulário principal -->
+            <textarea name="justificativa" id="justificativa-input" rows="4" cols="60" required></textarea><br><br>
+            
+            <!-- Este botão é do tipo 'submit' e seu 'value' será definido pelo JavaScript -->
+            <button type="submit" id="confirmar-reprovacao-btn" name="acao" value="" class="btn-danger">Confirmar Ação</button>
+            
+            <!-- Este botão é do tipo 'button' para não enviar o formulário e apenas fechar a caixa -->
+            <button type="button" class="btn-secondary" onclick="document.getElementById('justificativa-box').style.display='none'">Cancelar</button>
+        </div>
     </form>
     <script>
       let contDiretriz = <?= count($diretrizes) ?>;
