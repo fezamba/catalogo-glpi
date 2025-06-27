@@ -1239,12 +1239,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
           </div>
         </div>
     </form>
-    <form method="post" id="form-reprovacao" style="display:none; margin-top: 20px;">
-      <label for="justificativa">Justificativa da Reprovação:</label><br>
-      <textarea name="justificativa" id="justificativa" rows="4" cols="60" required></textarea><br><br>
-      <input type="hidden" name="acao" id="justificativa-submit-acao" value="">
-      <button type="submit" class="btn-danger">Enviar Reprovação</button>
-    </form>
+    <div id="form-reprovacao" style="display:none; margin-top: 20px;">
+      <label for="justificativa-texto">Justificativa:</label><br>
+      <textarea id="justificativa-texto" rows="4" cols="60" required></textarea><br><br>
+
+      <input type="hidden" id="justificativa-acao-escondida" value="">
+
+      <button type="button" id="confirmar-reprovacao-btn" class="btn-danger">Confirmar Ação</button>
+      <button type="button" class="btn-secondary" onclick="document.getElementById('form-reprovacao').style.display='none'">Cancelar</button>
+    </div>
     <script>
       let contDiretriz = <?= count($diretrizes) ?>;
       let contPadrao = <?= count($padroes) ?>;

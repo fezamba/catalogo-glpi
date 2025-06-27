@@ -59,22 +59,22 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
-function mostrarJustificativa(tipo) {
+function mostrarJustificativa(acao) {
     const formReprovacao = document.getElementById('form-reprovacao');
-    const campoAcao = document.getElementById('justificativa-submit-acao');
-    if (formReprovacao && campoAcao) {
-        formReprovacao.style.display = 'block';
-        campoAcao.value = tipo;
-        formReprovacao.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById('justificativa-acao-escondida').value = acao;
+    formReprovacao.style.display = 'block';
+    document.getElementById('justificativa-texto').focus();
+    formReprovacao.scrollIntoView({ behavior: 'smooth' });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('form-ficha');
-    const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
-    if (form) {
-        form.addEventListener('submit', function(event) {
+document.addEventListener('DOMContentLoaded', function() {
+    const formPrincipal = document.getElementById('form-ficha');
+    const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
+    const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
+
+    if (formPrincipal) {
+        formPrincipal.addEventListener('submit', function(event) {
             const actionTrigger = event.submitter;
 
             if (actionTrigger && actionTrigger.value === 'enviar_revisao') {
@@ -89,21 +89,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     firstRevisorCheckbox.setCustomValidity('');
                 }
 
-                const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"]');
-                if (diretrizesTitulos.length === 0) {
-                    event.preventDefault();
-                    alert('Erro: É necessário adicionar pelo menos uma Diretriz.');
-                    return;
-                }
-                
+                const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
                 let peloMenosUmTituloPreenchido = false;
                 diretrizesTitulos.forEach((textarea) => {
                     if (textarea.value.trim() !== '') {
                         peloMenosUmTituloPreenchido = true;
                     }
                 });
-
-                if (!peloMenosUmTituloPreenchido) {
+                if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
                     event.preventDefault();
                     alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
                 }
@@ -118,5 +111,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         }
+    }
+
+    if (btnConfirmarReprovacao && formPrincipal) {
+        btnConfirmarReprovacao.addEventListener('click', function() {
+            const justificativaTexto = document.getElementById('justificativa-texto').value;
+            const acao = document.getElementById('justificativa-acao-escondida').value;
+
+            if (justificativaTexto.trim() === '') {
+                alert('Por favor, preencha o campo de justificativa.');
+                return;
+            }
+
+            const inputAcao = document.createElement('input');
+            inputAcao.type = 'hidden';
+            inputAcao.name = 'acao';
+            inputAcao.value = acao;
+            formPrincipal.appendChild(inputAcao);
+
+            const inputJustificativa = document.createElement('input');
+            inputJustificativa.type = 'hidden';
+            inputJustificativa.name = 'justificativa';
+            inputJustificativa.value = justificativaTexto;
+            formPrincipal.appendChild(inputJustificativa);
+
+            formPrincipal.submit();
+        });
     }
 });
