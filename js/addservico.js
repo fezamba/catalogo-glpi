@@ -67,19 +67,16 @@ function mostrarJustificativa(acao) {
     formReprovacao.scrollIntoView({ behavior: 'smooth' });
 }
 
-
 document.addEventListener('DOMContentLoaded', function() {
     const formPrincipal = document.getElementById('form-ficha');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
     const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
-
 
     if (formPrincipal) {
         formPrincipal.addEventListener('submit', function(event) {
             const actionTrigger = event.submitter;
 
             if (actionTrigger && actionTrigger.value === 'enviar_revisao') {
-                
                 const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
                 if (revisoresMarcados === 0 && firstRevisorCheckbox) {
                     event.preventDefault();
@@ -90,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     firstRevisorCheckbox.setCustomValidity('');
                 }
 
-                // Validação de Diretrizes
                 const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
                 let peloMenosUmTituloPreenchido = false;
                 diretrizesTitulos.forEach((textarea) => {
@@ -98,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         peloMenosUmTituloPreenchido = true;
                     }
                 });
+
                 if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
                     event.preventDefault();
                     alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
@@ -131,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if(oldAction) oldAction.remove();
             const oldJustification = formPrincipal.querySelector('input[name="justificativa"]');
             if(oldJustification) oldJustification.remove();
-
 
             const inputAcao = document.createElement('input');
             inputAcao.type = 'hidden';
