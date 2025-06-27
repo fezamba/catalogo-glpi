@@ -813,7 +813,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_reviso
   $stmt->execute();
   $stmt->close();
 
-  // 2. Apaga e recria os relacionamentos (diretrizes, padrões, checklist)
   $mysqli->query("DELETE FROM diretriz WHERE ID_Servico = $id");
   if (!empty($_POST['diretrizes'])) {
     foreach ($_POST['diretrizes'] as $diretriz) {
