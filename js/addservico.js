@@ -1,7 +1,3 @@
-let contDiretriz = 0;
-let contPadrao = 0;
-let contChecklist = 0;
-
 function adicionarDiretriz() {
     contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
     const index = contDiretriz++;
