@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
     const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
 
+
     if (formPrincipal) {
         formPrincipal.addEventListener('submit', function(event) {
             const actionTrigger = event.submitter;
@@ -89,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     firstRevisorCheckbox.setCustomValidity('');
                 }
 
+                // Validação de Diretrizes
                 const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
                 let peloMenosUmTituloPreenchido = false;
                 diretrizesTitulos.forEach((textarea) => {
@@ -114,7 +116,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (btnConfirmarReprovacao && formPrincipal) {
-        btnConfirmarReprovacao.addEventListener('click', function() {
+        btnConfirmarReprovacao.addEventListener('click', function(event) {
+            event.preventDefault();
+
             const justificativaTexto = document.getElementById('justificativa-texto').value;
             const acao = document.getElementById('justificativa-acao-escondida').value;
 
@@ -122,6 +126,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Por favor, preencha o campo de justificativa.');
                 return;
             }
+            
+            const oldAction = formPrincipal.querySelector('input[name="acao"]');
+            if(oldAction) oldAction.remove();
+            const oldJustification = formPrincipal.querySelector('input[name="justificativa"]');
+            if(oldJustification) oldJustification.remove();
+
 
             const inputAcao = document.createElement('input');
             inputAcao.type = 'hidden';

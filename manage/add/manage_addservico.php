@@ -1246,7 +1246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       <input type="hidden" id="justificativa-acao-escondida" value="">
 
       <button type="button" id="confirmar-reprovacao-btn" class="btn-danger">Confirmar Ação</button>
-      <button type="button" class="btn-secondary" onclick="document.getElementById('form-reprovacao').style.display='none'">Cancelar</button>
+      <button type="button" class="btn-salvar" onclick="document.getElementById('form-reprovacao').style.display='none'">Cancelar</button>
     </div>
     <script>
       let contDiretriz = <?= count($diretrizes) ?>;
