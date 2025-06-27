@@ -1244,7 +1244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
 
           <button type="submit" id="confirmar-reprovacao-btn" name="acao" value="" class="btn-danger">Confirmar Ação</button>
 
-          <button type="button" class="btn-secondary" onclick="document.getElementById('justificativa-box').style.display='none'">Cancelar</button>
+          <button type="button" class="btn-salvar" onclick="document.getElementById('justificativa-box').style.display='none'">Cancelar</button>
         </div>
     </form>
     <script>
