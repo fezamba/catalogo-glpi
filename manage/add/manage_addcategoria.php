@@ -86,7 +86,7 @@ if (isset($_GET["sucesso"]) && $_GET["sucesso"] == "1") {
 <head>
   <meta charset="UTF-8">
   <title>Nova Categoria</title>
-  <link rel="stylesheet" href="style_manage_add.css">
+  <link rel="stylesheet" href="../../css/style_manage_add.css">
 </head>
 
 <body>
@@ -133,7 +133,7 @@ if (isset($_GET["sucesso"]) && $_GET["sucesso"] == "1") {
     </form>
   </div>
 
-  <script src="script_manage_add.js"></script>
+  <script src="../../js/script_manage_add.js"></script>
 </body>
 
 </html>

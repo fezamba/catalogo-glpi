@@ -48,7 +48,7 @@ $revisores = $result->fetch_all(MYSQLI_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>Gerenciamento de Revisores</title>
-    <link rel="stylesheet" href="../pos/manage_pos.css"> 
+    <link rel="stylesheet" href="../../css/manage_pos.css"> 
 </head>
 <body>
 

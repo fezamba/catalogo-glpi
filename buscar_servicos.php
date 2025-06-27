@@ -27,16 +27,18 @@ $query = "
         s.Titulo,
         s.Descricao,
         s.ID_SubCategoria,
+        s.UltimaAtualizacao,
+        s.status_ficha,
+        s.codigo_ficha,
+        s.versao,
         sub.ID_Categoria AS ID_Categoria,
         sub.Titulo AS subcategoria,
         cat.Titulo AS categoria
     FROM servico s
     JOIN subcategoria sub ON s.ID_SubCategoria = sub.ID
     JOIN categoria cat ON sub.ID_Categoria = cat.ID
-    WHERE
-        ($where)
-    AND s.status_ficha = 'publicado'
-    LIMIT 10
+    WHERE $where
+    ORDER BY s.ID DESC
 ";
 
 $res = $mysqli->query($query);
@@ -44,15 +46,7 @@ $res = $mysqli->query($query);
 $servicos = [];
 if ($res) {
     while ($row = $res->fetch_assoc()) {
-        $servicos[] = [
-            'id' => $row['ID'],
-            'titulo' => $row['Titulo'],
-            'descricao' => $row['Descricao'],
-            'id_subcategoria' => $row['ID_SubCategoria'],
-            'subcategoria' => $row['subcategoria'],
-            'id_categoria' => $row['ID_Categoria'],
-            'categoria' => $row['categoria']
-        ];
+        $servicos[] = $row;
     }
 }
 

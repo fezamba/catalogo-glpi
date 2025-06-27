@@ -37,7 +37,7 @@ while ($cat = $result->fetch_assoc()) {
 <head>
   <meta charset="UTF-8">
   <title>Lista de Categorias</title>
-  <link rel="stylesheet" href="style_lists.css">
+  <link rel="stylesheet" href="../../css/style_lists.css">
 </head>
 
 <body>

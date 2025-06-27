@@ -779,7 +779,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
 <head>
   <meta charset="UTF-8">
   <title>Adicionar Serviço</title>
-  <link rel="stylesheet" href="style_manage_add.css">
+  <link rel="stylesheet" href="../../css/style_manage_add.css">
   <?php if (in_array($tipo_usuario, ['revisor', 'po'])): ?>
   <?php endif; ?>
 </head>
@@ -1142,7 +1142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       let contPadrao = <?= count($padroes) ?>;
       let contChecklist = <?= count($checklist) ?>;
     </script>
-    <script src="addservico.js"></script>
+    <script src="../../js/addservico.js"></script>
     <input type="hidden" id="justificativa-submit-acao" value="">
 </body>
 

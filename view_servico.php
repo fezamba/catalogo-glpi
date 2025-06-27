@@ -73,7 +73,7 @@ $stmt_check->close();
 <head>
     <meta charset="UTF-8">
     <title>Visualizar: <?= htmlspecialchars($servico['Titulo'] ?? 'Serviço') ?></title>
-    <link rel="stylesheet" href="view_servico.css">
+    <link rel="stylesheet" href="css/view_servico.css">
 </head>
 
 <body>

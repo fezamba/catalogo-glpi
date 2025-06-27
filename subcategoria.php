@@ -45,7 +45,7 @@ $stmt->close();
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="subcategoria.css" />
+  <link rel="stylesheet" href="css/subcategoria.css" />
   <title>Subcategoria</title>
 </head>
 
@@ -96,7 +96,7 @@ $stmt->close();
     </section>
   </div>
 
-  <script src="script.js"></script>
+  <script src="js/script.js"></script>
 </body>
 
 </html>

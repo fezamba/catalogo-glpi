@@ -22,7 +22,7 @@ while ($cat = $result->fetch_assoc()) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style4.css"/>
+  <link rel="stylesheet" href="../css/manage.css"/>
   <title>Gerenciamento do Catálogo de Serviços</title>
 </head>
 

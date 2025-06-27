@@ -34,7 +34,7 @@ while ($sub = $result->fetch_assoc()) {
 <head>
   <meta charset="UTF-8">
   <title>Lista de Subcategorias</title>
-  <link rel="stylesheet" href="style_lists.css">
+  <link rel="stylesheet" href="../../css/style_lists.css">
 </head>
 
 <body>
@@ -122,7 +122,7 @@ while ($sub = $result->fetch_assoc()) {
       return;
     }
 
-    fetch(`buscar_subcategorias.php?termo=${encodeURIComponent(termoBusca)}`)
+    fetch(`../../buscar_subcategorias.php?termo=${encodeURIComponent(termoBusca)}`)
       .then(res => res.json())
       .then(data => {
         corpoTabela.innerHTML = '';

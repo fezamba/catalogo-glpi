@@ -67,7 +67,7 @@ if (isset($_GET['action'])) {
 <head>
   <meta charset="UTF-8">
   <title>Chatbot do Catálogo</title>
-  <link rel="stylesheet" href="chatbot.css">
+  <link rel="stylesheet" href="css/chatbot.css">
 </head>
 <body>
   <a href="../index.php" class="botao-voltar">← Voltar ao Catálogo</a>
@@ -85,6 +85,6 @@ if (isset($_GET['action'])) {
     </div>
   </div>
 
-  <script src="chatbot.js"></script>
+  <script src="js/chatbot.js"></script>
 </body>
 </html>

@@ -50,7 +50,7 @@ $pos = $result->fetch_all(MYSQLI_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>Gerenciamento de Product Owners (POs)</title>
-    <link rel="stylesheet" href="manage_pos.css"> 
+    <link rel="stylesheet" href="../../css/manage_pos.css"> 
 </head>
 <body>
 

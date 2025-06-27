@@ -10,14 +10,12 @@ $descricao = "";
 $id_categoria = "";
 $modo_edicao = false;
 
-// Buscar categorias para o select
 $categorias = [];
 $res = $mysqli->query("SELECT ID, Titulo FROM categoria ORDER BY Titulo ASC");
 while ($row = $res->fetch_assoc()) {
   $categorias[] = $row;
 }
 
-// Verifica se está editando
 if (isset($_GET['id'])) {
   $id = intval($_GET['id']);
   $modo_edicao = true;
@@ -96,7 +94,7 @@ if (isset($_GET["sucesso"]) && $_GET["sucesso"] == "1") {
 <head>
   <meta charset="UTF-8">
   <title><?php echo $modo_edicao ? "Editar Subcategoria" : "Nova Subcategoria"; ?></title>
-  <link rel="stylesheet" href="style_manage_add.css">
+  <link rel="stylesheet" href="../../css/style_manage_add.css">
 </head>
 
 <body>
@@ -153,7 +151,7 @@ if (isset($_GET["sucesso"]) && $_GET["sucesso"] == "1") {
     </form>
     </form>
 
-    <script src="script_manage_add.js"></script>
+    <script src="../../js/script_manage_add.js"></script>
   </div>
 
 </body>

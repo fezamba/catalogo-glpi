@@ -1,5 +1,5 @@
 <?php
-require_once '../../conexao.php';
+require_once 'conexao.php';
 header('Content-Type: application/json');
 
 $termo = trim($_GET['termo'] ?? '');

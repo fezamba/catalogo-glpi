@@ -25,7 +25,7 @@ while ($cat = $result->fetch_assoc()) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="index.css" />
+  <link rel="stylesheet" href="css/index.css" />
   <title>Catálogo de Serviços</title>
 </head>
 
@@ -56,19 +56,16 @@ while ($cat = $result->fetch_assoc()) {
           <?php endif; ?>
         </div>
       <?php endforeach; ?>
-      <!-- Botão Edição -->
       <div class="menu-item fixed-bottom">
-        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='/chatbot/chatbot.php'">
+        <button class="menu-button" style="margin-bottom: 10px;" onclick="window.location.href='chatbot.php'">
           Assistente Virtual <img src="img/chat.png" alt="Assistente-virtual" class="icon-left2">
         </button>
-        <!-- Botão Edição -->
         <button class="menu-button" onclick="window.location.href='/manage/manage.php'">
           Edição <img src="img/edit.png" alt="Editar-catalogo" class="icon-left">
         </button>
       </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <section class="content">
       <h1>Catálogo de Serviços - Todas as Categorias</h1>
       <p style="margin-bottom: 15px">Para te ajudar com mais agilidade e praticidade, disponibilizamos este catálogo com os principais serviços de TI oferecidos:</p>
@@ -92,7 +89,7 @@ while ($cat = $result->fetch_assoc()) {
     </section>
   </div>
 
-  <script src="script.js"></script>
+  <script src="js/script.js"></script>
 </body>
 
 </html>
