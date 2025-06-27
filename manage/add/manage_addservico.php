@@ -369,7 +369,6 @@ if ($modo_edicao) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_novamente') {
   $id = intval($_GET['id']);
-  $justificativa = $_POST['justificativa'] ?? 'Sem justificativa';
 
   $titulo       = $_POST['nome_servico'];
   $descricao    = $_POST['descricao_servico'];
@@ -381,15 +380,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_
   $excecao      = !empty($_POST['procedimento_excecao']) ? $_POST['procedimento_excecao'] : null;
   $obs          = !empty($_POST['observacoes_gerais']) ? $_POST['observacoes_gerais'] : null;
   $criador      = $_SESSION['username'];
+  $justificativa = $_POST['justificativa'] ?? 'Devolvido pelo PO para ajustes.';
 
-  $stmt = $mysqli->prepare("UPDATE servico SET
-        Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?,
-        UltimaAtualizacao = NOW(), area_especialista = ?,
-        po_responsavel = ?, alcadas = ?, procedimento_excecao = ?,
-        observacoes = ?, usuario_criador = ?, status_ficha = 'em_revisao', justificativa = ?, data_revisao = NOW()
+  $stmt = $mysqli->prepare("UPDATE servico SET 
+        Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
+        UltimaAtualizacao = NOW(), area_especialista = ?, 
+        po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, 
+        observacoes = ?, usuario_criador = ?, status_ficha = 'em_revisao', 
+        justificativa_rejeicao = ?
         WHERE ID = ?");
   $stmt->bind_param(
-    "ssissssssssi",
+    "ssisssssssssi",
     $titulo,
     $descricao,
     $subcategoria,
@@ -407,9 +408,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_
   $stmt->close();
 
   $mysqli->query("DELETE FROM diretriz WHERE ID_Servico = $id");
-  $mysqli->query("DELETE FROM padrao WHERE ID_Servico = $id");
-  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $id");
-
   if (!empty($_POST['diretrizes'])) {
     foreach ($_POST['diretrizes'] as $diretriz) {
       if (!empty($diretriz['titulo'])) {
@@ -428,6 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_
     }
   }
 
+  $mysqli->query("DELETE FROM padrao WHERE ID_Servico = $id");
   if (!empty($_POST['padroes'])) {
     foreach ($_POST['padroes'] as $padrao) {
       if (!empty($padrao['titulo'])) {
@@ -446,6 +445,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_
     }
   }
 
+  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $id");
   if (!empty($_POST['checklist'])) {
     foreach ($_POST['checklist'] as $item) {
       if (!empty($item['item'])) {
@@ -455,50 +455,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'enviar_revisao_
       }
     }
   }
-
-  header("Location: ../list/manage_listservico.php?sucesso=1");
-  exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'publicar_ficha') {
-  $id_nova_versao = intval($_GET['id']);
-
-  $codigo_ficha = null;
-  $stmt_find = $mysqli->prepare("SELECT codigo_ficha FROM servico WHERE ID = ?");
-  $stmt_find->bind_param("i", $id_nova_versao);
-  $stmt_find->execute();
-  $result = $stmt_find->get_result();
-  if ($row = $result->fetch_assoc()) {
-    $codigo_ficha = $row['codigo_ficha'];
-  }
-  $stmt_find->close();
-
-  $stmt_pub = $mysqli->prepare("UPDATE servico SET status_ficha = 'publicado' WHERE ID = ?");
-  $stmt_pub->bind_param("i", $id_nova_versao);
-  $stmt_pub->execute();
-  $stmt_pub->close();
-
-  if ($codigo_ficha) {
-    $stmt_update_old = $mysqli->prepare(
-      "UPDATE servico SET status_ficha = 'substituida' 
-             WHERE codigo_ficha = ? AND ID != ? AND status_ficha = 'publicado'"
-    );
-    $stmt_update_old->bind_param("si", $codigo_ficha, $id_nova_versao);
-    $stmt_update_old->execute();
-    $stmt_update_old->close();
-  }
-
-  header("Location: ../list/manage_listservico.php?sucesso=1");
-  exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'descontinuar_ficha') {
-  $id = intval($_GET['id']);
-
-  $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'descontinuada' WHERE ID = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $stmt->close();
 
   header("Location: ../list/manage_listservico.php?sucesso=1");
   exit;
@@ -819,7 +775,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'aprovar_po') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_revisor') {
   $id = intval($_GET['id']);
-  $justificativa = $_POST['justificativa'] ?? 'Sem justificativa';
 
   $titulo       = $_POST['nome_servico'];
   $descricao    = $_POST['descricao_servico'];
@@ -831,15 +786,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_reviso
   $excecao      = !empty($_POST['procedimento_excecao']) ? $_POST['procedimento_excecao'] : null;
   $obs          = !empty($_POST['observacoes_gerais']) ? $_POST['observacoes_gerais'] : null;
   $criador      = $_SESSION['username'];
+  $justificativa = $_POST['justificativa'] ?? 'Sem justificativa';
 
-  $stmt = $mysqli->prepare("UPDATE servico SET
-        Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?,
-        UltimaAtualizacao = NOW(), area_especialista = ?,
-        po_responsavel = ?, alcadas = ?, procedimento_excecao = ?,
-        observacoes = ?, usuario_criador = ?, status_ficha = 'reprovado_revisor', justificativa = ?, data_revisao = NOW()
+  $stmt = $mysqli->prepare("UPDATE servico SET 
+        Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, 
+        UltimaAtualizacao = NOW(), area_especialista = ?, 
+        po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, 
+        observacoes = ?, usuario_criador = ?, status_ficha = 'reprovado_revisor', 
+        justificativa_rejeicao = ?
         WHERE ID = ?");
   $stmt->bind_param(
-    "ssissssssssi",
+    "ssisssssssssi",
     $titulo,
     $descricao,
     $subcategoria,
@@ -856,10 +813,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_reviso
   $stmt->execute();
   $stmt->close();
 
+  // 2. Apaga e recria os relacionamentos (diretrizes, padrões, checklist)
   $mysqli->query("DELETE FROM diretriz WHERE ID_Servico = $id");
-  $mysqli->query("DELETE FROM padrao WHERE ID_Servico = $id");
-  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $id");
-
   if (!empty($_POST['diretrizes'])) {
     foreach ($_POST['diretrizes'] as $diretriz) {
       if (!empty($diretriz['titulo'])) {
@@ -878,6 +833,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_reviso
     }
   }
 
+  $mysqli->query("DELETE FROM padrao WHERE ID_Servico = $id");
   if (!empty($_POST['padroes'])) {
     foreach ($_POST['padroes'] as $padrao) {
       if (!empty($padrao['titulo'])) {
@@ -896,6 +852,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'reprovar_reviso
     }
   }
 
+  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $id");
   if (!empty($_POST['checklist'])) {
     foreach ($_POST['checklist'] as $item) {
       if (!empty($item['item'])) {
