@@ -1,5 +1,5 @@
 function adicionarDiretriz() {
-    contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
+    let contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
     const index = contDiretriz++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -20,7 +20,7 @@ function adicionarItemDiretriz(index) {
 }
 
 function adicionarPadrao() {
-    contPadrao = document.querySelectorAll('#padroes .grupo').length;
+    let contPadrao = document.querySelectorAll('#padroes .grupo').length;
     const index = contPadrao++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -41,7 +41,7 @@ function adicionarItemPadrao(index) {
 }
 
 function adicionarChecklist() {
-    contChecklist = document.querySelectorAll('#checklist .grupo').length;
+    let contChecklist = document.querySelectorAll('#checklist .grupo').length;
     const index = contChecklist++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -63,67 +63,70 @@ function mostrarJustificativa(acao) {
     const justificativaBox = document.getElementById('justificativa-box');
     const confirmarBtn = document.getElementById('confirmar-reprovacao-btn');
     
-    confirmarBtn.value = acao;
-    justificativaBox.style.display = 'block';
-    document.getElementById('justificativa-input').focus();
-    justificativaBox.scrollIntoView({ behavior: 'smooth' });
+    if (justificativaBox && confirmarBtn) {
+        confirmarBtn.value = acao;
+        justificativaBox.style.display = 'block';
+        document.getElementById('justificativa-input').focus();
+        justificativaBox.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-ficha');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
-    if (form) {
-        form.addEventListener('submit', function(event) {
-            const actionTrigger = event.submitter;
-            if (!actionTrigger) return;
+    if (!form) return;
 
-            const acao = actionTrigger.value;
+    form.addEventListener('submit', function(event) {
+        const actionTrigger = event.submitter;
+        if (!actionTrigger) return;
 
-            if (acao === 'enviar_revisao') {
-                const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
-                if (revisoresMarcados === 0 && firstRevisorCheckbox) {
-                    event.preventDefault();
-                    firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
-                    firstRevisorCheckbox.reportValidity();
-                    return;
-                } else if (firstRevisorCheckbox) {
-                    firstRevisorCheckbox.setCustomValidity('');
-                }
+        const acao = actionTrigger.value;
 
-                const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
-                let peloMenosUmTituloPreenchido = false;
-                diretrizesTitulos.forEach((textarea) => {
-                    if (textarea.value.trim() !== '') {
-                        peloMenosUmTituloPreenchido = true;
-                    }
-                });
-
-                if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
-                    event.preventDefault();
-                    alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
-                    return;
-                }
+        if (acao === 'enviar_revisao') {
+            const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
+            if (revisoresMarcados === 0 && firstRevisorCheckbox) {
+                event.preventDefault();
+                firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
+                firstRevisorCheckbox.reportValidity();
+                return;
+            } else if (firstRevisorCheckbox) {
+                firstRevisorCheckbox.setCustomValidity('');
             }
-            
-            if (acao === 'reprovar_revisor' || acao === 'enviar_revisao_novamente') {
-                const justificativaInput = document.getElementById('justificativa-input');
-                if (justificativaInput.value.trim() === '') {
-                     event.preventDefault();
-                     alert('Erro: O campo de justificativa é obrigatório para esta ação.');
-                     justificativaInput.focus();
-                     return;
-                }
-            }
-        });
 
-        if (firstRevisorCheckbox) {
-            const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
-            allRevisorCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('input', () => {
-                    firstRevisorCheckbox.setCustomValidity('');
-                });
+            const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
+            let peloMenosUmTituloPreenchido = false;
+            diretrizesTitulos.forEach((textarea) => {
+                if (textarea.value.trim() !== '') {
+                    peloMenosUmTituloPreenchido = true;
+                }
             });
+
+            if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
+                event.preventDefault();
+                alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
+                return;
+            }
         }
+        
+        if (acao === 'reprovar_revisor' || acao === 'enviar_revisao_novamente') {
+            const justificativaInput = document.getElementById('justificativa-input');
+            if (justificativaInput && justificativaInput.value.trim() === '') {
+                 event.preventDefault();
+                 alert('Erro: O campo de justificativa é obrigatório para esta ação.');
+                 justificativaInput.focus();
+                 return;
+            }
+        }
+
+    });
+
+    if (firstRevisorCheckbox) {
+        const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
+        allRevisorCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('input', () => {
+                firstRevisorCheckbox.setCustomValidity('');
+            });
+        });
     }
 });
