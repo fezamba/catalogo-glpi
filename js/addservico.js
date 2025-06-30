@@ -1,5 +1,5 @@
 function adicionarDiretriz() {
-    let contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
+    contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
     const index = contDiretriz++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -20,7 +20,7 @@ function adicionarItemDiretriz(index) {
 }
 
 function adicionarPadrao() {
-    let contPadrao = document.querySelectorAll('#padroes .grupo').length;
+    contPadrao = document.querySelectorAll('#padroes .grupo').length;
     const index = contPadrao++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -41,7 +41,7 @@ function adicionarItemPadrao(index) {
 }
 
 function adicionarChecklist() {
-    let contChecklist = document.querySelectorAll('#checklist .grupo').length;
+    contChecklist = document.querySelectorAll('#checklist .grupo').length;
     const index = contChecklist++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -73,25 +73,22 @@ function mostrarJustificativa(acao) {
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-ficha');
-    const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
-
     if (!form) return;
 
-    form.addEventListener('submit', function(event) {
-        const actionTrigger = event.submitter;
-        if (!actionTrigger) return;
+    const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
+    const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
+    const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
-        const acao = actionTrigger.value;
-
-        if (acao === 'enviar_revisao') {
+    // Listener #1: Apenas para o botão "Enviar para Revisão"
+    if (btnEnviarRevisao) {
+        btnEnviarRevisao.addEventListener('click', function(event) {
+            
             const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
             if (revisoresMarcados === 0 && firstRevisorCheckbox) {
                 event.preventDefault();
                 firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
                 firstRevisorCheckbox.reportValidity();
                 return;
-            } else if (firstRevisorCheckbox) {
-                firstRevisorCheckbox.setCustomValidity('');
             }
 
             const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
@@ -107,20 +104,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
                 return;
             }
-        }
-        
-        if (acao === 'reprovar_revisor' || acao === 'enviar_revisao_novamente') {
+        });
+    }
+
+    // Listener #2: Apenas para o botão "Confirmar Ação" da justificativa
+    if (btnConfirmarReprovacao) {
+        btnConfirmarReprovacao.addEventListener('click', function(event) {
             const justificativaInput = document.getElementById('justificativa-input');
             if (justificativaInput && justificativaInput.value.trim() === '') {
-                 event.preventDefault();
-                 alert('Erro: O campo de justificativa é obrigatório para esta ação.');
-                 justificativaInput.focus();
-                 return;
+                event.preventDefault();
+                alert('Erro: O campo de justificativa é obrigatório para esta ação.');
+                justificativaInput.focus();
             }
-        }
+        });
+    }
 
-    });
-
+    // Listener #3: Para limpar a mensagem de erro dos revisores
     if (firstRevisorCheckbox) {
         const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
         allRevisorCheckboxes.forEach(checkbox => {
