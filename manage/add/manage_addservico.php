@@ -1181,7 +1181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                 }
                 if ($status === 'revisada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_para_aprovacao" style="margin-right: 4px;">Enviar para Aprovação do PO</button>';
-                  echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
+                  echo '<button id="btn-devolver-revisao-criador" type="button" class="btn-salvar" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
                 }
                 if ($status === 'publicado') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
@@ -1195,13 +1195,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
 
               if ($tipo_usuario === 'revisor' && $status === 'em_revisao') {
                 echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_revisor" style="margin-right: 4px;">Concluir Revisão</button>';
-                echo '<button type="button" class="btn-danger" onclick="mostrarJustificativa(\'reprovar_revisor\')">Reprovar (Volta p/ Criador)</button>';
+                echo '<button id="btn-reprovar-revisor" type="button" class="btn-danger">Reprovar (Volta p/ Criador)</button>';
               }
 
               if ($tipo_usuario === 'po') {
                 if ($status === 'em_aprovacao') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar Ficha</button>';
-                  echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
+                  echo '<button id="btn-devolver-revisao-po" type="button" class="btn-salvar" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
                 }
               }
             }
@@ -1219,15 +1219,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               <input type="hidden" name="delete_id" value="<?php echo intval($_GET['id']); ?>">
             <?php endif; ?>
           </div>
-        </div>
-        <div id="justificativa-box" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
-          <label for="justificativa-input" style="font-weight: bold;">Justificativa (Obrigatório):</label><br>
-
-          <textarea name="justificativa" id="justificativa-input" rows="4" cols="60" required></textarea><br><br>
-
-          <button type="submit" id="confirmar-reprovacao-btn" name="acao" value="" class="btn-danger">Confirmar Ação</button>
-
-          <button type="button" class="btn-secondary" onclick="document.getElementById('justificativa-box').style.display='none'">Cancelar</button>
         </div>
     </form>
     <script>
