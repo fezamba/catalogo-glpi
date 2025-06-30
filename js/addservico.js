@@ -59,60 +59,58 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
-function submitWithJustification(form, action, justificationText) {
-    if (!form || !action || justificationText === null) return;
-
-    if (justificationText.trim() === "") {
-        alert("Ação cancelada. A justificativa é obrigatória.");
-        return;
+function mostrarJustificativa(acao) {
+    const justificativaBox = document.getElementById('justificativa-box');
+    const confirmarBtn = document.getElementById('confirmar-reprovacao-btn');
+    
+    if (justificativaBox && confirmarBtn) {
+        confirmarBtn.value = acao;
+        justificativaBox.style.display = 'block';
+        document.getElementById('justificativa-input').focus();
+        justificativaBox.scrollIntoView({ behavior: 'smooth' });
     }
-
-    const inputAcao = document.createElement('input');
-    inputAcao.type = 'hidden';
-    inputAcao.name = 'acao';
-    inputAcao.value = action;
-    form.appendChild(inputAcao);
-
-    const inputJustificativa = document.createElement('input');
-    inputJustificativa.type = 'hidden';
-    inputJustificativa.name = 'justificativa';
-    inputJustificativa.value = justificationText;
-    form.appendChild(inputJustificativa);
-
-    form.submit();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('form-ficha');
-    if (!form) return;
-
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
-    const btnReprovarRevisor = document.getElementById('btn-reprovar-revisor');
-    const btnDevolverRevisao = document.getElementById('btn-devolver-revisao');
+    const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
     if (btnEnviarRevisao) {
         btnEnviarRevisao.addEventListener('click', function(event) {
+            
             const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
             if (revisoresMarcados === 0 && firstRevisorCheckbox) {
                 event.preventDefault();
                 firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
                 firstRevisorCheckbox.reportValidity();
+                return;
+            }
+
+            const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
+            let peloMenosUmTituloPreenchido = false;
+            diretrizesTitulos.forEach((textarea) => {
+                if (textarea.value.trim() !== '') {
+                    peloMenosUmTituloPreenchido = true;
+                }
+            });
+
+            if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
+                event.preventDefault();
+                alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
+                return;
             }
         });
     }
 
-    if(btnReprovarRevisor) {
-        btnReprovarRevisor.addEventListener('click', function() {
-            const justification = prompt("Por favor, digite a justificativa para reprovar:", "");
-            submitWithJustification(form, 'reprovar_revisor', justification);
-        });
-    }
-    
-    if(btnDevolverRevisao) {
-        btnDevolverRevisao.addEventListener('click', function() {
-            const justification = prompt("Por favor, digite a justificativa para devolver a revisão:", "");
-            submitWithJustification(form, 'enviar_revisao_novamente', justification);
+    if (btnConfirmarReprovacao) {
+        btnConfirmarReprovacao.addEventListener('click', function(event) {
+            const justificativaInput = document.getElementById('justificativa-input');
+            if (justificativaInput && justificativaInput.value.trim() === '') {
+                event.preventDefault();
+                alert('Erro: O campo de justificativa é obrigatório para esta ação.');
+                justificativaInput.focus();
+            }
         });
     }
 
