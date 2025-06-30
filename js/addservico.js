@@ -60,72 +60,60 @@ function autoResize(el) {
 }
 
 function mostrarJustificativa(acao) {
-    const justificativaBox = document.getElementById('justificativa-box');
-    const confirmarBtn = document.getElementById('confirmar-reprovacao-btn');
-    
-    if (justificativaBox && confirmarBtn) {
-        confirmarBtn.value = acao;
-        justificativaBox.style.display = 'block';
-        document.getElementById('justificativa-input').focus();
-        justificativaBox.scrollIntoView({ behavior: 'smooth' });
+    const formPrincipal = document.getElementById('form-ficha');
+    if (!formPrincipal) return;
+
+    const justificativaTexto = prompt("Por favor, digite a justificativa para esta ação:", "");
+
+    if (justificativaTexto === null || justificativaTexto.trim() === "") {
+        alert("Ação cancelada. A justificativa é obrigatória.");
+        return;
     }
+
+    const inputAcao = document.createElement('input');
+    inputAcao.type = 'hidden';
+    inputAcao.name = 'acao';
+    inputAcao.value = acao;
+    formPrincipal.appendChild(inputAcao);
+
+    const inputJustificativa = document.createElement('input');
+    inputJustificativa.type = 'hidden';
+    inputJustificativa.name = 'justificativa';
+    inputJustificativa.value = justificativaTexto;
+    formPrincipal.appendChild(inputJustificativa);
+
+    formPrincipal.submit();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-ficha');
-    if (!form) return;
-
-    const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
-    const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
-    // Listener #1: Apenas para o botão "Enviar para Revisão"
-    if (btnEnviarRevisao) {
-        btnEnviarRevisao.addEventListener('click', function(event) {
-            
-            const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
-            if (revisoresMarcados === 0 && firstRevisorCheckbox) {
-                event.preventDefault();
-                firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
-                firstRevisorCheckbox.reportValidity();
-                return;
-            }
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            const actionTrigger = event.submitter;
+            if (!actionTrigger) return;
 
-            const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
-            let peloMenosUmTituloPreenchido = false;
-            diretrizesTitulos.forEach((textarea) => {
-                if (textarea.value.trim() !== '') {
-                    peloMenosUmTituloPreenchido = true;
+            if (actionTrigger.value === 'enviar_revisao') {
+                const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
+                if (revisoresMarcados === 0 && firstRevisorCheckbox) {
+                    event.preventDefault();
+                    firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
+                    firstRevisorCheckbox.reportValidity();
+                    return;
+                } else if (firstRevisorCheckbox) {
+                    firstRevisorCheckbox.setCustomValidity('');
                 }
-            });
-
-            if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
-                event.preventDefault();
-                alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
-                return;
             }
         });
-    }
 
-    // Listener #2: Apenas para o botão "Confirmar Ação" da justificativa
-    if (btnConfirmarReprovacao) {
-        btnConfirmarReprovacao.addEventListener('click', function(event) {
-            const justificativaInput = document.getElementById('justificativa-input');
-            if (justificativaInput && justificativaInput.value.trim() === '') {
-                event.preventDefault();
-                alert('Erro: O campo de justificativa é obrigatório para esta ação.');
-                justificativaInput.focus();
-            }
-        });
-    }
-
-    // Listener #3: Para limpar a mensagem de erro dos revisores
-    if (firstRevisorCheckbox) {
-        const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
-        allRevisorCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('input', () => {
-                firstRevisorCheckbox.setCustomValidity('');
+        if (firstRevisorCheckbox) {
+            const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
+            allRevisorCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('input', () => {
+                    firstRevisorCheckbox.setCustomValidity('');
+                });
             });
-        });
+        }
     }
 });
