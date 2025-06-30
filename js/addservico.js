@@ -59,13 +59,10 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
-function mostrarJustificativa(acao) {
-    const formPrincipal = document.getElementById('form-ficha');
-    if (!formPrincipal) return;
+function submitWithJustification(form, action, justificationText) {
+    if (!form || !action || justificationText === null) return;
 
-    const justificativaTexto = prompt("Por favor, digite a justificativa para esta ação:", "");
-
-    if (justificativaTexto === null || justificativaTexto.trim() === "") {
+    if (justificationText.trim() === "") {
         alert("Ação cancelada. A justificativa é obrigatória.");
         return;
     }
@@ -73,20 +70,25 @@ function mostrarJustificativa(acao) {
     const inputAcao = document.createElement('input');
     inputAcao.type = 'hidden';
     inputAcao.name = 'acao';
-    inputAcao.value = acao;
-    formPrincipal.appendChild(inputAcao);
+    inputAcao.value = action;
+    form.appendChild(inputAcao);
 
     const inputJustificativa = document.createElement('input');
     inputJustificativa.type = 'hidden';
     inputJustificativa.name = 'justificativa';
-    inputJustificativa.value = justificativaTexto;
-    formPrincipal.appendChild(inputJustificativa);
+    inputJustificativa.value = justificationText;
+    form.appendChild(inputJustificativa);
 
-    formPrincipal.submit();
+    form.submit();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-ficha');
+    if (!form) return;
+
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
+    const btnReprovarRevisor = document.getElementById('btn-reprovar-revisor');
+    const btnDevolverRevisao = document.getElementById('btn-devolver-revisao');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
     if (btnEnviarRevisao) {
@@ -97,6 +99,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
                 firstRevisorCheckbox.reportValidity();
             }
+        });
+    }
+
+    if(btnReprovarRevisor) {
+        btnReprovarRevisor.addEventListener('click', function() {
+            const justification = prompt("Por favor, digite a justificativa para reprovar:", "");
+            submitWithJustification(form, 'reprovar_revisor', justification);
+        });
+    }
+    
+    if(btnDevolverRevisao) {
+        btnDevolverRevisao.addEventListener('click', function() {
+            const justification = prompt("Por favor, digite a justificativa para devolver a revisão:", "");
+            submitWithJustification(form, 'enviar_revisao_novamente', justification);
         });
     }
 
