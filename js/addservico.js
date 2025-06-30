@@ -60,21 +60,34 @@ function autoResize(el) {
 }
 
 function mostrarJustificativa(acao) {
-    const justificativaBox = document.getElementById('justificativa-box');
-    const confirmarBtn = document.getElementById('confirmar-reprovacao-btn');
-    
-    if (justificativaBox && confirmarBtn) {
-        confirmarBtn.value = acao;
-        justificativaBox.style.display = 'block';
-        document.getElementById('justificativa-input').focus();
-        justificativaBox.scrollIntoView({ behavior: 'smooth' });
+    const formPrincipal = document.getElementById('form-ficha');
+    if (!formPrincipal) {
+        return;
     }
+
+    const justificativaTexto = prompt("Por favor, digite a justificativa para esta ação:", "");
+
+    if (justificativaTexto === null || justificativaTexto.trim() === "") {
+        alert("Ação cancelada. A justificativa é obrigatória.");
+        return;
+    }
+
+    const inputAcao = document.createElement('input');
+    inputAcao.type = 'hidden';
+    inputAcao.name = 'acao';
+    inputAcao.value = acao;
+    formPrincipal.appendChild(inputAcao);
+
+    const inputJustificativa = document.createElement('input');
+    inputJustificativa.type = 'hidden';
+    inputJustificativa.name = 'justificativa';
+    inputJustificativa.value = justificativaTexto;
+    formPrincipal.appendChild(inputJustificativa);
+
+    formPrincipal.submit();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('form-ficha');
-    if (!form) return;
-
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
