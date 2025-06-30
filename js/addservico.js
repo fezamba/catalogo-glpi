@@ -59,7 +59,6 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
-// Função CORRIGIDA que será chamada pelo onclick dos seus botões
 function mostrarJustificativa(acao) {
     const formPrincipal = document.getElementById('form-ficha');
     if (!formPrincipal) {
@@ -74,21 +73,18 @@ function mostrarJustificativa(acao) {
         return;
     }
 
-    // Cria um campo oculto para a ação
     const inputAcao = document.createElement('input');
     inputAcao.type = 'hidden';
     inputAcao.name = 'acao';
     inputAcao.value = acao;
     formPrincipal.appendChild(inputAcao);
 
-    // Cria um campo oculto para a justificativa
     const inputJustificativa = document.createElement('input');
     inputJustificativa.type = 'hidden';
     inputJustificativa.name = 'justificativa';
     inputJustificativa.value = justificativaTexto;
     formPrincipal.appendChild(inputJustificativa);
 
-    // Envia o formulário principal
     formPrincipal.submit();
 }
 
