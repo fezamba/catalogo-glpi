@@ -70,6 +70,11 @@ function mostrarJustificativa(acao) {
         return;
     }
 
+    const oldAction = formPrincipal.querySelector('input[name="acao"]');
+    if(oldAction) oldAction.remove();
+    const oldJustification = formPrincipal.querySelector('input[name="justificativa"]');
+    if(oldJustification) oldJustification.remove();
+
     const inputAcao = document.createElement('input');
     inputAcao.type = 'hidden';
     inputAcao.name = 'acao';
@@ -86,34 +91,26 @@ function mostrarJustificativa(acao) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('form-ficha');
+    const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
-    if (form) {
-        form.addEventListener('submit', function(event) {
-            const actionTrigger = event.submitter;
-            if (!actionTrigger) return;
-
-            if (actionTrigger.value === 'enviar_revisao') {
-                const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
-                if (revisoresMarcados === 0 && firstRevisorCheckbox) {
-                    event.preventDefault();
-                    firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
-                    firstRevisorCheckbox.reportValidity();
-                    return;
-                } else if (firstRevisorCheckbox) {
-                    firstRevisorCheckbox.setCustomValidity('');
-                }
+    if (btnEnviarRevisao) {
+        btnEnviarRevisao.addEventListener('click', function(event) {
+            const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
+            if (revisoresMarcados === 0 && firstRevisorCheckbox) {
+                event.preventDefault();
+                firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
+                firstRevisorCheckbox.reportValidity();
             }
         });
+    }
 
-        if (firstRevisorCheckbox) {
-            const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
-            allRevisorCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('input', () => {
-                    firstRevisorCheckbox.setCustomValidity('');
-                });
+    if (firstRevisorCheckbox) {
+        const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
+        allRevisorCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('input', () => {
+                firstRevisorCheckbox.setCustomValidity('');
             });
-        }
+        });
     }
 });
