@@ -59,7 +59,22 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
+function mostrarJustificativa(acao) {
+    const justificativaBox = document.getElementById('justificativa-box');
+    const confirmarBtn = document.getElementById('confirmar-reprovacao-btn');
+    
+    if (justificativaBox && confirmarBtn) {
+        confirmarBtn.value = acao;
+        justificativaBox.style.display = 'block';
+        document.getElementById('justificativa-input').focus();
+        justificativaBox.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-ficha');
+    if (!form) return;
+
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
