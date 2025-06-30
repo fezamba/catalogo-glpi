@@ -59,7 +59,14 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
-function submitWithJustification(form, action) {
+// Função CORRIGIDA que será chamada pelo onclick dos seus botões
+function mostrarJustificativa(acao) {
+    const formPrincipal = document.getElementById('form-ficha');
+    if (!formPrincipal) {
+        console.error('Erro crítico: Formulário principal #form-ficha não encontrado.');
+        return;
+    }
+
     const justificativaTexto = prompt("Por favor, digite a justificativa para esta ação:", "");
 
     if (justificativaTexto === null || justificativaTexto.trim() === "") {
@@ -67,57 +74,52 @@ function submitWithJustification(form, action) {
         return;
     }
 
+    // Cria um campo oculto para a ação
     const inputAcao = document.createElement('input');
     inputAcao.type = 'hidden';
     inputAcao.name = 'acao';
-    inputAcao.value = action;
-    form.appendChild(inputAcao);
+    inputAcao.value = acao;
+    formPrincipal.appendChild(inputAcao);
 
+    // Cria um campo oculto para a justificativa
     const inputJustificativa = document.createElement('input');
     inputJustificativa.type = 'hidden';
     inputJustificativa.name = 'justificativa';
     inputJustificativa.value = justificativaTexto;
-    form.appendChild(inputJustificativa);
+    formPrincipal.appendChild(inputJustificativa);
 
-    form.submit();
+    // Envia o formulário principal
+    formPrincipal.submit();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('form-ficha');
-    if (!form) return;
-
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
-    const btnReprovarRevisor = document.getElementById('btn-reprovar-revisor');
-    const btnDevolverRevisaoCriador = document.getElementById('btn-devolver-revisao-criador');
-    const btnDevolverRevisaoPO = document.getElementById('btn-devolver-revisao-po');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
     if (btnEnviarRevisao) {
         btnEnviarRevisao.addEventListener('click', function(event) {
+            
             const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
             if (revisoresMarcados === 0 && firstRevisorCheckbox) {
                 event.preventDefault();
                 firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
                 firstRevisorCheckbox.reportValidity();
+                return;
             }
-        });
-    }
 
-    if (btnReprovarRevisor) {
-        btnReprovarRevisor.addEventListener('click', function() {
-            submitWithJustification(form, 'reprovar_revisor');
-        });
-    }
+            const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
+            let peloMenosUmTituloPreenchido = false;
+            diretrizesTitulos.forEach((textarea) => {
+                if (textarea.value.trim() !== '') {
+                    peloMenosUmTituloPreenchido = true;
+                }
+            });
 
-    if (btnDevolverRevisaoCriador) {
-        btnDevolverRevisaoCriador.addEventListener('click', function() {
-            submitWithJustification(form, 'enviar_revisao_novamente');
-        });
-    }
-    
-    if (btnDevolverRevisaoPO) {
-        btnDevolverRevisaoPO.addEventListener('click', function() {
-            submitWithJustification(form, 'enviar_revisao_novamente');
+            if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
+                event.preventDefault();
+                alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
+                return;
+            }
         });
     }
 
