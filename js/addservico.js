@@ -76,8 +76,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form) {
         form.addEventListener('submit', function(event) {
             const actionTrigger = event.submitter;
+            if (!actionTrigger) return;
 
-            if (actionTrigger && actionTrigger.value === 'enviar_revisao') {
+            const acao = actionTrigger.value;
+
+            if (acao === 'enviar_revisao') {
                 const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
                 if (revisoresMarcados === 0 && firstRevisorCheckbox) {
                     event.preventDefault();
@@ -99,6 +102,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
                     event.preventDefault();
                     alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
+                    return;
+                }
+            }
+            
+            if (acao === 'reprovar_revisor' || acao === 'enviar_revisao_novamente') {
+                const justificativaInput = document.getElementById('justificativa-input');
+                if (justificativaInput.value.trim() === '') {
+                     event.preventDefault();
+                     alert('Erro: O campo de justificativa é obrigatório para esta ação.');
+                     justificativaInput.focus();
+                     return;
                 }
             }
         });
