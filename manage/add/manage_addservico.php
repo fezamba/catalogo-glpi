@@ -1227,7 +1227,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
       let contChecklist = <?= count($checklist) ?>;
     </script>
     <script src="../../js/addservico.js"></script>
-    <input type="hidden" id="justificativa-submit-acao" value="">
 </body>
 
 </html>
