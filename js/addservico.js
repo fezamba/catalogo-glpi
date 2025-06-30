@@ -59,21 +59,8 @@ function autoResize(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 
-function mostrarJustificativa(acao) {
-    const justificativaBox = document.getElementById('justificativa-box');
-    const confirmarBtn = document.getElementById('confirmar-reprovacao-btn');
-    
-    if (justificativaBox && confirmarBtn) {
-        confirmarBtn.value = acao;
-        justificativaBox.style.display = 'block';
-        document.getElementById('justificativa-input').focus();
-        justificativaBox.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
-    const btnConfirmarReprovacao = document.getElementById('confirmar-reprovacao-btn');
     const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
 
     if (btnEnviarRevisao) {
@@ -99,17 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 event.preventDefault();
                 alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
                 return;
-            }
-        });
-    }
-
-    if (btnConfirmarReprovacao) {
-        btnConfirmarReprovacao.addEventListener('click', function(event) {
-            const justificativaInput = document.getElementById('justificativa-input');
-            if (justificativaInput && justificativaInput.value.trim() === '') {
-                event.preventDefault();
-                alert('Erro: O campo de justificativa é obrigatório para esta ação.');
-                justificativaInput.focus();
             }
         });
     }

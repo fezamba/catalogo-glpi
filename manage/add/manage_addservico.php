@@ -1198,7 +1198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
                 }
                 if ($status === 'revisada') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="enviar_para_aprovacao" style="margin-right: 4px;">Enviar para Aprovação do PO</button>';
-                  echo '<button id="btn-devolver-revisao" type="button" class="btn-salvar" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
+                  echo '<button type="submit" name="acao" value="enviar_revisao_novamente" class="btn-salvar" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
                 }
                 if ($status === 'publicado') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="nova_versao_auto" style="margin-right: 4px;">Nova Versão</button>';
@@ -1212,13 +1212,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
 
               if ($tipo_usuario === 'revisor' && $status === 'em_revisao') {
                 echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_revisor" style="margin-right: 4px;">Concluir Revisão</button>';
-                echo '<button id="btn-reprovar-revisor" type="button" class="btn-danger">Reprovar (Volta p/ Criador)</button>';
+                echo '<button type="submit" name="acao" value="reprovar_revisor" class="btn-danger">Reprovar (Volta p/ Criador)</button>';
               }
 
               if ($tipo_usuario === 'po') {
                 if ($status === 'em_aprovacao') {
                   echo '<button type="submit" class="btn-salvar" name="acao" value="aprovar_po" style="margin-right: 4px;">Aprovar Ficha</button>';
-                  echo '<button type="button" class="btn-salvar" onclick="mostrarJustificativa(\'enviar_revisao_novamente\')" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
+                  echo '<button type="submit" name="acao" value="enviar_revisao_novamente" class="btn-salvar" style="background-color: #5bc0de; border-color: #46b8da;">Devolver para Revisão</button>';
                 }
               }
             }
