@@ -1,5 +1,5 @@
 function adicionarDiretriz() {
-    contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
+    let contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
     const index = contDiretriz++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -20,7 +20,7 @@ function adicionarItemDiretriz(index) {
 }
 
 function adicionarPadrao() {
-    contPadrao = document.querySelectorAll('#padroes .grupo').length;
+    let contPadrao = document.querySelectorAll('#padroes .grupo').length;
     const index = contPadrao++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -41,7 +41,7 @@ function adicionarItemPadrao(index) {
 }
 
 function adicionarChecklist() {
-    contChecklist = document.querySelectorAll('#checklist .grupo').length;
+    let contChecklist = document.querySelectorAll('#checklist .grupo').length;
     const index = contChecklist++;
     const container = document.createElement('div');
     container.classList.add('grupo');
@@ -69,11 +69,6 @@ function mostrarJustificativa(acao) {
         alert("Ação cancelada. A justificativa é obrigatória.");
         return;
     }
-
-    const oldAction = formPrincipal.querySelector('input[name="acao"]');
-    if(oldAction) oldAction.remove();
-    const oldJustification = formPrincipal.querySelector('input[name="justificativa"]');
-    if(oldJustification) oldJustification.remove();
 
     const inputAcao = document.createElement('input');
     inputAcao.type = 'hidden';
