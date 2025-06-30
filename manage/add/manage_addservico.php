@@ -20,7 +20,11 @@ function fetch_by_id($mysqli, $table, $id)
 function fetch_all($mysqli, $table, $order_by = 'ID ASC')
 {
     $data = [];
-    $result = $mysqli->query("SELECT * FROM $table ORDER BY $order_by");
+    $query = "SELECT * FROM $table";
+    if ($order_by) {
+        $query .= " ORDER BY $order_by";
+    }
+    $result = $mysqli->query($query);
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $data[] = $row;
@@ -240,7 +244,7 @@ if ($modo_edicao) {
     $diretrizes = fetch_related_items($mysqli, $id, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
     $padroes = fetch_related_items($mysqli, $id, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
     $checklist = fetch_checklist($mysqli, $id);
-    $revisores_servico_raw = fetch_all($mysqli, 'servico_revisores WHERE servico_id = ' . $id);
+    $revisores_servico_raw = fetch_all($mysqli, 'servico_revisores WHERE servico_id = ' . $id, null);
     $revisores_servico = array_column($revisores_servico_raw, 'revisor_id');
 }
 
