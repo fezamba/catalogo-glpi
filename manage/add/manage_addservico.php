@@ -17,7 +17,7 @@ function fetch_by_id($mysqli, $table, $id)
     return $result->fetch_assoc();
 }
 
-function fetch_all($mysqli, $table, $order_by = 'ID ASC')
+function fetch_all($mysqli, $table, $order_by = null)
 {
     $data = [];
     $query = "SELECT * FROM $table";
@@ -47,15 +47,16 @@ function fetch_related_items($mysqli, $servico_id, $main_table, $item_table, $jo
     $stmt->bind_param("i", $servico_id);
     $stmt->execute();
     $result = $stmt->get_result();
+    $temp_items = [];
     while ($row = $result->fetch_assoc()) {
-        if (!isset($items[$row['main_id']])) {
-            $items[$row['main_id']] = ['titulo' => $row['main_titulo'], 'itens' => []];
+        if (!isset($temp_items[$row['main_id']])) {
+            $temp_items[$row['main_id']] = ['titulo' => $row['main_titulo'], 'itens' => []];
         }
         if ($row['item_conteudo']) {
-            $items[$row['main_id']]['itens'][] = $row['item_conteudo'];
+            $temp_items[$row['main_id']]['itens'][] = $row['item_conteudo'];
         }
     }
-    return array_values($items);
+    return array_values($temp_items);
 }
 
 function fetch_checklist($mysqli, $servico_id)
@@ -73,27 +74,22 @@ function fetch_checklist($mysqli, $servico_id)
 
 function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table, $join_col_main, $join_col_item)
 {
-    $stmt_delete_main = $mysqli->prepare("DELETE FROM $main_table WHERE $join_col_main = ?");
-    $stmt_delete_main->bind_param("i", $servico_id);
-    $stmt_delete_main->execute();
+    $mysqli->query("DELETE FROM $main_table WHERE $join_col_main = $servico_id");
 
     if (empty($data)) return;
 
-    $stmt_insert_main = $mysqli->prepare("INSERT INTO $main_table (Titulo, $join_col_main) VALUES (?, ?)");
-    $stmt_insert_item = $mysqli->prepare("INSERT INTO $item_table (Conteudo, $join_col_item) VALUES (?, ?)");
-
     foreach ($data as $main_item) {
-        if (empty($main_item['titulo'])) continue;
+        if (empty(trim($main_item['titulo']))) continue;
 
-        $stmt_insert_main->bind_param("si", $main_item['titulo'], $servico_id);
-        $stmt_insert_main->execute();
-        $main_id = $stmt_insert_main->insert_id;
+        $titulo_main = $mysqli->real_escape_string($main_item['titulo']);
+        $mysqli->query("INSERT INTO $main_table (Titulo, $join_col_main) VALUES ('$titulo_main', $servico_id)");
+        $main_id = $mysqli->insert_id;
 
         if (!empty($main_item['itens'])) {
             foreach ($main_item['itens'] as $item_conteudo) {
-                if (!empty($item_conteudo)) {
-                    $stmt_insert_item->bind_param("si", $item_conteudo, $main_id);
-                    $stmt_insert_item->execute();
+                if (!empty(trim($item_conteudo))) {
+                    $conteudo_item = $mysqli->real_escape_string($item_conteudo);
+                    $mysqli->query("INSERT INTO $item_table (Conteudo, $join_col_item) VALUES ('$conteudo_item', $main_id)");
                 }
             }
         }
@@ -102,17 +98,15 @@ function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table
 
 function sync_checklist_data($mysqli, $servico_id, $checklist_data)
 {
-    $stmt_delete = $mysqli->prepare("DELETE FROM checklist WHERE ID_Servico = ?");
-    $stmt_delete->bind_param("i", $servico_id);
-    $stmt_delete->execute();
+    $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $servico_id");
 
     if (empty($checklist_data)) return;
 
-    $stmt_insert = $mysqli->prepare("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES (?, ?, ?)");
     foreach ($checklist_data as $item) {
-        if (!empty($item['item'])) {
-            $stmt_insert->bind_param("iss", $servico_id, $item['item'], $item['observacao']);
-            $stmt_insert->execute();
+        if (!empty(trim($item['item']))) {
+            $nome_item = $mysqli->real_escape_string($item['item']);
+            $obs_item = $mysqli->real_escape_string($item['observacao']);
+            $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($servico_id, '$nome_item', '$obs_item')");
         }
     }
 }
@@ -157,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
             sync_related_data($mysqli, $new_id, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
             sync_checklist_data($mysqli, $new_id, $post_data['checklist'] ?? []);
 
-            redirect("?id=$new_id&sucesso=1");
+            redirect("../list/manage_listservico.php?sucesso=1");
             break;
 
         case 'excluir':
@@ -211,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
                     }
                 }
             }
-            redirect("?id=$id_post&sucesso=1");
+            redirect("../list/manage_listservico.php?sucesso=1");
             break;
 
         case 'enviar_para_aprovacao':
@@ -222,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
             $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = ? WHERE ID = ?");
             $stmt->bind_param("si", $novo_status, $id_post);
             $stmt->execute();
-            redirect("?id=$id_post&sucesso=1");
+            redirect("../list/manage_listservico.php?sucesso=1");
             break;
     }
 }
@@ -274,7 +268,42 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
 <head>
     <meta charset="UTF-8">
     <title><?php echo $modo_edicao ? "Editar Serviço" : "Adicionar Serviço"; ?></title>
-    <link rel="stylesheet" href="../../css/style_manage_add.css">
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background-color: #f4f6f9; }
+        .form-wrapper { max-width: 800px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 12px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        .form-title { font-size: 24px; margin-bottom: 20px; text-align: center; }
+        .form-grid { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+        .form-column { flex: 1 1 100%; display: flex; flex-direction: column; gap: 15px; }
+        @media (min-width: 600px) { .form-column { flex: 1 1 calc(50% - 20px); } }
+        label { display: flex; flex-direction: column; font-weight: bold; }
+        input[type='text'], textarea, select { padding: 8px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        textarea { resize: vertical; min-height: 40px; }
+        .form-actions-horizontal { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 20px; width: 100%; }
+        .btn-salvar, .btn-danger, .btn-info { color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; text-decoration: none; }
+        .btn-salvar { background-color: #f9b000; }
+        .btn-salvar:hover { background-color: #d89a00; }
+        .btn-danger { background-color: #d9534f; }
+        .btn-danger:hover { background-color: #c9302c; }
+        .btn-info { background-color: #5bc0de; }
+        .btn-info:hover { background-color: #46b8da; }
+        .btn-back { padding: 10px 20px; margin-bottom: 20px; background-color: #e0e0e0; color: #333; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-back:hover { background-color: #cfcfcf; }
+        .mensagem { background-color: #d4edda; color: #155724; padding: 10px 15px; border-radius: 6px; border: 1px solid #c3e6cb; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        .mensagem.erro { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .grupo { background-color: #fffaf0; padding: 15px; border-left: 4px solid #f9b000; margin-bottom: 10px; border-radius: 6px; }
+        h3 { margin-bottom: 7px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        #debug-panel { position: fixed; bottom: 15px; right: 15px; width: 250px; background-color: #2c3e50; color: white; padding: 15px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); z-index: 1000; font-size: 14px; }
+        #debug-panel h4 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 1px solid #4a627a; padding-bottom: 5px; }
+        #debug-panel label, #debug-panel select, #debug-panel button { width: 100%; display: block; margin-bottom: 10px; box-sizing: border-box; }
+        #debug-panel button { background-color: #f9b000; color: #fff; font-weight: bold; cursor: pointer; border: none; padding: 8px; }
+        .revisores-container { margin-top: 15px; padding: 20px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #e9ecef; }
+        .checkbox-list { max-height: 220px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background-color: #fff; }
+        .checkbox-label { display: block; padding: 8px; font-weight: normal; cursor: pointer; }
+        .checkbox-label input[type='checkbox'] { margin-right: 10px; }
+    </style>
 </head>
 <body>
     <div id="debug-panel">
@@ -289,12 +318,9 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             <label for="debug-status-ficha">Forçar Status:</label>
             <select id="debug-status-ficha">
                 <option value="">-- Status Atual --</option>
-                <?php
-                $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'descontinuada'];
+                <?php $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'descontinuada'];
                 foreach ($todos_status as $status_opcao): ?>
-                    <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>>
-                        <?= ucfirst(str_replace('_', ' ', $status_opcao)) ?>
-                    </option>
+                    <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>><?= ucfirst(str_replace('_', ' ', $status_opcao)) ?></option>
                 <?php endforeach; ?>
             </select>
         <?php endif; ?>
@@ -302,235 +328,168 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     </div>
 
     <div class="form-wrapper">
-        <h2 class="form-title">
-            <?php echo $modo_edicao ? "Editar Ficha " . htmlspecialchars($dados_edicao['codigo_ficha'] ?? '') . " (v" . htmlspecialchars($dados_edicao['versao'] ?? '') . ")" : "Adicionar Serviço"; ?>
-        </h2>
+        <h2 class="form-title"><?php echo $modo_edicao ? "Editar Ficha " . htmlspecialchars($dados_edicao['codigo_ficha'] ?? '') . " (v" . htmlspecialchars($dados_edicao['versao'] ?? '') . ")" : "Adicionar Serviço"; ?></h2>
         <a href="../list/manage_listservico.php" class="btn-back">← Voltar para lista</a>
 
-        <?php if ($modo_edicao): ?>
-            <p><strong>Status da Ficha:</strong> <?php echo get_status_label($status); ?></p>
-        <?php endif; ?>
-        
-        <div id="form-error-message" class="mensagem-erro" style="display:none;"></div>
+        <?php if ($modo_edicao): ?><p><strong>Status da Ficha:</strong> <?php echo get_status_label($status); ?></p><?php endif; ?>
+        <div id="form-error-message" class="mensagem erro" style="display:none;"></div>
+        <?php if (!empty($dados_edicao['justificativa_rejeicao']) && in_array($status, ['rascunho', 'em_revisao', 'reprovado_revisor', 'reprovado_po'])): ?><div class="rejection-notice"><strong>Justificativa da Reprovação:</strong><br><em><?php echo nl2br(htmlspecialchars($dados_edicao['justificativa_rejeicao'])); ?></em></div><?php endif; ?>
+        <?php if (!empty($mensagem)): ?><div class="mensagem"><?php echo htmlspecialchars($mensagem); ?></div><?php endif; ?>
 
-        <?php if (!empty($dados_edicao['justificativa_rejeicao']) && in_array($status, ['rascunho', 'em_revisao', 'reprovado_revisor', 'reprovado_po'])): ?>
-            <div class="rejection-notice">
-                <strong>Justificativa da Reprovação:</strong><br>
-                <em><?php echo nl2br(htmlspecialchars($dados_edicao['justificativa_rejeicao'])); ?></em>
-            </div>
-        <?php endif; ?>
-
-        <?php if (!empty($mensagem)): ?>
-            <div class="mensagem-sucesso"><?php echo htmlspecialchars($mensagem); ?></div>
-        <?php endif; ?>
-
-        <form id="form-ficha" method="post" class="form-grid">
-            <input type="hidden" name="acao" id="form-action-field" value="">
-
-            <div class="form-column">
-                <label>Nome do Serviço:<textarea name="nome_servico" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Titulo'] ?? '') ?></textarea></label>
-                <label>Descrição do Serviço:<textarea name="descricao_servico" rows="4" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea></label>
-                <h3>Informações Adicionais</h3>
-                <label>Área Especialista:<textarea name="area_especialista" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['area_especialista'] ?? '') ?></textarea></label>
-                <label>Alçadas:<textarea name="alcadas" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['alcadas'] ?? '') ?></textarea></label>
-                <label>Procedimento de Exceção:<textarea name="procedimento_excecao" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['procedimento_excecao'] ?? '') ?></textarea></label>
-                <label>Base de Conhecimento:<textarea name="base_conhecimento" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea></label>
-                <label>PO Responsável:
-                    <select name="po_responsavel" required <?= $isReadOnly ? 'disabled' : '' ?>>
-                        <option value="">Selecione um PO...</option>
-                        <?php foreach ($lista_pos as $po): ?>
-                            <option value="<?= htmlspecialchars($po['nome']) ?>" <?= (($dados_edicao['po_responsavel'] ?? '') === $po['nome']) ? 'selected' : '' ?>><?= htmlspecialchars($po['nome']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </label>
-            </div>
-
-            <div class="form-column">
-                <label>Subcategoria:
-                    <select name="id_subcategoria" required <?= $isReadOnly ? 'disabled' : '' ?>>
-                        <option value="">Selecione uma subcategoria</option>
-                        <?php foreach ($subcategorias as $sub): ?>
-                            <option value="<?php echo $sub['ID']; ?>" <?php if (($dados_edicao['ID_SubCategoria'] ?? '') == $sub['ID']) echo 'selected'; ?>><?php echo htmlspecialchars($sub['Titulo']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </label>
-                
-                <?php if ($modo_edicao): ?>
-                <div class="revisores-container">
-                    <label>Revisores Designados</label>
-                    <div class="checkbox-list">
-                        <?php foreach ($lista_revisores as $revisor): ?>
-                            <label class="checkbox-label"><input type="checkbox" name="revisores_ids[]" value="<?= $revisor['ID'] ?>" <?= in_array($revisor['ID'], $revisores_servico) ? 'checked' : '' ?> <?= $isReadOnly || !$podeEnviarRevisao ? 'disabled' : '' ?>> <?= htmlspecialchars($revisor['nome']) ?></label>
-                        <?php endforeach; ?>
-                    </div>
+        <form id="form-ficha" method="post">
+            <div class="form-grid">
+                <div class="form-column">
+                    <label>Nome do Serviço:<textarea name="nome_servico" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Titulo'] ?? '') ?></textarea></label>
+                    <label>Descrição do Serviço:<textarea name="descricao_servico" rows="4" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea></label>
+                    <h3>Informações Adicionais</h3>
+                    <label>Área Especialista:<textarea name="area_especialista" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['area_especialista'] ?? '') ?></textarea></label>
+                    <label>Alçadas:<textarea name="alcadas" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['alcadas'] ?? '') ?></textarea></label>
+                    <label>Procedimento de Exceção:<textarea name="procedimento_excecao" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['procedimento_excecao'] ?? '') ?></textarea></label>
+                    <label>Base de Conhecimento:<textarea name="base_conhecimento" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea></label>
+                    <label>PO Responsável:
+                        <select name="po_responsavel" required <?= $isReadOnly ? 'disabled' : '' ?>>
+                            <option value="">Selecione um PO...</option>
+                            <?php foreach ($lista_pos as $po): ?><option value="<?= htmlspecialchars($po['nome']) ?>" <?= (($dados_edicao['po_responsavel'] ?? '') === $po['nome']) ? 'selected' : '' ?>><?= htmlspecialchars($po['nome']) ?></option><?php endforeach; ?>
+                        </select>
+                    </label>
                 </div>
-                <?php endif; ?>
 
-                <h3>Diretrizes</h3><div id="diretrizes"></div><?php if (!$isReadOnly): ?><button type="button" class="btn-add" onclick="adicionarDiretriz()">+ Adicionar Diretriz</button><?php endif; ?>
-                <h3>Padrões</h3><div id="padroes"></div><?php if (!$isReadOnly): ?><button type="button" class="btn-add" onclick="adicionarPadrao()">+ Adicionar Padrão</button><?php endif; ?>
-                <h3>Checklist de Verificação</h3><div id="checklist"></div><?php if (!$isReadOnly): ?><button type="button" class="btn-add" onclick="adicionarChecklist()">+ Adicionar Item</button><?php endif; ?>
-                <h3>Observações Gerais</h3><textarea name="observacoes_gerais" rows="4" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['observacoes'] ?? '') ?></textarea>
-            </div>
-
-            <div class="form-full-width">
-                <?php if ($modo_edicao && isset($dados_edicao['codigo_ficha'])): ?>
-                    <div class="historico-versoes">
-                        <strong>Versões:</strong>
-                        <?php
-                        $codigo = $dados_edicao['codigo_ficha'];
-                        $res_versoes = $mysqli->query("SELECT ID, versao, status_ficha FROM servico WHERE codigo_ficha = '$codigo' ORDER BY versao ASC");
-                        while ($ver = $res_versoes->fetch_assoc()) { echo "<a href='?id={$ver['ID']}&tipo={$tipo_usuario}' class='versao-link'>v{$ver['versao']} (" . get_status_label($ver['status_ficha']) . ")</a> "; }
-                        ?>
+                <div class="form-column">
+                    <label>Subcategoria:
+                        <select name="id_subcategoria" required <?= $isReadOnly ? 'disabled' : '' ?>>
+                            <option value="">Selecione uma subcategoria</option>
+                            <?php foreach ($subcategorias as $sub): ?><option value="<?php echo $sub['ID']; ?>" <?php if (($dados_edicao['ID_SubCategoria'] ?? '') == $sub['ID']) echo 'selected'; ?>><?php echo htmlspecialchars($sub['Titulo']); ?></option><?php endforeach; ?>
+                        </select>
+                    </label>
+                    <?php if ($modo_edicao): ?>
+                    <div class="revisores-container">
+                        <label>Revisores Designados</label>
+                        <div class="checkbox-list">
+                            <?php foreach ($lista_revisores as $revisor): ?><label class="checkbox-label"><input type="checkbox" name="revisores_ids[]" value="<?= $revisor['ID'] ?>" <?= in_array($revisor['ID'], $revisores_servico) ? 'checked' : '' ?> <?= $isReadOnly || !$podeEnviarRevisao ? 'disabled' : '' ?>> <?= htmlspecialchars($revisor['nome']) ?></label><?php endforeach; ?>
+                        </div>
                     </div>
-                <?php endif; ?>
-
-                <div class="form-actions-horizontal">
-                    <?php if (!$modo_edicao): ?>
-                        <button type="button" class="btn-salvar btn-action" data-action="criar_servico">Criar Serviço</button>
-                    <?php else: ?>
-                        <?php if ($podeSalvarRascunho) echo '<button type="button" class="btn-info btn-action" data-action="enviar_revisao">Salvar Alterações</button>'; ?>
-                        <?php if ($podeEnviarRevisao) echo '<button type="button" class="btn-salvar btn-action" data-action="enviar_revisao">Enviar para Revisão</button>'; ?>
-                        <?php if ($podeEnviarAprovacao) echo '<button type="button" class="btn-salvar btn-action" data-action="enviar_para_aprovacao">Enviar para Aprovação do PO</button>'; ?>
-                        <?php if ($podeDevolverRevisao && $tipo_usuario === 'criador') echo '<button type="button" class="btn-info btn-action" data-action="enviar_revisao_novamente" data-requires-justification="true">Devolver para Revisão</button>'; ?>
-                        <?php if ($podePublicar) echo '<button type="button" class="btn-salvar btn-action" data-action="publicar_ficha">Publicar Ficha</button>'; ?>
-                        <?php if ($podeCancelar) echo '<button type="button" class="btn-danger btn-action" data-action="cancelar_ficha" data-confirm-message="Tem certeza que deseja cancelar esta ficha?">Cancelar</button>'; ?>
-                        <?php if ($podeCriarNovaVersao) echo '<button type="button" class="btn-salvar btn-action" data-action="nova_versao_auto">Nova Versão</button>'; ?>
-                        <?php if ($podeAprovarRevisor) echo '<button type="button" class="btn-salvar btn-action" data-action="aprovar_revisor">Concluir Revisão</button>'; ?>
-                        <?php if ($podeReprovarRevisor) echo '<button type="button" class="btn-danger btn-action" data-action="reprovar_revisor" data-requires-justification="true">Reprovar</button>'; ?>
-                        <?php if ($podeAprovarPO) echo '<button type="button" class="btn-salvar btn-action" data-action="aprovar_po">Aprovar Ficha</button>'; ?>
-                        <?php if ($podeDevolverRevisao && $tipo_usuario === 'po') echo '<button type="button" class="btn-info btn-action" data-action="enviar_revisao_novamente" data-requires-justification="true">Devolver para Revisão</button>'; ?>
-                        <?php if ($podeExcluir): ?>
-                            <input type="hidden" name="delete_id" value="<?php echo $id; ?>">
-                            <button type="button" class="btn-danger btn-action" data-action="excluir" data-confirm-message="Tem certeza que deseja excluir permanentemente este serviço?">Excluir</button>
-                        <?php endif; ?>
                     <?php endif; ?>
+                    <h3>Diretrizes</h3>
+                    <div id="diretrizes">
+                        <?php $index = 0; foreach ($diretrizes as $diretriz): ?>
+                        <div class="grupo">
+                            <label>Diretriz <?= $index + 1 ?> - Título:</label>
+                            <textarea name="diretrizes[<?= $index ?>][titulo]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($diretriz['titulo']) ?></textarea>
+                            <div id="itens_diretriz_<?= $index ?>">
+                                <?php foreach ($diretriz['itens'] as $item): ?><textarea name="diretrizes[<?= $index ?>][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item da diretriz" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
+                            </div>
+                            <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(<?= $index ?>)">+ Item</button><?php endif; ?>
+                        </div>
+                        <?php $index++; endforeach; ?>
+                    </div>
+                    <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarDiretriz()">+ Adicionar Diretriz</button><?php endif; ?>
+                    <h3>Padrões</h3>
+                    <div id="padroes">
+                        <?php $index = 0; foreach ($padroes as $padrao): ?>
+                        <div class="grupo">
+                            <label>Padrão <?= $index + 1 ?> - Título:</label>
+                            <textarea name="padroes[<?= $index ?>][titulo]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($padrao['titulo']) ?></textarea>
+                            <div id="itens_padrao_<?= $index ?>">
+                                <?php foreach ($padrao['itens'] as $item): ?><textarea name="padroes[<?= $index ?>][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item do padrão" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
+                            </div>
+                            <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(<?= $index ?>)">+ Item</button><?php endif; ?>
+                        </div>
+                        <?php $index++; endforeach; ?>
+                    </div>
+                    <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarPadrao()">+ Adicionar Padrão</button><?php endif; ?>
+                    <h3>Checklist de Verificação</h3>
+                    <div id="checklist">
+                        <?php $index = 0; foreach ($checklist as $item): ?>
+                        <div class="grupo">
+                            <label>Item <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][item]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['item']) ?></textarea>
+                            <label>Observação <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][observacao]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['observacao']) ?></textarea>
+                        </div>
+                        <?php $index++; endforeach; ?>
+                    </div>
+                    <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarChecklist()">+ Adicionar Item</button><?php endif; ?>
+                    <h3>Observações Gerais</h3><textarea name="observacoes_gerais" rows="4" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['observacoes'] ?? '') ?></textarea>
                 </div>
+            </div>
+            <div class="form-actions-horizontal">
+                <?php if (!$modo_edicao): ?>
+                    <button type="submit" name="acao" value="criar_servico" class="btn-salvar">Criar Serviço</button>
+                <?php else: ?>
+                    <?php if ($podeSalvarRascunho): ?><button type="submit" name="acao" value="enviar_revisao" class="btn-info">Salvar Alterações</button><?php endif; ?>
+                    <?php if ($podeEnviarRevisao): ?><button type="submit" id="btn-enviar-revisao" name="acao" value="enviar_revisao" class="btn-salvar">Enviar para Revisão</button><?php endif; ?>
+                    <?php if ($podeEnviarAprovacao): ?><button type="submit" name="acao" value="enviar_para_aprovacao" class="btn-salvar">Enviar para Aprovação do PO</button><?php endif; ?>
+                    <?php if ($podeDevolverRevisao && $tipo_usuario === 'criador'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
+                    <?php if ($podePublicar): ?><button type="submit" name="acao" value="publicar_ficha" class="btn-salvar">Publicar Ficha</button><?php endif; ?>
+                    <?php if ($podeCancelar): ?><button type="submit" name="acao" value="cancelar_ficha" class="btn-danger" onclick="return confirm('Tem certeza que deseja cancelar esta ficha?')">Cancelar</button><?php endif; ?>
+                    <?php if ($podeCriarNovaVersao): ?><button type="submit" name="acao" value="nova_versao_auto" class="btn-salvar">Nova Versão</button><?php endif; ?>
+                    <?php if ($podeAprovarRevisor): ?><button type="submit" name="acao" value="aprovar_revisor" class="btn-salvar">Concluir Revisão</button><?php endif; ?>
+                    <?php if ($podeReprovarRevisor): ?><button type="button" class="btn-danger" onclick="mostrarJustificativa('reprovar_revisor')">Reprovar</button><?php endif; ?>
+                    <?php if ($podeAprovarPO): ?><button type="submit" name="acao" value="aprovar_po" class="btn-salvar">Aprovar Ficha</button><?php endif; ?>
+                    <?php if ($podeDevolverRevisao && $tipo_usuario === 'po'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
+                    <?php if ($podeExcluir): ?>
+                        <input type="hidden" name="delete_id" value="<?php echo $id; ?>">
+                        <button type="submit" name="acao" value="excluir" class="btn-danger" onclick="return confirm('Tem certeza que deseja excluir permanentemente este serviço?')">Excluir</button>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
         </form>
     </div>
 
-    <div id="justificativa-modal" class="modal" style="display:none;">
+    <div id="justificativa-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="document.getElementById('justificativa-modal').style.display='none'">&times;</span>
             <h3>Justificativa</h3>
             <p>Por favor, informe o motivo da devolução/reprovação.</p>
-            <textarea id="justificativa-texto" rows="5"></textarea>
-            <button id="justificativa-submit" class="btn-salvar">Enviar</button>
+            <textarea id="justificativa-texto" rows="5" style="width: 100%"></textarea>
+            <button id="justificativa-submit" class="btn-salvar" style="margin-top: 10px;">Enviar</button>
         </div>
     </div>
 
     <script>
-        const isReadOnly = <?= json_encode($isReadOnly) ?>;
-        let diretrizes = <?= json_encode($diretrizes ?? []) ?>;
-        let padroes = <?= json_encode($padroes ?? []) ?>;
-        let checklist = <?= json_encode($checklist ?? []) ?>;
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+        document.querySelectorAll('textarea').forEach(el => autoResize(el));
 
-        function renderSection(containerId, data, fields, titlePrefix, itemPlaceholder) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            data.forEach((mainItem, mainIndex) => {
-                const group = document.createElement('div');
-                group.className = 'grupo';
-                let html = `<label>${titlePrefix} ${mainIndex + 1} - Título:</label>
-                            <textarea name="${containerId}[${mainIndex}][${fields[0]}]" rows="1" ${isReadOnly ? 'readonly' : ''}>${mainItem.titulo || ''}</textarea>
-                            <div id="itens_${containerId}_${mainIndex}">`;
-                mainItem.itens.forEach(item => { html += `<textarea name="${containerId}[${mainIndex}][${fields[1]}][]" rows="1" placeholder="${itemPlaceholder}" ${isReadOnly ? 'readonly' : ''}>${item || ''}</textarea>`; });
-                html += `</div>`;
-                if (!isReadOnly) { html += `<button type="button" class="btn-add-item" onclick="adicionarSubItem('${containerId}', ${mainIndex})">+ Item</button>`; }
-                group.innerHTML = html;
-                container.appendChild(group);
-            });
-            autoResizeAllTextareas();
+        function adicionarDiretriz() {
+            const index = document.querySelectorAll('#diretrizes .grupo').length;
+            const container = document.createElement('div');
+            container.classList.add('grupo');
+            container.innerHTML = `<label>Diretriz ${index + 1} - Título:</label><textarea name="diretrizes[${index}][titulo]" rows="1" oninput="autoResize(this)"></textarea><div id="itens_diretriz_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(${index})">+ Item</button>`;
+            document.getElementById('diretrizes').appendChild(container);
+        }
+        function adicionarItemDiretriz(index) {
+            document.getElementById(`itens_diretriz_${index}`).insertAdjacentHTML('beforeend', `<textarea name="diretrizes[${index}][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item da diretriz"></textarea><br>`);
+        }
+        function adicionarPadrao() {
+            const index = document.querySelectorAll('#padroes .grupo').length;
+            const container = document.createElement('div');
+            container.classList.add('grupo');
+            container.innerHTML = `<label>Padrão ${index + 1} - Título:</label><textarea name="padroes[${index}][titulo]" rows="1" oninput="autoResize(this)"></textarea><div id="itens_padrao_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(${index})">+ Item</button>`;
+            document.getElementById('padroes').appendChild(container);
+        }
+        function adicionarItemPadrao(index) {
+            document.getElementById(`itens_padrao_${index}`).insertAdjacentHTML('beforeend', `<textarea name="padroes[${index}][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item do padrão"></textarea><br>`);
+        }
+        function adicionarChecklist() {
+            const index = document.querySelectorAll('#checklist .grupo').length;
+            const container = document.createElement('div');
+            container.classList.add('grupo');
+            container.innerHTML = `<label>Item ${index + 1}:</label><textarea name="checklist[${index}][item]" rows="1" oninput="autoResize(this)"></textarea><label>Observação ${index + 1}:</label><textarea name="checklist[${index}][observacao]" rows="1" oninput="autoResize(this)"></textarea>`;
+            document.getElementById('checklist').appendChild(container);
         }
 
-        function renderChecklist() {
-            const container = document.getElementById('checklist');
-            container.innerHTML = '';
-            checklist.forEach((item, index) => {
-                const group = document.createElement('div');
-                group.className = 'grupo';
-                group.innerHTML = `<label>Item ${index + 1}:</label><textarea name="checklist[${index}][item]" rows="1" ${isReadOnly ? 'readonly' : ''}>${item.item || ''}</textarea>
-                                   <label>Observação ${index + 1}:</label><textarea name="checklist[${index}][observacao]" rows="1" ${isReadOnly ? 'readonly' : ''}>${item.observacao || ''}</textarea>`;
-                container.appendChild(group);
-            });
-            autoResizeAllTextareas();
-        }
-        
-        function renderAllSections() {
-            renderSection('diretrizes', diretrizes, ['titulo', 'itens'], 'Diretriz', 'Item da diretriz');
-            renderSection('padroes', padroes, ['titulo', 'itens'], 'Padrão', 'Item do padrão');
-            renderChecklist();
-        }
-
-        function adicionarDiretriz() { diretrizes.push({ titulo: '', itens: [''] }); renderAllSections(); }
-        function adicionarPadrao() { padroes.push({ titulo: '', itens: [''] }); renderAllSections(); }
-        function adicionarChecklist() { checklist.push({ item: '', observacao: '' }); renderAllSections(); }
-        function adicionarSubItem(type, index) {
-            if (type === 'diretrizes') diretrizes[index].itens.push('');
-            if (type === 'padroes') padroes[index].itens.push('');
-            renderAllSections();
-        }
-
-        function autoResizeAllTextareas() {
-            document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.style.height = 'auto';
-                textarea.style.height = (textarea.scrollHeight) + 'px';
-                textarea.addEventListener('input', () => {
-                    textarea.style.height = 'auto';
-                    textarea.style.height = (textarea.scrollHeight) + 'px';
-                }, { once: true });
-            });
-        }
-
-        function submitForm(action) {
-            document.getElementById('form-action-field').value = action;
-            document.getElementById('form-ficha').submit();
-        }
-        
-        function showFormError(message) {
-            const errorDiv = document.getElementById('form-error-message');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-        }
-
-        function validateAndSubmit(action) {
-            document.getElementById('form-error-message').style.display = 'none';
-
-            if (action === 'enviar_revisao') {
-                const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
-                if (document.querySelector('input[name="revisores_ids[]"]') && revisoresMarcados === 0) {
-                    showFormError('Erro: Por favor, selecione ao menos um revisor para continuar.');
-                    return;
-                }
-                const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
-                const algumTituloPreenchido = Array.from(diretrizesTitulos).some(t => t.value.trim() !== '');
-                if (diretrizesTitulos.length > 0 && !algumTituloPreenchido) {
-                    showFormError('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
-                    return;
-                }
-            }
-            submitForm(action);
-        }
-
-        function mostrarJustificativa(action) {
+        function mostrarJustificativa(acao) {
             const modal = document.getElementById('justificativa-modal');
             modal.style.display = 'block';
             document.getElementById('justificativa-submit').onclick = function() {
                 const justificativa = document.getElementById('justificativa-texto').value;
                 if (!justificativa.trim()) { alert('A justificativa é obrigatória.'); return; }
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'justificativa';
-                hiddenInput.value = justificativa;
-                document.getElementById('form-ficha').appendChild(hiddenInput);
-                modal.style.display = 'none';
-                submitForm(action);
+                const form = document.getElementById('form-ficha');
+                form.insertAdjacentHTML('beforeend', `<input type="hidden" name="acao" value="${acao}">`);
+                form.insertAdjacentHTML('beforeend', `<input type="hidden" name="justificativa" value="${justificativa}">`);
+                form.submit();
             }
         }
-
+        
         document.addEventListener('DOMContentLoaded', function() {
-            renderAllSections();
-
             document.getElementById('debug-apply-btn')?.addEventListener('click', function() {
                 const url = new URL(window.location.href);
                 url.searchParams.set('tipo', document.getElementById('debug-tipo-usuario').value);
@@ -540,20 +499,24 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
                 window.location.href = url.toString();
             });
 
-            document.querySelector('.form-actions-horizontal').addEventListener('click', function(e) {
-                if (!e.target.matches('.btn-action')) return;
-                const button = e.target;
-                const action = button.dataset.action;
-                if (button.dataset.requiresJustification) {
-                    mostrarJustificativa(action);
-                } else if (button.dataset.confirmMessage) {
-                    if (confirm(button.dataset.confirmMessage)) {
-                        validateAndSubmit(action);
+            const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
+            if (btnEnviarRevisao) {
+                btnEnviarRevisao.addEventListener('click', function(event) {
+                    const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
+                    if (document.querySelector('input[name="revisores_ids[]"]') && revisoresMarcados === 0) {
+                        event.preventDefault();
+                        alert('Erro: Por favor, selecione ao menos um revisor para continuar.');
+                        return;
                     }
-                } else {
-                    validateAndSubmit(action);
-                }
-            });
+                    const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
+                    const algumTituloPreenchido = Array.from(diretrizesTitulos).some(t => t.value.trim() !== '');
+                    if (diretrizesTitulos.length > 0 && !algumTituloPreenchido) {
+                        event.preventDefault();
+                        alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
+                        return;
+                    }
+                });
+            }
         });
     </script>
 </body>
