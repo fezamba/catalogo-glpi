@@ -1236,15 +1236,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['acao'] === 'cancelar_ficha'
               <input type="hidden" name="delete_id" value="<?php echo intval($_GET['id']); ?>">
             <?php endif; ?>
           </div>
-        </div>
-        <div id="justificativa-box" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
-          <label for="justificativa-input" style="font-weight: bold;">Justificativa (Obrigatório):</label><br>
+          <div id="justificativa-box" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
+            <label for="justificativa-input" style="font-weight: bold;">Justificativa (Obrigatório):</label><br>
 
-          <textarea name="justificativa" id="justificativa-input" rows="4" cols="60" required></textarea><br><br>
+            <textarea name="justificativa" id="justificativa-input" rows="4" cols="60" required></textarea><br><br>
 
-          <button type="submit" id="confirmar-reprovacao-btn" name="acao" value="" class="btn-danger">Confirmar Ação</button>
+            <button type="submit" id="confirmar-reprovacao-btn" name="acao" value="" class="btn-danger">Confirmar Ação</button>
 
-          <button type="button" class="btn-salvar" onclick="document.getElementById('justificativa-box').style.display='none'">Cancelar</button>
+            <button type="button" class="btn-salvar" onclick="document.getElementById('justificativa-box').style.display='none'">Cancelar</button>
+          </div>
         </div>
     </form>
     <script>
