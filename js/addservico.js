@@ -62,6 +62,7 @@ function autoResize(el) {
 function mostrarJustificativa(acao) {
     const formPrincipal = document.getElementById('form-ficha');
     if (!formPrincipal) {
+        console.error('Formulário principal #form-ficha não encontrado.');
         return;
     }
 
