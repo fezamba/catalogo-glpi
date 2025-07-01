@@ -307,7 +307,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
 <head>
   <meta charset="UTF-8">
   <title><?php echo $modo_edicao ? "Editar Serviço" : "Adicionar Serviço"; ?></title>
-  <link rel="stylesheet" href="../css/addservico.css">
+  <link rel="stylesheet" href="../../css/addservico.css">
 </head>
 
 <body>
@@ -456,7 +456,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
       <button id="justificativa-submit" class="btn-salvar" style="margin-top: 10px;">Enviar</button>
     </div>
   </div>
-  
+<script src="../../js/addservico.js"></script>
 </body>
 
 </html>
