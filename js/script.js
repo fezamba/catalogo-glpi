@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      fetch('buscar_servicos.php?termo=' + encodeURIComponent(termo))
+      fetch('../buscar_servicos.php?termo=' + encodeURIComponent(termo))
         .then((res) => res.json())
         .then((data) => {
           if (data.length === 0) {
