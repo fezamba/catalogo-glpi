@@ -14,40 +14,47 @@ if (empty($tokens)) {
     exit;
 }
 
-$likes = [];
+$where_conditions = [];
+$params = [];
+$types = '';
+
 foreach ($tokens as $token) {
-    $t = $mysqli->real_escape_string($token);
-    $likes[] = "(s.Titulo LIKE '%$t%' OR sub.Titulo LIKE '%$t%' OR cat.Titulo LIKE '%$t%')";
+    $where_conditions[] = "(s.Titulo LIKE ? OR s.Descricao LIKE ? OR sub.Titulo LIKE ? OR cat.Titulo LIKE ?)";
+    
+    $param = "%" . $token . "%";
+    array_push($params, $param, $param, $param, $param);
+    $types .= 'ssss';
 }
-$where = implode(' AND ', $likes);
+
+$where_clause = implode(' AND ', $where_conditions);
 
 $query = "
     SELECT 
-        s.ID,
-        s.Titulo,
-        s.Descricao,
-        s.ID_SubCategoria,
-        s.UltimaAtualizacao,
-        s.status_ficha,
-        s.codigo_ficha,
-        s.versao,
-        sub.ID_Categoria AS ID_Categoria,
+        s.ID as id,
+        s.Titulo as titulo,
+        s.Descricao as descricao,
         sub.Titulo AS subcategoria,
         cat.Titulo AS categoria
     FROM servico s
     JOIN subcategoria sub ON s.ID_SubCategoria = sub.ID
     JOIN categoria cat ON sub.ID_Categoria = cat.ID
-    WHERE $where
+    WHERE $where_clause
+      AND s.status_ficha = 'publicado'
     ORDER BY s.ID DESC
+    LIMIT 10
 ";
 
-$res = $mysqli->query($query);
+$stmt = $mysqli->prepare($query);
+$stmt->bind_param($types, ...$params);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $servicos = [];
-if ($res) {
-    while ($row = $res->fetch_assoc()) {
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
         $servicos[] = $row;
     }
 }
 
 echo json_encode($servicos);
+?>
