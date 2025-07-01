@@ -6,9 +6,104 @@ if ($mysqli->connect_errno) {
   die("Erro de conexão com o banco de dados: " . $mysqli->connect_error);
 }
 
+function fetch_by_id($mysqli, $table, $id)
+{
+  $stmt = $mysqli->prepare("SELECT * FROM $table WHERE ID = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  return $stmt->get_result()->fetch_assoc();
+}
+function fetch_all($mysqli, $table, $order_by = null)
+{
+  $data = [];
+  $query = "SELECT * FROM $table";
+  if ($order_by) {
+    $query .= " ORDER BY $order_by";
+  }
+  $result = $mysqli->query($query);
+  if ($result) {
+    while ($row = $result->fetch_assoc()) {
+      $data[] = $row;
+    }
+  }
+  return $data;
+}
+function fetch_related_items($mysqli, $servico_id, $main_table, $item_table, $join_col_main, $join_col_item)
+{
+  $items = [];
+  $query = "SELECT m.ID AS main_id, m.Titulo AS main_titulo, i.Conteudo AS item_conteudo FROM $main_table m LEFT JOIN $item_table i ON m.ID = i.$join_col_item WHERE m.$join_col_main = ? ORDER BY m.ID, i.ID";
+  $stmt = $mysqli->prepare($query);
+  $stmt->bind_param("i", $servico_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $temp_items = [];
+  while ($row = $result->fetch_assoc()) {
+    if (!isset($temp_items[$row['main_id']])) {
+      $temp_items[$row['main_id']] = ['titulo' => $row['main_titulo'], 'itens' => []];
+    }
+    if ($row['item_conteudo']) {
+      $temp_items[$row['main_id']]['itens'][] = $row['item_conteudo'];
+    }
+  }
+  return array_values($temp_items);
+}
+function fetch_checklist($mysqli, $servico_id)
+{
+  $checklist = [];
+  $stmt = $mysqli->prepare("SELECT NomeItem, Observacao FROM checklist WHERE ID_Servico = ? ORDER BY ID");
+  $stmt->bind_param("i", $servico_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  while ($row = $result->fetch_assoc()) {
+    $checklist[] = ['item' => $row['NomeItem'], 'observacao' => $row['Observacao']];
+  }
+  return $checklist;
+}
+function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table, $join_col_main, $join_col_item)
+{
+  $mysqli->query("DELETE FROM $main_table WHERE $join_col_main = $servico_id");
+  if (empty($data)) return;
+  foreach ($data as $main_item) {
+    if (empty(trim($main_item['titulo']))) continue;
+    $titulo_main = $mysqli->real_escape_string($main_item['titulo']);
+    $mysqli->query("INSERT INTO $main_table (Titulo, $join_col_main) VALUES ('$titulo_main', $servico_id)");
+    $main_id = $mysqli->insert_id;
+    if (!empty($main_item['itens'])) {
+      foreach ($main_item['itens'] as $item_conteudo) {
+        if (!empty(trim($item_conteudo))) {
+          $conteudo_item = $mysqli->real_escape_string($item_conteudo);
+          $mysqli->query("INSERT INTO $item_table (Conteudo, $join_col_item) VALUES ('$conteudo_item', $main_id)");
+        }
+      }
+    }
+  }
+}
+function sync_checklist_data($mysqli, $servico_id, $checklist_data)
+{
+  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $servico_id");
+  if (empty($checklist_data)) return;
+  foreach ($checklist_data as $item) {
+    if (!empty(trim($item['item']))) {
+      $nome_item = $mysqli->real_escape_string($item['item']);
+      $obs_item = $mysqli->real_escape_string($item['observacao']);
+      $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($servico_id, '$nome_item', '$obs_item')");
+    }
+  }
+}
+function redirect($location)
+{
+  header("Location: " . $location);
+  exit;
+}
+function get_status_label($status)
+{
+  $labels = ['rascunho' => '📝 Em Cadastro', 'em_revisao' => '🔍 Em revisão', 'revisada' => '✅ Revisada', 'em_aprovacao' => '🕒 Em aprovação', 'aprovada' => '☑️ Aprovada', 'publicado' => '📢 Publicado', 'cancelada' => '🚫 Cancelada', 'reprovado_revisor' => '❌ Reprovado pelo Revisor', 'reprovado_po' => '❌ Reprovado pelo PO', 'substituida' => '♻️ Substituída', 'descontinuada' => '⏳ Descontinuada'];
+  return $labels[$status] ?? '—';
+}
+
 $lista_revisores_debug = fetch_all($mysqli, 'revisores', 'nome ASC');
 $lista_pos_debug = fetch_all($mysqli, 'pos', 'nome ASC');
-$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD']; // Usuário Padrão
+$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD'];
 
 if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
   $simulacao = explode('_', $_GET['simular_usuario'], 2);
@@ -29,133 +124,6 @@ if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
 }
 $_SESSION['usuario_logado'] = $usuario_logado;
 
-function fetch_by_id($mysqli, $table, $id)
-{
-  $stmt = $mysqli->prepare("SELECT * FROM $table WHERE ID = ?");
-  $stmt->bind_param("i", $id);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  return $result->fetch_assoc();
-}
-
-function fetch_all($mysqli, $table, $order_by = null)
-{
-  $data = [];
-  $query = "SELECT * FROM $table";
-  if ($order_by) {
-    $query .= " ORDER BY $order_by";
-  }
-  $result = $mysqli->query($query);
-  if ($result) {
-    while ($row = $result->fetch_assoc()) {
-      $data[] = $row;
-    }
-  }
-  return $data;
-}
-
-function fetch_related_items($mysqli, $servico_id, $main_table, $item_table, $join_col_main, $join_col_item)
-{
-  $items = [];
-  $query = "
-        SELECT m.ID AS main_id, m.Titulo AS main_titulo, i.Conteudo AS item_conteudo
-        FROM $main_table m
-        LEFT JOIN $item_table i ON m.ID = i.$join_col_item
-        WHERE m.$join_col_main = ?
-        ORDER BY m.ID, i.ID
-    ";
-  $stmt = $mysqli->prepare($query);
-  $stmt->bind_param("i", $servico_id);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $temp_items = [];
-  while ($row = $result->fetch_assoc()) {
-    if (!isset($temp_items[$row['main_id']])) {
-      $temp_items[$row['main_id']] = ['titulo' => $row['main_titulo'], 'itens' => []];
-    }
-    if ($row['item_conteudo']) {
-      $temp_items[$row['main_id']]['itens'][] = $row['item_conteudo'];
-    }
-  }
-  return array_values($temp_items);
-}
-
-function fetch_checklist($mysqli, $servico_id)
-{
-  $checklist = [];
-  $stmt = $mysqli->prepare("SELECT NomeItem, Observacao FROM checklist WHERE ID_Servico = ? ORDER BY ID");
-  $stmt->bind_param("i", $servico_id);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  while ($row = $result->fetch_assoc()) {
-    $checklist[] = ['item' => $row['NomeItem'], 'observacao' => $row['Observacao']];
-  }
-  return $checklist;
-}
-
-function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table, $join_col_main, $join_col_item)
-{
-  $mysqli->query("DELETE FROM $main_table WHERE $join_col_main = $servico_id");
-
-  if (empty($data)) return;
-
-  foreach ($data as $main_item) {
-    if (empty(trim($main_item['titulo']))) continue;
-
-    $titulo_main = $mysqli->real_escape_string($main_item['titulo']);
-    $mysqli->query("INSERT INTO $main_table (Titulo, $join_col_main) VALUES ('$titulo_main', $servico_id)");
-    $main_id = $mysqli->insert_id;
-
-    if (!empty($main_item['itens'])) {
-      foreach ($main_item['itens'] as $item_conteudo) {
-        if (!empty(trim($item_conteudo))) {
-          $conteudo_item = $mysqli->real_escape_string($item_conteudo);
-          $mysqli->query("INSERT INTO $item_table (Conteudo, $join_col_item) VALUES ('$conteudo_item', $main_id)");
-        }
-      }
-    }
-  }
-}
-
-function sync_checklist_data($mysqli, $servico_id, $checklist_data)
-{
-  $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $servico_id");
-
-  if (empty($checklist_data)) return;
-
-  foreach ($checklist_data as $item) {
-    if (!empty(trim($item['item']))) {
-      $nome_item = $mysqli->real_escape_string($item['item']);
-      $obs_item = $mysqli->real_escape_string($item['observacao']);
-      $mysqli->query("INSERT INTO checklist (ID_Servico, NomeItem, Observacao) VALUES ($servico_id, '$nome_item', '$obs_item')");
-    }
-  }
-}
-
-function redirect($location)
-{
-  header("Location: " . $location);
-  exit;
-}
-
-function get_status_label($status)
-{
-  $labels = [
-    'rascunho' => '📝 Em Cadastro',
-    'em_revisao' => '🔍 Em revisão',
-    'revisada' => '✅ Revisada',
-    'em_aprovacao' => '🕒 Em aprovação',
-    'aprovada' => '☑️ Aprovada',
-    'publicado' => '📢 Publicado',
-    'cancelada' => '🚫 Cancelada',
-    'reprovado_revisor' => '❌ Reprovado pelo Revisor',
-    'reprovado_po' => '❌ Reprovado pelo PO',
-    'substituida' => '♻️ Substituída',
-    'descontinuada' => '⏳ Descontinuada'
-  ];
-  return $labels[$status] ?? '—';
-}
-
 $id = isset($_GET['id']) ? intval($_GET['id']) : null;
 $modo_edicao = !is_null($id);
 $mensagem = '';
@@ -164,6 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
   $acao = $_POST['acao'];
   $id_post = $modo_edicao ? $id : null;
   $post_data = $_POST;
+  $nome_usuario_logado = $usuario_logado['nome'];
 
   switch ($acao) {
     case 'nova_versao_auto':
@@ -171,19 +140,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       if ($servico_antigo) {
         $partes = explode('.', $servico_antigo['versao']);
         $nova_versao = ((int)$partes[0] + 1) . '.0';
-
-        $stmt = $mysqli->prepare("INSERT INTO servico (codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
-        $stmt->bind_param("ssssisssssss", $servico_antigo['codigo_ficha'], $nova_versao, $servico_antigo['Titulo'], $servico_antigo['Descricao'], $servico_antigo['ID_SubCategoria'], $servico_antigo['KBs'], $servico_antigo['area_especialista'], $servico_antigo['po_responsavel'], $servico_antigo['alcadas'], $servico_antigo['procedimento_excecao'], $servico_antigo['observacoes'], $usuario_logado['nome']);
+        $stmt = $mysqli->prepare("INSERT INTO servico (codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha, UltimaAtualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', NOW())");
+        $stmt->bind_param("ssssisssssss", $servico_antigo['codigo_ficha'], $nova_versao, $servico_antigo['Titulo'], $servico_antigo['Descricao'], $servico_antigo['ID_SubCategoria'], $servico_antigo['KBs'], $servico_antigo['area_especialista'], $servico_antigo['po_responsavel'], $servico_antigo['alcadas'], $servico_antigo['procedimento_excecao'], $servico_antigo['observacoes'], $nome_usuario_logado);
         $stmt->execute();
         $novo_id = $stmt->insert_id;
-
         $diretrizes_antigas = fetch_related_items($mysqli, $id_post, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
         sync_related_data($mysqli, $novo_id, $diretrizes_antigas, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
         $padroes_antigos = fetch_related_items($mysqli, $id_post, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
         sync_related_data($mysqli, $novo_id, $padroes_antigos, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
         $checklist_antigo = fetch_checklist($mysqli, $id_post);
         sync_checklist_data($mysqli, $novo_id, $checklist_antigo);
-
         redirect("manage_addservico.php?id=$novo_id&sucesso=1");
       }
       break;
@@ -199,36 +165,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       }
       redirect("../list/manage_listservico.php?sucesso=1");
       break;
-
     case 'criar_servico':
       $stmt = $mysqli->prepare("INSERT INTO servico (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha) VALUES ('1.0', ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
-      $stmt->bind_param("ssisssssss", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $_SESSION['username']);
+      $stmt->bind_param("ssisssssss", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado);
       $stmt->execute();
       $new_id = $stmt->insert_id;
-
       $codigo_ficha = "FCH-" . str_pad($new_id, 4, "0", STR_PAD_LEFT);
       $mysqli->query("UPDATE servico SET codigo_ficha = '$codigo_ficha' WHERE ID = $new_id");
-
       sync_related_data($mysqli, $new_id, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $new_id, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $new_id, $post_data['checklist'] ?? []);
-
       redirect("../list/manage_listservico.php?sucesso=1");
       break;
-
     case 'salvar_rascunho':
       $sql = "UPDATE servico SET Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, UltimaAtualizacao = NOW(), area_especialista = ?, po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, observacoes = ?, usuario_criador = ? WHERE ID = ?";
       $stmt = $mysqli->prepare($sql);
-      $stmt->bind_param("ssisssssssi", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $_SESSION['username'], $id_post);
+      $stmt->bind_param("ssisssssssi", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado, $id_post);
       $stmt->execute();
-
       sync_related_data($mysqli, $id_post, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $id_post, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $id_post, $post_data['checklist'] ?? []);
-
       redirect("manage_addservico.php?id=$id_post&sucesso=1");
       break;
-
     case 'excluir':
       $delete_id = intval($_POST['delete_id']);
       $stmt = $mysqli->prepare("DELETE FROM servico WHERE ID = ?");
@@ -236,28 +194,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       $stmt->execute();
       redirect("../list/manage_listservico.php?excluido=1");
       break;
-
     case 'enviar_revisao':
     case 'enviar_revisao_novamente':
     case 'aprovar_revisor':
     case 'aprovar_po':
     case 'reprovar_revisor':
     case 'reprovar_po':
-      $status_map = [
-        'enviar_revisao' => 'em_revisao',
-        'enviar_revisao_novamente' => 'em_revisao',
-        'aprovar_revisor' => 'revisada',
-        'aprovar_po' => 'aprovada',
-        'reprovar_revisor' => 'reprovado_revisor',
-        'reprovar_po' => 'reprovado_po'
-      ];
+      $status_map = ['enviar_revisao' => 'em_revisao', 'enviar_revisao_novamente' => 'em_revisao', 'aprovar_revisor' => 'revisada', 'aprovar_po' => 'aprovada', 'reprovar_revisor' => 'reprovado_revisor', 'reprovar_po' => 'reprovado_po'];
       $novo_status = $status_map[$acao];
       $justificativa = in_array($acao, ['reprovar_revisor', 'reprovar_po', 'enviar_revisao_novamente']) ? ($post_data['justificativa'] ?? 'Sem justificativa') : null;
-
       $sql = "UPDATE servico SET Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, UltimaAtualizacao = NOW(), area_especialista = ?, po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, observacoes = ?, usuario_criador = ?, status_ficha = ?";
-      $params = [$post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $_SESSION['username'], $novo_status];
+      $params = [$post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado, $novo_status];
       $types = "ssissssssss";
-
       if ($justificativa) {
         $sql .= ", justificativa_rejeicao = ?";
         $params[] = $justificativa;
@@ -272,15 +220,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       $sql .= " WHERE ID = ?";
       $params[] = $id_post;
       $types .= "i";
-
       $stmt = $mysqli->prepare($sql);
       $stmt->bind_param($types, ...$params);
       $stmt->execute();
-
       sync_related_data($mysqli, $id_post, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $id_post, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $id_post, $post_data['checklist'] ?? []);
-
       if ($acao === 'enviar_revisao') {
         $mysqli->query("DELETE FROM servico_revisores WHERE servico_id = $id_post");
         if (!empty($post_data['revisores_ids'])) {
@@ -293,7 +238,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       }
       redirect("../list/manage_listservico.php?sucesso=1");
       break;
-
     case 'enviar_para_aprovacao':
     case 'cancelar_ficha':
       $status_map_simple = ['enviar_para_aprovacao' => 'em_aprovacao', 'cancelar_ficha' => 'cancelada'];
@@ -318,16 +262,14 @@ $diretrizes = [];
 $padroes = [];
 $checklist = [];
 $revisores_servico = [];
-
 if ($modo_edicao) {
   $dados_edicao = fetch_by_id($mysqli, 'servico', $id);
   if (!$dados_edicao) {
     die("Serviço não encontrado.");
   }
-  if (isset($_GET['forcar_status'])) {
+  if (isset($_GET['forcar_status']) && !empty($_GET['forcar_status'])) {
     $dados_edicao['status_ficha'] = $_GET['forcar_status'];
   }
-
   $diretrizes = fetch_related_items($mysqli, $id, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
   $padroes = fetch_related_items($mysqli, $id, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
   $checklist = fetch_checklist($mysqli, $id);
@@ -338,26 +280,26 @@ if ($modo_edicao) {
 $subcategorias = fetch_all($mysqli, 'subcategoria', 'Titulo ASC');
 $lista_pos = fetch_all($mysqli, 'pos', 'nome ASC');
 $lista_revisores = fetch_all($mysqli, 'revisores', 'nome ASC');
-
-$tipo_usuario = $_GET['tipo'] ?? 'criador';
+$tipo_usuario_atual = $usuario_logado['tipo'];
+$id_usuario_atual = $usuario_logado['id'];
+$nome_usuario_atual = $usuario_logado['nome'];
 $status = $dados_edicao['status_ficha'] ?? 'rascunho';
 
 $isRevisorAutorizado = $tipo_usuario_atual === 'revisor' && in_array($id_usuario_atual, $revisores_servico);
 $isPOAutorizado = $tipo_usuario_atual === 'po' && ($nome_usuario_atual === ($dados_edicao['po_responsavel'] ?? ''));
 
-$podeSalvarRascunho = $tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po']);
+$podeSalvarRascunho = $tipo_usuario_atual === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po']);
 $podeEnviarRevisao = $podeSalvarRascunho;
-$podeEnviarAprovacao = $tipo_usuario === 'criador' && $status === 'revisada';
-$podeDevolverRevisao = ($tipo_usuario === 'criador' && $status === 'revisada') || ($tipo_usuario === 'po' && $status === 'em_aprovacao');
-$podeCriarNovaVersao = $tipo_usuario === 'criador' && $status === 'publicado';
-$podePublicar = $tipo_usuario === 'criador' && $status === 'aprovada';
+$podeEnviarAprovacao = $tipo_usuario_atual === 'criador' && $status === 'revisada';
+$podeDevolverRevisao = ($tipo_usuario_atual === 'criador' && $status === 'revisada') || ($tipo_usuario_atual === 'po' && $status === 'em_aprovacao' && $isPOAutorizado);
+$podeCriarNovaVersao = $tipo_usuario_atual === 'criador' && $status === 'publicado';
+$podePublicar = $tipo_usuario_atual === 'criador' && $status === 'aprovada';
 $podeCancelar = $podePublicar;
 $podeExcluir = $modo_edicao && $podeSalvarRascunho;
-$podeAprovarRevisor = $tipo_usuario === 'revisor' && $status === 'em_revisao';
-$podeReprovarRevisor = $podeAprovarRevisor;
-$podeAprovarPO = $tipo_usuario === 'po' && $status === 'em_aprovacao';
-$isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'descontinuada']) || ($tipo_usuario === 'revisor' && $status !== 'em_revisao') || ($tipo_usuario === 'po' && $status !== 'em_aprovacao');
+$podeAprovarRevisor = $status === 'em_revisao' && $isRevisorAutorizado;
+$podeAprovarPO = $status === 'em_aprovacao' && $isPOAutorizado;
 
+$isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'descontinuada']) || ($tipo_usuario_atual === 'revisor' && !$isRevisorAutorizado && $status === 'em_revisao') || ($tipo_usuario_atual === 'po' && !$isPOAutorizado && $status === 'em_aprovacao');
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
