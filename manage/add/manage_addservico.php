@@ -8,26 +8,20 @@ if ($mysqli->connect_errno) {
 
 $lista_revisores_debug = fetch_all($mysqli, 'revisores', 'nome ASC');
 $lista_pos_debug = fetch_all($mysqli, 'pos', 'nome ASC');
-$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD'];
+$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD']; // Usuário Padrão
 
 if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
   $simulacao = explode('_', $_GET['simular_usuario'], 2);
   $tipo_simulado = $simulacao[0];
-  $id_simulado = $simulacao[1];
+  $id_simulado = intval($simulacao[1]);
 
   if ($tipo_simulado === 'revisor') {
-    $stmt = $mysqli->prepare("SELECT ID, nome FROM revisores WHERE ID = ?");
-    $stmt->bind_param("i", $id_simulado);
-    $stmt->execute();
-    $user_data = $stmt->get_result()->fetch_assoc();
+    $user_data = fetch_by_id($mysqli, 'revisores', $id_simulado);
     if ($user_data) {
       $usuario_logado = ['tipo' => 'revisor', 'id' => $user_data['ID'], 'nome' => $user_data['nome']];
     }
   } elseif ($tipo_simulado === 'po') {
-    $stmt = $mysqli->prepare("SELECT ID, nome FROM pos WHERE ID = ?");
-    $stmt->bind_param("i", $id_simulado);
-    $stmt->execute();
-    $user_data = $stmt->get_result()->fetch_assoc();
+    $user_data = fetch_by_id($mysqli, 'pos', $id_simulado);
     if ($user_data) {
       $usuario_logado = ['tipo' => 'po', 'id' => $user_data['ID'], 'nome' => $user_data['nome']];
     }
@@ -179,28 +173,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
         $nova_versao = ((int)$partes[0] + 1) . '.0';
 
         $stmt = $mysqli->prepare("INSERT INTO servico (codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
-        $stmt->bind_param("ssdssssssssss", $servico_antigo['codigo_ficha'], $nova_versao, $servico_antigo['Titulo'], $servico_antigo['Descricao'], $servico_antigo['ID_SubCategoria'], $servico_antigo['KBs'], $servico_antigo['area_especialista'], $servico_antigo['po_responsavel'], $servico_antigo['alcadas'], $servico_antigo['procedimento_excecao'], $servico_antigo['observacoes'], $_SESSION['usuario_logado']['nome']);
+        $stmt->bind_param("ssssisssssss", $servico_antigo['codigo_ficha'], $nova_versao, $servico_antigo['Titulo'], $servico_antigo['Descricao'], $servico_antigo['ID_SubCategoria'], $servico_antigo['KBs'], $servico_antigo['area_especialista'], $servico_antigo['po_responsavel'], $servico_antigo['alcadas'], $servico_antigo['procedimento_excecao'], $servico_antigo['observacoes'], $usuario_logado['nome']);
         $stmt->execute();
         $novo_id = $stmt->insert_id;
 
         $diretrizes_antigas = fetch_related_items($mysqli, $id_post, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
         sync_related_data($mysqli, $novo_id, $diretrizes_antigas, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
-
         $padroes_antigos = fetch_related_items($mysqli, $id_post, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
         sync_related_data($mysqli, $novo_id, $padroes_antigos, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
-
         $checklist_antigo = fetch_checklist($mysqli, $id_post);
         sync_checklist_data($mysqli, $novo_id, $checklist_antigo);
 
         redirect("manage_addservico.php?id=$novo_id&sucesso=1");
       }
       break;
-
     case 'publicar_ficha':
       $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'publicado' WHERE ID = ?");
       $stmt->bind_param("i", $id_post);
       $stmt->execute();
-
       $servico_publicado = fetch_by_id($mysqli, 'servico', $id_post);
       if ($servico_publicado) {
         $stmt_substituir = $mysqli->prepare("UPDATE servico SET status_ficha = 'substituida' WHERE codigo_ficha = ? AND versao < ? AND status_ficha = 'publicado'");
