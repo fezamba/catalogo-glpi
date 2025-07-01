@@ -6,7 +6,34 @@ if ($mysqli->connect_errno) {
   die("Erro de conexão com o banco de dados: " . $mysqli->connect_error);
 }
 
-$_SESSION['username'] = 'Service-Desk/WD';
+$lista_revisores_debug = fetch_all($mysqli, 'revisores', 'nome ASC');
+$lista_pos_debug = fetch_all($mysqli, 'pos', 'nome ASC');
+$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD'];
+
+if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
+  $simulacao = explode('_', $_GET['simular_usuario'], 2);
+  $tipo_simulado = $simulacao[0];
+  $id_simulado = $simulacao[1];
+
+  if ($tipo_simulado === 'revisor') {
+    $stmt = $mysqli->prepare("SELECT ID, nome FROM revisores WHERE ID = ?");
+    $stmt->bind_param("i", $id_simulado);
+    $stmt->execute();
+    $user_data = $stmt->get_result()->fetch_assoc();
+    if ($user_data) {
+      $usuario_logado = ['tipo' => 'revisor', 'id' => $user_data['ID'], 'nome' => $user_data['nome']];
+    }
+  } elseif ($tipo_simulado === 'po') {
+    $stmt = $mysqli->prepare("SELECT ID, nome FROM pos WHERE ID = ?");
+    $stmt->bind_param("i", $id_simulado);
+    $stmt->execute();
+    $user_data = $stmt->get_result()->fetch_assoc();
+    if ($user_data) {
+      $usuario_logado = ['tipo' => 'po', 'id' => $user_data['ID'], 'nome' => $user_data['nome']];
+    }
+  }
+}
+$_SESSION['usuario_logado'] = $usuario_logado;
 
 function fetch_by_id($mysqli, $table, $id)
 {
@@ -145,6 +172,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
   $post_data = $_POST;
 
   switch ($acao) {
+    case 'nova_versao_auto':
+      $servico_antigo = fetch_by_id($mysqli, 'servico', $id_post);
+      if ($servico_antigo) {
+        $partes = explode('.', $servico_antigo['versao']);
+        $nova_versao = ((int)$partes[0] + 1) . '.0';
+
+        $stmt = $mysqli->prepare("INSERT INTO servico (codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
+        $stmt->bind_param("ssdssssssssss", $servico_antigo['codigo_ficha'], $nova_versao, $servico_antigo['Titulo'], $servico_antigo['Descricao'], $servico_antigo['ID_SubCategoria'], $servico_antigo['KBs'], $servico_antigo['area_especialista'], $servico_antigo['po_responsavel'], $servico_antigo['alcadas'], $servico_antigo['procedimento_excecao'], $servico_antigo['observacoes'], $_SESSION['usuario_logado']['nome']);
+        $stmt->execute();
+        $novo_id = $stmt->insert_id;
+
+        $diretrizes_antigas = fetch_related_items($mysqli, $id_post, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
+        sync_related_data($mysqli, $novo_id, $diretrizes_antigas, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
+
+        $padroes_antigos = fetch_related_items($mysqli, $id_post, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
+        sync_related_data($mysqli, $novo_id, $padroes_antigos, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
+
+        $checklist_antigo = fetch_checklist($mysqli, $id_post);
+        sync_checklist_data($mysqli, $novo_id, $checklist_antigo);
+
+        redirect("manage_addservico.php?id=$novo_id&sucesso=1");
+      }
+      break;
+
+    case 'publicar_ficha':
+      $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'publicado' WHERE ID = ?");
+      $stmt->bind_param("i", $id_post);
+      $stmt->execute();
+
+      $servico_publicado = fetch_by_id($mysqli, 'servico', $id_post);
+      if ($servico_publicado) {
+        $stmt_substituir = $mysqli->prepare("UPDATE servico SET status_ficha = 'substituida' WHERE codigo_ficha = ? AND versao < ? AND status_ficha = 'publicado'");
+        $stmt_substituir->bind_param("sd", $servico_publicado['codigo_ficha'], $servico_publicado['versao']);
+        $stmt_substituir->execute();
+      }
+      redirect("../list/manage_listservico.php?sucesso=1");
+      break;
+
     case 'criar_servico':
       $stmt = $mysqli->prepare("INSERT INTO servico (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha) VALUES ('1.0', ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
       $stmt->bind_param("ssisssssss", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $_SESSION['username']);
@@ -241,8 +306,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
 
     case 'enviar_para_aprovacao':
     case 'cancelar_ficha':
-    case 'publicar_ficha':
-      $status_map_simple = ['enviar_para_aprovacao' => 'em_aprovacao', 'cancelar_ficha' => 'cancelada', 'publicar_ficha' => 'publicado'];
+      $status_map_simple = ['enviar_para_aprovacao' => 'em_aprovacao', 'cancelar_ficha' => 'cancelada'];
       $novo_status = $status_map_simple[$acao];
       $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = ? WHERE ID = ?");
       $stmt->bind_param("si", $novo_status, $id_post);
@@ -287,6 +351,9 @@ $lista_revisores = fetch_all($mysqli, 'revisores', 'nome ASC');
 
 $tipo_usuario = $_GET['tipo'] ?? 'criador';
 $status = $dados_edicao['status_ficha'] ?? 'rascunho';
+
+$isRevisorAutorizado = $tipo_usuario_atual === 'revisor' && in_array($id_usuario_atual, $revisores_servico);
+$isPOAutorizado = $tipo_usuario_atual === 'po' && ($nome_usuario_atual === ($dados_edicao['po_responsavel'] ?? ''));
 
 $podeSalvarRascunho = $tipo_usuario === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po']);
 $podeEnviarRevisao = $podeSalvarRascunho;
@@ -575,22 +642,28 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
 <body>
   <div id="debug-panel">
     <h4>Painel de Testes</h4>
-    <label for="debug-tipo-usuario">Simular como:</label>
-    <select id="debug-tipo-usuario">
-      <option value="criador" <?= ($tipo_usuario === 'criador') ? 'selected' : '' ?>>Criador</option>
-      <option value="revisor" <?= ($tipo_usuario === 'revisor') ? 'selected' : '' ?>>Revisor</option>
-      <option value="po" <?= ($tipo_usuario === 'po') ? 'selected' : '' ?>>PO</option>
+    <label for="debug-status-ficha">Forçar Status:</label>
+    <select id="debug-status-ficha">
+      <option value="">-- Status Atual --</option>
+      <?php $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'descontinuada'];
+      foreach ($todos_status as $status_opcao): ?>
+        <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>><?= ucfirst(str_replace('_', ' ', $status_opcao)) ?></option>
+      <?php endforeach; ?>
     </select>
-    <?php if ($modo_edicao): ?>
-      <label for="debug-status-ficha">Forçar Status:</label>
-      <select id="debug-status-ficha">
-        <option value="">-- Status Atual --</option>
-        <?php $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'descontinuada'];
-        foreach ($todos_status as $status_opcao): ?>
-          <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>><?= ucfirst(str_replace('_', ' ', $status_opcao)) ?></option>
+    <label for="debug-simular-usuario">Simular como Usuário:</label>
+    <select id="debug-simular-usuario">
+      <option value="criador_0" <?= $usuario_logado['tipo'] === 'criador' ? 'selected' : '' ?>>Criador (Padrão)</option>
+      <optgroup label="Revisores">
+        <?php foreach ($lista_revisores_debug as $rev): ?>
+          <option value="revisor_<?= $rev['ID'] ?>" <?= ($usuario_logado['tipo'] === 'revisor' && $usuario_logado['id'] == $rev['ID']) ? 'selected' : '' ?>><?= htmlspecialchars($rev['nome']) ?></option>
         <?php endforeach; ?>
-      </select>
-    <?php endif; ?>
+      </optgroup>
+      <optgroup label="Product Owners">
+        <?php foreach ($lista_pos_debug as $po): ?>
+          <option value="po_<?= $po['ID'] ?>" <?= ($usuario_logado['tipo'] === 'po' && $usuario_logado['id'] == $po['ID']) ? 'selected' : '' ?>><?= htmlspecialchars($po['nome']) ?></option>
+        <?php endforeach; ?>
+      </optgroup>
+    </select>
     <button id="debug-apply-btn">Aplicar e Recarregar</button>
   </div>
 
@@ -687,14 +760,13 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
           <?php if ($podeSalvarRascunho): ?><button type="submit" name="acao" value="salvar_rascunho" class="btn-info">Salvar Alterações</button><?php endif; ?>
           <?php if ($podeEnviarRevisao): ?><button type="submit" id="btn-enviar-revisao" name="acao" value="enviar_revisao" class="btn-salvar">Enviar para Revisão</button><?php endif; ?>
           <?php if ($podeEnviarAprovacao): ?><button type="submit" name="acao" value="enviar_para_aprovacao" class="btn-salvar">Enviar para Aprovação do PO</button><?php endif; ?>
-          <?php if ($podeDevolverRevisao && $tipo_usuario === 'criador'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
+          <?php if ($podeDevolverRevisao && $tipo_usuario_atual === 'criador'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
           <?php if ($podePublicar): ?><button type="submit" name="acao" value="publicar_ficha" class="btn-salvar">Publicar Ficha</button><?php endif; ?>
           <?php if ($podeCancelar): ?><button type="submit" name="acao" value="cancelar_ficha" class="btn-danger" onclick="return confirm('Tem certeza que deseja cancelar esta ficha?')">Cancelar</button><?php endif; ?>
           <?php if ($podeCriarNovaVersao): ?><button type="submit" name="acao" value="nova_versao_auto" class="btn-salvar">Nova Versão</button><?php endif; ?>
-          <?php if ($podeAprovarRevisor): ?><button type="submit" name="acao" value="aprovar_revisor" class="btn-salvar">Concluir Revisão</button><?php endif; ?>
-          <?php if ($podeReprovarRevisor): ?><button type="button" class="btn-danger" onclick="mostrarJustificativa('reprovar_revisor')">Reprovar</button><?php endif; ?>
+          <?php if ($podeAprovarRevisor): ?><button type="submit" name="acao" value="aprovar_revisor" class="btn-salvar">Concluir Revisão</button><button type="button" class="btn-danger" onclick="mostrarJustificativa('reprovar_revisor')">Reprovar</button><?php endif; ?>
           <?php if ($podeAprovarPO): ?><button type="submit" name="acao" value="aprovar_po" class="btn-salvar">Aprovar Ficha</button><?php endif; ?>
-          <?php if ($podeDevolverRevisao && $tipo_usuario === 'po'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
+          <?php if ($podeDevolverRevisao && $tipo_usuario_atual === 'po'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
           <?php if ($podeExcluir): ?>
             <input type="hidden" name="delete_id" value="<?php echo $id; ?>">
             <button type="submit" name="acao" value="excluir" class="btn-danger" onclick="return confirm('Tem certeza que deseja excluir permanentemente este serviço?')">Excluir</button>
@@ -768,20 +840,14 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
         form.submit();
       }
     }
-
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('debug-apply-btn')?.addEventListener('click', function() {
         const url = new URL(window.location.href);
-        url.searchParams.set('tipo', document.getElementById('debug-tipo-usuario').value);
-        const statusSelect = document.getElementById('debug-status-ficha');
-        if (statusSelect && statusSelect.value) {
-          url.searchParams.set('forcar_status', statusSelect.value);
-        } else {
-          url.searchParams.delete('forcar_status');
-        }
+        const params = url.searchParams;
+        params.set('forcar_status', document.getElementById('debug-status-ficha').value);
+        params.set('simular_usuario', document.getElementById('debug-simular-usuario').value);
         window.location.href = url.toString();
       });
-
       const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
       if (btnEnviarRevisao) {
         btnEnviarRevisao.addEventListener('click', function(event) {
