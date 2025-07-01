@@ -169,81 +169,114 @@ while ($srv = $result->fetch_assoc()) {
       </div>
     </div>
   </div>
-<script>
-  const inputServico = document.getElementById('busca-servico');
-  const resultadosServico = document.getElementById('resultados-servico');
-  const corpoTabela = document.querySelector('.tabela-servicos tbody');
-  const paginacao = document.getElementById('paginacao');
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputServico = document.getElementById('busca-servico');
+      const resultadosServico = document.getElementById('resultados-servico');
+      const corpoTabela = document.querySelector('.tabela-servicos tbody');
+      const paginacao = document.getElementById('paginacao');
+      let debounceTimer;
 
-  inputServico.addEventListener('input', function () {
-    const termoBusca = this.value.trim();
+      if (inputServico && corpoTabela) {
+        inputServico.addEventListener('input', function() {
+          clearTimeout(debounceTimer);
 
-    if (termoBusca === '') {
-      location.reload();
-      return;
-    }
+          debounceTimer = setTimeout(() => {
+            const termoBusca = this.value.trim();
 
-    fetch(`../../buscar_servicos.php?termo=${encodeURIComponent(termoBusca)}`)
-      .then(res => res.json())
-      .then(data => {
-        corpoTabela.innerHTML = '';
-        resultadosServico.style.display = 'none';
-        paginacao.style.display = 'none';
+            if (termoBusca === '') {
+              location.reload();
+              return;
+            }
 
-        if (data.length === 0) {
-          resultadosServico.innerHTML = '<div style="padding:10px;">Nenhum serviço encontrado.</div>';
-          resultadosServico.style.display = 'block';
-          return;
-        }
+            fetch(`../../buscar_servicos.php?termo=${encodeURIComponent(termoBusca)}`)
+              .then(res => res.json())
+              .then(data => {
+                corpoTabela.innerHTML = '';
+                resultadosServico.style.display = 'none';
+                if (paginacao) {
+                  paginacao.style.display = 'none';
+                }
 
-        data.forEach(servico => {
-          const linha = document.createElement('tr');
+                if (data.length === 0) {
+                  resultadosServico.innerHTML = '<div style="padding:10px;">Nenhum serviço encontrado.</div>';
+                  resultadosServico.style.display = 'block';
+                  return;
+                }
 
-          let statusTexto = '—';
-          switch (servico.status_ficha) {
-            case 'rascunho': statusTexto = '📝 Em Cadastro'; break;
-            case 'em_revisao': statusTexto = '🔍 Em revisão'; break;
-            case 'revisada': statusTexto = '✅ Revisada'; break;
-            case 'em_aprovacao': statusTexto = '🕒 Em aprovação'; break;
-            case 'aprovada': statusTexto = '☑️ Aprovada'; break;
-            case 'publicado': statusTexto = '📢 Publicado'; break;
-            case 'cancelada': statusTexto = '🚫 Cancelada'; break;
-            case 'reprovado_revisor': statusTexto = '❌ Reprovado pelo revisor'; break;
-            case 'reprovado_po': statusTexto = '❌ Reprovado pelo PO'; break;
-            case 'substituida': statusTexto = '♻️ Substituída'; break;
-            case 'inativa': statusTexto = '🚫 Inativa'; break;
-          }
+                data.forEach(servico => {
+                  const linha = document.createElement('tr');
 
-          const ultimaAtt = servico.UltimaAtualizacao
-            ? new Date(servico.UltimaAtualizacao).toLocaleString('pt-BR')
-            : '—';
+                  let statusTexto = '—';
+                  switch (servico.status_ficha) {
+                    case 'rascunho':
+                      statusTexto = '📝 Em Cadastro';
+                      break;
+                    case 'em_revisao':
+                      statusTexto = '🔍 Em revisão';
+                      break;
+                    case 'revisada':
+                      statusTexto = '✅ Revisada';
+                      break;
+                    case 'em_aprovacao':
+                      statusTexto = '🕒 Em aprovação';
+                      break;
+                    case 'aprovada':
+                      statusTexto = '☑️ Aprovada';
+                      break;
+                    case 'publicado':
+                      statusTexto = '📢 Publicado';
+                      break;
+                    case 'cancelada':
+                      statusTexto = '🚫 Cancelada';
+                      break;
+                    case 'reprovado_revisor':
+                      statusTexto = '❌ Reprovado pelo revisor';
+                      break;
+                    case 'reprovado_po':
+                      statusTexto = '❌ Reprovado pelo PO';
+                      break;
+                    case 'substituida':
+                      statusTexto = '♻️ Substituída';
+                      break;
+                    case 'inativa':
+                      statusTexto = '🚫 Inativa';
+                      break;
+                  }
 
-          const botaoEdicao = servico.status_ficha === 'publicado'
-            ? `<a href="../add/manage_addservico.php?id=${servico.ID}&nova_versao=1" class="btn-nova-versao">Nova versão</a>`
-            : `<a href="../add/manage_addservico.php?id=${servico.ID}" class="btn-editar">✏️</a>`;
+                  const ultimaAtt = servico.UltimaAtualizacao ?
+                    new Date(servico.UltimaAtualizacao).toLocaleString('pt-BR') :
+                    '—';
 
-          linha.innerHTML = `
-            <td>${servico.Titulo}</td>
-            <td>${servico.ID}</td>
-            <td>${servico.categoria}</td>
-            <td>${servico.subcategoria}</td>
-            <td>${ultimaAtt}</td>
-            <td>${statusTexto}</td>
-            <td>${servico.Descricao}</td>
-            <td>${servico.codigo_ficha || '—'}</td>
-            <td>${servico.versao || '—'}</td>
-            <td>${botaoEdicao}</td>
-          `;
-          corpoTabela.appendChild(linha);
+                  const botaoEdicao = servico.status_ficha === 'publicado' ?
+                    `<a href="../add/manage_addservico.php?id=${servico.ID}&nova_versao=1" class="btn-nova-versao">Nova versão</a>` :
+                    `<a href="../add/manage_addservico.php?id=${servico.ID}" class="btn-editar">✏️</a>`;
+
+                  linha.innerHTML = `
+                                <td>${servico.Titulo}</td>
+                                <td>${servico.ID}</td>
+                                <td>${servico.categoria}</td>
+                                <td>${servico.subcategoria}</td>
+                                <td>${ultimaAtt}</td>
+                                <td>${statusTexto}</td>
+                                <td>${servico.Descricao}</td>
+                                <td>${servico.codigo_ficha || '—'}</td>
+                                <td>${servico.versao || '—'}</td>
+                                <td>${botaoEdicao}</td>
+                            `;
+                  corpoTabela.appendChild(linha);
+                });
+              })
+              .catch(err => {
+                resultadosServico.innerHTML = '<div style="padding:10px;">Erro ao buscar serviços.</div>';
+                resultadosServico.style.display = 'block';
+                console.error(err);
+              });
+          }, 300);
         });
-      })
-      .catch(err => {
-        resultadosServico.innerHTML = '<div style="padding:10px;">Erro ao buscar serviços.</div>';
-        resultadosServico.style.display = 'block';
-        console.error(err);
-      });
-  });
-</script>
+      }
+    });
+  </script>
 </body>
 
 </html>
