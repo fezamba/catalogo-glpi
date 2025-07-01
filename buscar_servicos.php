@@ -33,15 +33,18 @@ $query = "
         s.ID as id,
         s.Titulo as titulo,
         s.Descricao as descricao,
+        s.UltimaAtualizacao as ultima_atualizacao,
+        s.status_ficha,
+        s.codigo_ficha,
+        s.versao,
         sub.Titulo AS subcategoria,
         cat.Titulo AS categoria
     FROM servico s
     JOIN subcategoria sub ON s.ID_SubCategoria = sub.ID
     JOIN categoria cat ON sub.ID_Categoria = cat.ID
     WHERE $where_clause
-      AND s.status_ficha = 'publicado'
     ORDER BY s.ID DESC
-    LIMIT 10
+    LIMIT 25
 ";
 
 $stmt = $mysqli->prepare($query);

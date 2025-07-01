@@ -193,14 +193,20 @@ while ($srv = $result->fetch_assoc()) {
               .then(res => res.json())
               .then(data => {
                 corpoTabela.innerHTML = '';
-                resultadosServico.style.display = 'none';
+                if (resultadosServico) {
+                  resultadosServico.style.display = 'none';
+                }
                 if (paginacao) {
                   paginacao.style.display = 'none';
                 }
 
                 if (data.length === 0) {
-                  resultadosServico.innerHTML = '<div style="padding:10px;">Nenhum serviço encontrado.</div>';
-                  resultadosServico.style.display = 'block';
+                  const linha = corpoTabela.insertRow();
+                  const cell = linha.insertCell();
+                  cell.colSpan = 10;
+                  cell.innerHTML = "Nenhum serviço encontrado.";
+                  cell.style.textAlign = 'center';
+                  cell.style.padding = '20px';
                   return;
                 }
 
@@ -244,22 +250,22 @@ while ($srv = $result->fetch_assoc()) {
                       break;
                   }
 
-                  const ultimaAtt = servico.UltimaAtualizacao ?
-                    new Date(servico.UltimaAtualizacao).toLocaleString('pt-BR') :
+                  const ultimaAtt = servico.ultima_atualizacao ?
+                    new Date(servico.ultima_atualizacao).toLocaleString('pt-BR') :
                     '—';
 
                   const botaoEdicao = servico.status_ficha === 'publicado' ?
-                    `<a href="../add/manage_addservico.php?id=${servico.ID}&nova_versao=1" class="btn-nova-versao">Nova versão</a>` :
-                    `<a href="../add/manage_addservico.php?id=${servico.ID}" class="btn-editar">✏️</a>`;
+                    `<a href="../add/manage_addservico.php?id=${servico.id}&nova_versao=1" class="btn-nova-versao">Nova versão</a>` :
+                    `<a href="../add/manage_addservico.php?id=${servico.id}" class="btn-editar">✏️</a>`;
 
                   linha.innerHTML = `
-                                <td>${servico.Titulo}</td>
-                                <td>${servico.ID}</td>
+                                <td>${servico.titulo}</td>
+                                <td>${servico.id}</td>
                                 <td>${servico.categoria}</td>
                                 <td>${servico.subcategoria}</td>
                                 <td>${ultimaAtt}</td>
                                 <td>${statusTexto}</td>
-                                <td>${servico.Descricao}</td>
+                                <td>${servico.descricao}</td>
                                 <td>${servico.codigo_ficha || '—'}</td>
                                 <td>${servico.versao || '—'}</td>
                                 <td>${botaoEdicao}</td>
@@ -268,8 +274,13 @@ while ($srv = $result->fetch_assoc()) {
                 });
               })
               .catch(err => {
-                resultadosServico.innerHTML = '<div style="padding:10px;">Erro ao buscar serviços.</div>';
-                resultadosServico.style.display = 'block';
+                corpoTabela.innerHTML = '';
+                const linha = corpoTabela.insertRow();
+                const cell = linha.insertCell();
+                cell.colSpan = 10;
+                cell.innerHTML = "Erro ao buscar serviços.";
+                cell.style.textAlign = 'center';
+                cell.style.padding = '20px';
                 console.error(err);
               });
           }, 300);
