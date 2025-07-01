@@ -12,19 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
               return;
           }
 
-          Promise.all([
-              fetch('../buscar_servicos.php?termo=' + encodeURIComponent(termo)),
-              fetch('../buscar_subcategorias.php?termo=' + encodeURIComponent(termo))
-          ])
-          .then(responses => Promise.all(responses.map(res => res.json())))
-          .then(([servicos, subcategorias]) => {
-              displayResults(servicos, subcategorias);
-          })
-          .catch(error => {
-              console.error('Erro na busca:', error);
-              resultadosBox.innerHTML = '<div class="resultado-item">Ocorreu um erro na busca.</div>';
-              resultadosBox.style.display = 'block';
-          });
+          fetch('../buscar_servicos.php?termo=' + encodeURIComponent(termo))
+              .then(response => response.json())
+              .then(data => {
+                  displayResults(data.servicos, data.subcategorias);
+              })
+              .catch(error => {
+                  console.error('Erro na busca:', error);
+                  resultadosBox.innerHTML = '<div class="resultado-item">Ocorreu um erro na busca.</div>';
+                  resultadosBox.style.display = 'block';
+              });
       };
 
       const displayResults = (servicos, subcategorias) => {
