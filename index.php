@@ -28,6 +28,7 @@ while ($cat = $result->fetch_assoc()) {
     <link rel="stylesheet" href="css/index.css" />
     <title>Catálogo de Serviços</title>
     <style>
+        /* Estilos para a funcionalidade do menu sanfona (accordion) */
         .submenu {
             max-height: 0;
             overflow: hidden;
@@ -53,7 +54,8 @@ while ($cat = $result->fetch_assoc()) {
         <aside class="sidebar">
             <div class="menu-item">
                 <button class="menu-button" onclick="window.location.href='index.php'">
-                    Todas Categorias <span class="badge"><?php echo count($categorias); ?></span>
+                    <span>Todas Categorias</span>
+                    <span class="badge"><?php echo count($categorias); ?></span>
                 </button>
             </div>
 
@@ -107,6 +109,25 @@ while ($cat = $result->fetch_assoc()) {
         </section>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const accordionToggles = document.querySelectorAll('.accordion-toggle');
+
+            accordionToggles.forEach(button => {
+                button.addEventListener('click', function() {
+                    const submenu = this.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        if (submenu.style.maxHeight) {
+                            submenu.style.maxHeight = null;
+                        } else {
+                            submenu.style.maxHeight = submenu.scrollHeight + "px";
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    
     <script src="js/script.js"></script>
 </body>
 

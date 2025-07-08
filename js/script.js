@@ -1,19 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const accordionToggles = document.querySelectorAll('.accordion-toggle');
-
-    accordionToggles.forEach(button => {
-        button.addEventListener('click', function() {
-            const submenu = this.nextElementSibling;
-            if (submenu && submenu.classList.contains('submenu')) {
-                if (submenu.style.maxHeight) {
-                    submenu.style.maxHeight = null;
-                } else {
-                    submenu.style.maxHeight = submenu.scrollHeight + "px";
-                }
-            }
-        });
-    });
-
     const inputBusca = document.getElementById('busca-global');
     const resultadosBox = document.getElementById('resultados-busca');
     let debounceTimer;
