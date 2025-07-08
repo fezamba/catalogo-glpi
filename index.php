@@ -31,7 +31,7 @@ while ($cat = $result->fetch_assoc()) {
 
     <div class="layout">
         <aside class="sidebar">
-            <div class="menu-item">
+            <div class="menu-item todas-categorias">
                 <button class="menu-button" onclick="window.location.href='index.php'">
                     <span>Todas Categorias</span>
                     <span class="badge"><?php echo count($categorias); ?></span>

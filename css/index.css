@@ -45,6 +45,23 @@ body {
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
+.todas-categorias .menu-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: 1px solid transparent;
+    text-align: left;
+    font-size: 14px;
+    padding: 15px 10px 15px 10px;
+    cursor: pointer;
+    color: #333;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
 .menu-button:hover {
     background-color: #eef2ff;
     color: #4338ca;
