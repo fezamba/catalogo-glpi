@@ -81,16 +81,19 @@ $stmt_check->close();
             border-top: 2px solid #f0ad4e;
             background-color: #fcfcfc;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
         }
+
         .chamado-form-container .section-title {
             margin-top: 0;
             border-bottom: none;
             padding-bottom: 0;
         }
+
         .form-group {
             margin-bottom: 20px;
         }
+
         .form-group label {
             display: block;
             font-weight: bold;
@@ -98,6 +101,7 @@ $stmt_check->close();
             font-size: 1.1em;
             color: #333;
         }
+
         .form-group textarea {
             width: 100%;
             padding: 12px;
@@ -108,11 +112,13 @@ $stmt_check->close();
             line-height: 1.5;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
+
         .form-group textarea:focus {
             border-color: #f0ad4e;
             box-shadow: 0 0 0 3px rgba(240, 173, 78, 0.2);
             outline: none;
         }
+
         .form-group .btn-primary {
             background-color: #f0ad4e;
             color: white;
@@ -124,6 +130,7 @@ $stmt_check->close();
             cursor: pointer;
             transition: background-color 0.3s;
         }
+
         .form-group .btn-primary:hover {
             background-color: #ec971f;
         }
@@ -133,7 +140,7 @@ $stmt_check->close();
 <body>
     <div class="wrapper">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <a href="subcategoria.php?id=<?= $servico['subcategoria_id'] ?? '0' ?>" class="btn btn-back">← Voltar ao Catálogo</a>
+            <a href="subcategoria.php?id=<?= $servico['ID_SubCategoria'] ?? '0' ?>" class="btn btn-back">← Voltar ao Catálogo</a>
         </div>
 
         <div class="header">
@@ -237,14 +244,14 @@ $stmt_check->close();
         <div class="chamado-form-container">
             <h2 class="section-title">Abrir um Chamado para este Serviço</h2>
             <form action="../chamado/processar_chamado.php" method="POST">
-                
+
                 <input type="hidden" name="servico_id" value="<?= $servico['ID'] ?>">
-                
+
                 <div class="form-group">
                     <label for="descricao_chamado">Descreva sua solicitação:</label>
                     <textarea id="descricao_chamado" name="descricao_chamado" rows="5" required placeholder="Forneça detalhes sobre o seu problema ou solicitação..."></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Criar Chamado</button>
                 </div>
