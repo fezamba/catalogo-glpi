@@ -74,6 +74,60 @@ $stmt_check->close();
     <meta charset="UTF-8">
     <title>Visualizar: <?= htmlspecialchars($servico['Titulo'] ?? 'Serviço') ?></title>
     <link rel="stylesheet" href="css/view_servico.css">
+    <style>
+        .chamado-form-container {
+            margin-top: 40px;
+            padding: 25px;
+            border-top: 2px solid #f0ad4e;
+            background-color: #fcfcfc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        .chamado-form-container .section-title {
+            margin-top: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            color: #333;
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-family: inherit;
+            font-size: 1em;
+            line-height: 1.5;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-group textarea:focus {
+            border-color: #f0ad4e;
+            box-shadow: 0 0 0 3px rgba(240, 173, 78, 0.2);
+            outline: none;
+        }
+        .form-group .btn-primary {
+            background-color: #f0ad4e;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .form-group .btn-primary:hover {
+            background-color: #ec971f;
+        }
+    </style>
 </head>
 
 <body>
