@@ -25,24 +25,6 @@ while ($cat = $result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="css/index.css" />
     <title>Catálogo de Serviços</title>
-    <style>
-        .submenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            background-color: #f8f9fa;
-            border-left: 3px solid #f0ad4e;
-            margin-left: 10px;
-            padding-left: 5px;
-        }
-
-        .menu-button {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-    </style>
 </head>
 
 <body>
@@ -109,6 +91,7 @@ while ($cat = $result->fetch_assoc()) {
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const accordionToggles = document.querySelectorAll('.accordion-toggle');
+
             accordionToggles.forEach(button => {
                 button.addEventListener('click', function() {
                     const submenu = this.nextElementSibling;

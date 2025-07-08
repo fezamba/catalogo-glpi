@@ -29,18 +29,10 @@ body {
 }
 
 .menu-button {
-  width: 100%;
-  background: none;
-  border: none;
-  text-align: left;
-  font-size: 14px;
-  padding: 10px;
-  cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #333;
-  font-weight: normal;
+  width: 100%;
 }
 
 .menu-button:hover {
@@ -52,11 +44,13 @@ body {
 }
 
 .submenu {
-  display: none;
-  padding: 10px 15px;
-  margin-top: 0;
-  background-color: #f1f1f1;
-  border-left: 2px solid #ccc;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  background-color: #f8f9fa;
+  border-left: 3px solid #f0ad4e;
+  margin-left: 10px;
+  padding-left: 5px;
 }
 
 .submenu a {
@@ -162,49 +156,49 @@ body {
 }
 
 #resultados-busca {
-    background: white; 
-    border: 1px solid #ddd; 
-    border-radius: 6px; 
-    text-align: left; 
-    display: none;
-    margin-top: -1px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-align: left;
+  display: none;
+  margin-top: -1px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 #resultados-busca a.resultado-item {
-    display: block;
-    padding: 12px 15px;
-    color: #333;
-    text-decoration: none;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background-color 0.2s ease;
+  display: block;
+  padding: 12px 15px;
+  color: #333;
+  text-decoration: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
 }
 
 #resultados-busca a.resultado-item:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 #resultados-busca a.resultado-item:hover {
-    background-color: #f8f9fa;
+  background-color: #f8f9fa;
 }
 
 .resultado-titulo {
-    font-size: 1rem;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 3px;
+  font-size: 1rem;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 3px;
 }
 
 .resultado-contexto {
-    font-size: 0.8rem;
-    color: #777;
-    display: block;
-    margin-bottom: 5px;
+  font-size: 0.8rem;
+  color: #777;
+  display: block;
+  margin-bottom: 5px;
 }
 
 .resultado-desc {
-    display: block;
-    font-size: 0.85rem;
-    color: #555;
-    line-height: 1.4;
+  display: block;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.4;
 }
