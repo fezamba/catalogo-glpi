@@ -80,7 +80,6 @@ $stmt_check->close();
     <div class="wrapper">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <a href="index.php" class="btn btn-back">← Voltar ao Catálogo</a>
-            <a href="../chamado/processar_chamado.php?servico_id=<?= $servico['ID'] ?>" class="btn btn-primary">Criar Chamado</a>
         </div>
 
         <div class="header">
@@ -116,7 +115,6 @@ $stmt_check->close();
                 <strong>Base de Conhecimento (KB):</strong>
                 <?php
                 $kb_link = $servico['KBs'] ?? '';
-
                 if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
                 ?>
                     <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank"><?= htmlspecialchars($kb_link) ?></a>
@@ -180,6 +178,23 @@ $stmt_check->close();
         <div class="grupo">
             <h4>Procedimento de Exceção</h4>
             <p><?= nl2br(htmlspecialchars($servico['procedimento_excecao'] ?? 'Não informado.')) ?></p>
+        </div>
+
+        <div class="chamado-form-container">
+            <h2 class="section-title">Abrir um Chamado para este Serviço</h2>
+            <form action="../chamado/processar_chamado.php" method="POST">
+                
+                <input type="hidden" name="servico_id" value="<?= $servico['ID'] ?>">
+                
+                <div class="form-group">
+                    <label for="descricao_chamado">Descreva sua solicitação:</label>
+                    <textarea id="descricao_chamado" name="descricao_chamado" rows="5" required placeholder="Forneça detalhes sobre o seu problema ou solicitação..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Criar Chamado</button>
+                </div>
+            </form>
         </div>
     </div>
 </body>
