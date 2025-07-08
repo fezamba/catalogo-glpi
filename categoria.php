@@ -53,7 +53,7 @@ $stmt_sub->close();
     <div class="layout">
         <aside class="sidebar">
             <div class="menu-item">
-                <button class="menu-button" onclick="window.location.href='index.php'">
+                <button class="menu-button todas-categorias" onclick="window.location.href='index.php'">
                     <span>Todas Categorias</span>
                 </button>
             </div>
