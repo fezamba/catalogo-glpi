@@ -83,8 +83,8 @@ $pos = $result->fetch_all(MYSQLI_ASSOC);
         <h3>Cadastrar Novo PO</h3>
         <form method="post" action="manage_pos.php">
             <div class="form-group">
-                <input type="text" name="nome" placeholder="Nome completo do PO" required>
-                <input type="email" name="email" placeholder="E-mail do PO" required>
+                <input type="text" name="nome" maxlength="255" placeholder="Nome completo do PO" required>
+                <input type="email" name="email" maxlength="255" placeholder="E-mail do PO" required>
                 <button type="submit" class="btn-criar">Adicionar</button>
             </div>
         </form>
