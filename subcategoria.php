@@ -63,8 +63,8 @@ $stmt_servicos->close();
 
             <?php foreach ($categorias as $cat): ?>
                 <div class="menu-item">
-                    <?php 
-                        $is_active_cat = ($cat['ID'] == $categoria_pai_id) ? 'active' : '';
+                    <?php
+                    $is_active_cat = ($cat['ID'] == $categoria_pai_id) ? 'active' : '';
                     ?>
                     <button class="menu-button accordion-toggle <?= $is_active_cat ?>">
                         <span><?php echo htmlspecialchars($cat['Titulo']); ?></span>
@@ -74,7 +74,7 @@ $stmt_servicos->close();
                         <div class="submenu">
                             <?php foreach ($cat['subcategorias'] as $sub): ?>
                                 <?php
-                                    $is_active_sub = ($sub['ID'] == $id_subcategoria) ? 'active-link' : '';
+                                $is_active_sub = ($sub['ID'] == $id_subcategoria) ? 'active-link' : '';
                                 ?>
                                 <a href="subcategoria.php?id=<?php echo $sub['ID']; ?>" class="<?= $is_active_sub ?>">
                                     <?php echo htmlspecialchars($sub['Titulo']); ?>
@@ -103,7 +103,33 @@ $stmt_servicos->close();
             </div>
         </section>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const accordionToggles = document.querySelectorAll('.accordion-toggle');
 
+            accordionToggles.forEach(button => {
+                const submenu = button.nextElementSibling;
+
+                // Se a categoria estiver ativa, expande o submenu ao carregar a página
+                if (button.classList.contains('active') && submenu && submenu.classList.contains('submenu')) {
+                    submenu.style.maxHeight = submenu.scrollHeight + "px";
+                }
+
+                button.addEventListener('click', function() {
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        // Alterna a classe 'active' para o estilo visual
+                        this.classList.toggle('active');
+
+                        if (submenu.style.maxHeight) {
+                            submenu.style.maxHeight = null;
+                        } else {
+                            submenu.style.maxHeight = submenu.scrollHeight + "px";
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

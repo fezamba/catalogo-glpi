@@ -61,8 +61,8 @@ $stmt_sub->close();
 
             <?php foreach ($categorias as $cat): ?>
                 <div class="menu-item">
-                    <?php 
-                        $is_active_cat = ($cat['ID'] == $id_categoria) ? 'active' : '';
+                    <?php
+                    $is_active_cat = ($cat['ID'] == $id_categoria) ? 'active' : '';
                     ?>
                     <button class="menu-button accordion-toggle <?= $is_active_cat ?>">
                         <span><?php echo htmlspecialchars($cat['Titulo']); ?></span>
@@ -95,7 +95,33 @@ $stmt_sub->close();
             </div>
         </section>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const accordionToggles = document.querySelectorAll('.accordion-toggle');
 
+            accordionToggles.forEach(button => {
+                const submenu = button.nextElementSibling;
+
+                // Se a categoria estiver ativa, expande o submenu ao carregar a página
+                if (button.classList.contains('active') && submenu && submenu.classList.contains('submenu')) {
+                    submenu.style.maxHeight = submenu.scrollHeight + "px";
+                }
+
+                button.addEventListener('click', function() {
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        // Alterna a classe 'active' para o estilo visual
+                        this.classList.toggle('active');
+
+                        if (submenu.style.maxHeight) {
+                            submenu.style.maxHeight = null;
+                        } else {
+                            submenu.style.maxHeight = submenu.scrollHeight + "px";
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
