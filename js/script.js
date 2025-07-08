@@ -1,4 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const accordionToggles = document.querySelectorAll('.accordion-toggle');
+
+    accordionToggles.forEach(button => {
+        button.addEventListener('click', function() {
+            const submenu = this.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                if (submenu.style.maxHeight) {
+                    submenu.style.maxHeight = null;
+                } else {
+                    submenu.style.maxHeight = submenu.scrollHeight + "px";
+                }
+            }
+        });
+    });
+
     const inputBusca = document.getElementById('busca-global');
     const resultadosBox = document.getElementById('resultados-busca');
     let debounceTimer;
@@ -6,12 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputBusca && resultadosBox) {
         const handleSearch = () => {
             const termo = inputBusca.value.trim();
-
             if (termo.length < 2) {
                 resultadosBox.style.display = 'none';
                 return;
             }
-
             fetch('../buscar_servicos.php?termo=' + encodeURIComponent(termo))
                 .then(response => response.json())
                 .then(servicos => {
@@ -26,9 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const displayResults = (servicos) => {
             let html = '';
-
             if (servicos && servicos.length > 0) {
-                html += servicos.map(serv => `
+                html = servicos.map(serv => `
                     <a href="../view_servico.php?id=${serv.id}" class="resultado-item">
                         <strong class="resultado-titulo">${serv.titulo}</strong>
                         <span class="resultado-contexto">em ${serv.categoria} > ${serv.subcategoria}</span>
@@ -38,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 html = '<div class="resultado-item">Nenhum resultado encontrado.</div>';
             }
-
             resultadosBox.innerHTML = html;
             resultadosBox.style.display = 'block';
         };
@@ -54,27 +65,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    // --- LÓGICA DA NAVBAR (MENU SANFONA) ---
-    const accordionToggles = document.querySelectorAll('.accordion-toggle');
-
-    accordionToggles.forEach(button => {
-        button.addEventListener('click', function() {
-            // Não executa a lógica sanfona para o botão "Todas Categorias"
-            if (this.onclick && this.onclick.toString().includes("index.php")) {
-                return;
-            }
-            
-            this.classList.toggle('active');
-            
-            const submenu = this.nextElementSibling;
-            if (submenu && submenu.classList.contains('submenu')) {
-                if (submenu.style.maxHeight) {
-                    submenu.style.maxHeight = null;
-                } else {
-                    submenu.style.maxHeight = submenu.scrollHeight + "px";
-                }
-            }
-        });
-    });
 });

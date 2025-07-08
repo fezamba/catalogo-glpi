@@ -28,24 +28,21 @@ while ($cat = $result->fetch_assoc()) {
     <link rel="stylesheet" href="css/index.css" />
     <title>Catálogo de Serviços</title>
     <style>
-        /* Estilos para a funcionalidade do menu sanfona (accordion) */
         .submenu {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
             background-color: #f8f9fa;
+            border-left: 3px solid #f0ad4e;
+            margin-left: 10px;
+            padding-left: 5px;
         }
 
-        .menu-button.accordion-toggle::after {
-            content: '\25BC'; /* Seta para baixo */
-            font-size: 10px;
-            float: right;
-            transition: transform 0.3s;
-            margin-left: 5px;
-        }
-
-        .menu-button.accordion-toggle.active::after {
-            transform: rotate(180deg); /* Gira a seta para cima */
+        .menu-button.accordion-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
         }
     </style>
 </head>
@@ -63,7 +60,7 @@ while ($cat = $result->fetch_assoc()) {
             <?php foreach ($categorias as $cat): ?>
                 <div class="menu-item">
                     <button class="menu-button accordion-toggle">
-                        <?php echo htmlspecialchars($cat['Titulo']); ?>
+                        <span><?php echo htmlspecialchars($cat['Titulo']); ?></span>
                         <span class="badge"><?php echo count($cat['subcategorias']); ?></span>
                     </button>
                     <?php if (count($cat['subcategorias'])): ?>
@@ -110,7 +107,7 @@ while ($cat = $result->fetch_assoc()) {
         </section>
     </div>
 
-    <script src="js/index.js"></script>
+    <script src="js/script.js"></script>
 </body>
 
 </html>
