@@ -133,7 +133,7 @@ $stmt_check->close();
 <body>
     <div class="wrapper">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <a href="categoria.php?id=<?= $servico['subcategoria_id'] ?? '0' ?>" class="btn btn-back">← Voltar ao Catálogo</a>
+            <a href="subcategoria.php?id=<?= $servico['subcategoria_id'] ?? '0' ?>" class="btn btn-back">← Voltar ao Catálogo</a>
         </div>
 
         <div class="header">
