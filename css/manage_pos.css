@@ -119,6 +119,7 @@ body {
 .tabela-pos {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .tabela-pos th,
@@ -141,8 +142,16 @@ body {
 }
 
 .tabela-pos th:nth-child(1), .tabela-pos td:nth-child(1) { width: 10%; text-align: center; }
-.tabela-pos th:nth-child(2), .tabela-pos td:nth-child(2) { width: 35%; }
-.tabela-pos th:nth-child(3), .tabela-pos td:nth-child(3) { width: 35%; }
+.tabela-pos th:nth-child(2), .tabela-pos td:nth-child(2) { 
+    width: 35%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.tabela-pos th:nth-child(3), .tabela-pos td:nth-child(3) { 
+    width: 35%; 
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
 .tabela-pos th:nth-child(4), .tabela-pos td:nth-child(4) { width: 20%; text-align: center; }
 
 .btn-danger {
