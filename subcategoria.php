@@ -7,7 +7,6 @@ if ($mysqli->connect_errno) {
 
 $id_subcategoria = $_GET['id'] ?? 0;
 
-// Busca os detalhes da subcategoria atual e da sua categoria pai
 $categoria_pai_id = 0;
 $stmt_sub_details = $mysqli->prepare("SELECT Titulo, Descricao, ID_Categoria FROM subcategoria WHERE ID = ?");
 $stmt_sub_details->bind_param("i", $id_subcategoria);
@@ -20,7 +19,6 @@ if ($sub_details = $result_sub_details->fetch_assoc()) {
 }
 $stmt_sub_details->close();
 
-// Busca todas as categorias para a barra lateral
 $categorias = [];
 $result_all_cats = $mysqli->query("SELECT * FROM categoria ORDER BY Titulo ASC");
 while ($cat = $result_all_cats->fetch_assoc()) {
@@ -32,7 +30,6 @@ while ($cat = $result_all_cats->fetch_assoc()) {
     $categorias[] = $cat;
 }
 
-// Busca os serviços desta subcategoria
 $servicos = [];
 $stmt_servicos = $mysqli->prepare("SELECT ID, Titulo, Descricao, KBs FROM servico WHERE ID_SubCategoria = ? AND status_ficha = 'publicado'");
 $stmt_servicos->bind_param("i", $id_subcategoria);
@@ -57,9 +54,10 @@ $stmt_servicos->close();
 
     <div class="layout">
         <aside class="sidebar">
-            <div class="menu-item todas-categorias">
-                <button class="menu-button" onclick="window.location.href='index.php'">
+            <div class="menu-item">
+                <button class="menu-button todas-categorias" onclick="window.location.href='index.php'">
                     <span>Todas Categorias</span>
+                    <span class="badge"><?php echo count($categorias); ?></span>
                 </button>
             </div>
 
@@ -97,37 +95,15 @@ $stmt_servicos->close();
                     <a href="view_servico.php?id=<?php echo $serv['ID']; ?>" class="service-card">
                         <h3><?php echo htmlspecialchars($serv['Titulo']); ?></h3>
                         <p class="card-description"><?php echo htmlspecialchars($serv['Descricao']); ?></p>
+                        <?php if (!empty($serv['KBs'])): ?>
+                            <span class="card-kb-link">Ver KB</span>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
             </div>
         </section>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const accordionToggles = document.querySelectorAll('.accordion-toggle');
-
-            accordionToggles.forEach(button => {
-                const submenu = button.nextElementSibling;
-
-                if (button.classList.contains('active') && submenu && submenu.classList.contains('submenu')) {
-                    submenu.style.maxHeight = submenu.scrollHeight + "px";
-                }
-
-                button.addEventListener('click', function() {
-                    if (submenu && submenu.classList.contains('submenu')) {
-                        this.classList.toggle('active');
-                        
-                        if (submenu.style.maxHeight) {
-                            submenu.style.maxHeight = null;
-                        } else {
-                            submenu.style.maxHeight = submenu.scrollHeight + "px";
-                        }
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 
 </html>

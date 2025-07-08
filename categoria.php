@@ -55,13 +55,13 @@ $stmt_sub->close();
             <div class="menu-item">
                 <button class="menu-button todas-categorias" onclick="window.location.href='index.php'">
                     <span>Todas Categorias</span>
+                    <span class="badge"><?php echo count($categorias); ?></span>
                 </button>
             </div>
 
             <?php foreach ($categorias as $cat): ?>
                 <div class="menu-item">
                     <?php 
-                        // Adiciona a classe 'active' se esta for a categoria atual
                         $is_active_cat = ($cat['ID'] == $id_categoria) ? 'active' : '';
                     ?>
                     <button class="menu-button accordion-toggle <?= $is_active_cat ?>">
@@ -96,33 +96,6 @@ $stmt_sub->close();
         </section>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const accordionToggles = document.querySelectorAll('.accordion-toggle');
-
-            accordionToggles.forEach(button => {
-                const submenu = button.nextElementSibling;
-
-                // Se a categoria estiver ativa, expande o submenu ao carregar a página
-                if (button.classList.contains('active') && submenu && submenu.classList.contains('submenu')) {
-                    submenu.style.maxHeight = submenu.scrollHeight + "px";
-                }
-
-                button.addEventListener('click', function() {
-                    if (submenu && submenu.classList.contains('submenu')) {
-                        // Alterna a classe 'active' para o estilo visual
-                        this.classList.toggle('active');
-                        
-                        if (submenu.style.maxHeight) {
-                            submenu.style.maxHeight = null;
-                        } else {
-                            submenu.style.maxHeight = submenu.scrollHeight + "px";
-                        }
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 
 </html>
