@@ -8,31 +8,31 @@ function autoResize(el) {
     const index = document.querySelectorAll('#diretrizes .grupo').length;
     const container = document.createElement('div');
     container.classList.add('grupo');
-    container.innerHTML = `<label>Diretriz ${index + 1} - Título:</label><textarea name="diretrizes[${index}][titulo]" rows="1" oninput="autoResize(this)"></textarea><div id="itens_diretriz_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(${index})">+ Item</button>`;
+    container.innerHTML = `<label>Diretriz ${index + 1} - Título:</label><textarea name="diretrizes[${index}][titulo]" rows="1" maxlength="255" oninput="autoResize(this)"></textarea><div id="itens_diretriz_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(${index})">+ Item</button>`;
     document.getElementById('diretrizes').appendChild(container);
   }
 
   function adicionarItemDiretriz(index) {
-    document.getElementById(`itens_diretriz_${index}`).insertAdjacentHTML('beforeend', `<textarea name="diretrizes[${index}][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item da diretriz"></textarea><br>`);
+    document.getElementById(`itens_diretriz_${index}`).insertAdjacentHTML('beforeend', `<textarea name="diretrizes[${index}][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item da diretriz"></textarea><br>`);
   }
 
   function adicionarPadrao() {
     const index = document.querySelectorAll('#padroes .grupo').length;
     const container = document.createElement('div');
     container.classList.add('grupo');
-    container.innerHTML = `<label>Padrão ${index + 1} - Título:</label><textarea name="padroes[${index}][titulo]" rows="1" oninput="autoResize(this)"></textarea><div id="itens_padrao_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(${index})">+ Item</button>`;
+    container.innerHTML = `<label>Padrão ${index + 1} - Título:</label><textarea name="padroes[${index}][titulo]" rows="1" maxlength="255" oninput="autoResize(this)"></textarea><div id="itens_padrao_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(${index})">+ Item</button>`;
     document.getElementById('padroes').appendChild(container);
   }
 
   function adicionarItemPadrao(index) {
-    document.getElementById(`itens_padrao_${index}`).insertAdjacentHTML('beforeend', `<textarea name="padroes[${index}][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item do padrão"></textarea><br>`);
+    document.getElementById(`itens_padrao_${index}`).insertAdjacentHTML('beforeend', `<textarea name="padroes[${index}][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item do padrão"></textarea><br>`);
   }
 
   function adicionarChecklist() {
     const index = document.querySelectorAll('#checklist .grupo').length;
     const container = document.createElement('div');
     container.classList.add('grupo');
-    container.innerHTML = `<label>Item ${index + 1}:</label><textarea name="checklist[${index}][item]" rows="1" oninput="autoResize(this)"></textarea><label>Observação ${index + 1}:</label><textarea name="checklist[${index}][observacao]" rows="1" oninput="autoResize(this)"></textarea>`;
+    container.innerHTML = `<label>Item ${index + 1}:</label><textarea name="checklist[${index}][item]" rows="1" maxlength="255" oninput="autoResize(this)"></textarea><label>Observação ${index + 1}:</label><textarea name="checklist[${index}][observacao]" rows="1" maxlength="1000" oninput="autoResize(this)"></textarea>`;
     document.getElementById('checklist').appendChild(container);
   }
 

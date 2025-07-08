@@ -452,7 +452,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
       <span class="close-btn" onclick="document.getElementById('justificativa-modal').style.display='none'">&times;</span>
       <h3>Justificativa</h3>
       <p>Por favor, informe o motivo da devolução/reprovação.</p>
-      <textarea id="justificativa-texto" rows="5" style="width: 100%"></textarea>
+      <textarea id="justificativa-texto" rows="5" maxlength="1000" style="width: 100%"></textarea>
       <button id="justificativa-submit" class="btn-salvar" style="margin-top: 10px;">Enviar</button>
     </div>
   </div>
