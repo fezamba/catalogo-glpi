@@ -21,17 +21,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome']) && isset($_PO
     $email = trim($_POST['email']);
 
     if (!empty($nome) && !empty($email)) {
-        $stmt = $mysqli->prepare("INSERT INTO pos (nome, email) VALUES (?, ?)");
-        $stmt->bind_param("ss", $nome, $email);
-        if ($stmt->execute()) {
-            header("Location: manage_pos.php?sucesso=adicionado");
-            exit;
+        // --- INÍCIO DA VALIDAÇÃO ---
+        $stmt_check = $mysqli->prepare("SELECT nome, email FROM pos WHERE nome = ? OR email = ?");
+        $stmt_check->bind_param("ss", $nome, $email);
+        $stmt_check->execute();
+        $result_check = $stmt_check->get_result();
+
+        if ($result_check->num_rows > 0) {
+            $existente = $result_check->fetch_assoc();
+            if (strcasecmp($existente['nome'], $nome) == 0) {
+                $mensagem = "<div class='mensagem erro'>Erro: O nome '<strong>" . htmlspecialchars($nome) . "</strong>' já está cadastrado.</div>";
+            } else if (strcasecmp($existente['email'], $email) == 0) {
+                $mensagem = "<div class='mensagem erro'>Erro: O e-mail '<strong>" . htmlspecialchars($email) . "</strong>' já está cadastrado.</div>";
+            }
         } else {
-            $mensagem = ($mysqli->errno === 1062) ? 
-                "<div class='mensagem erro'>Erro: Este e-mail já está cadastrado.</div>" : 
-                "<div class='mensagem erro'>Erro ao cadastrar o PO.</div>";
+            // --- FIM DA VALIDAÇÃO ---
+            $stmt = $mysqli->prepare("INSERT INTO pos (nome, email) VALUES (?, ?)");
+            $stmt->bind_param("ss", $nome, $email);
+            if ($stmt->execute()) {
+                header("Location: manage_pos.php?sucesso=adicionado");
+                exit;
+            } else {
+                $mensagem = "<div class='mensagem erro'>Erro ao cadastrar o PO.</div>";
+            }
+            $stmt->close();
         }
-        $stmt->close();
+        $stmt_check->close();
     } else {
         $mensagem = "<div class='mensagem erro'>Nome e e-mail são obrigatórios.</div>";
     }
