@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $descricao = $servico['Descricao'];
 
     // Configurações GLPI
-    $glpi_api_url = "http://localhost/glpi/apirest.php"; // CONFIGURAR ESSE TREM DEPOIS
+    $glpi_api_url = "http://servicedesk.fazenda.rj.gov.br/glpi/apirest.php";
     $app_token = "SEU_APP_TOKEN";
     $user_token = "SEU_USER_TOKEN";
     $requesttype_id = 1;
