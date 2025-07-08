@@ -28,6 +28,7 @@ while ($cat = $result->fetch_assoc()) {
     <link rel="stylesheet" href="css/index.css" />
     <title>Catálogo de Serviços</title>
     <style>
+        /* Estilos para a funcionalidade do menu sanfona (accordion) */
         .submenu {
             max-height: 0;
             overflow: hidden;
@@ -36,14 +37,15 @@ while ($cat = $result->fetch_assoc()) {
         }
 
         .menu-button.accordion-toggle::after {
-            content: '\\25BC';
+            content: '\25BC'; /* Seta para baixo */
             font-size: 10px;
             float: right;
             transition: transform 0.3s;
+            margin-left: 5px;
         }
 
         .menu-button.accordion-toggle.active::after {
-            transform: rotate(180deg);
+            transform: rotate(180deg); /* Gira a seta para cima */
         }
     </style>
 </head>
@@ -108,7 +110,7 @@ while ($cat = $result->fetch_assoc()) {
         </section>
     </div>
 
-    <script src="js/script.js"></script>
+    <script src="js/index.js"></script>
 </body>
 
 </html>
