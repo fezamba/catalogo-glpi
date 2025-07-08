@@ -421,7 +421,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             endforeach; ?>
           </div>
           <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarChecklist()">+ Adicionar Item</button><?php endif; ?>
-          <h3>Observações Gerais</h3><textarea name="observacoes_gerais" rows="4" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['observacoes'] ?? '') ?></textarea>
+          <h3>Observações Gerais</h3><textarea name="observacoes_gerais" rows="4" maxlength="1000" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['observacoes'] ?? '') ?></textarea>
         </div>
       </div>
       <div class="form-actions-horizontal">
