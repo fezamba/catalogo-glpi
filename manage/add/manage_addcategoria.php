@@ -109,11 +109,11 @@ if (isset($_GET["sucesso"]) && $_GET["sucesso"] == "1") {
 
       <div class="form-column">
         <label>Nome:
-          <input type="text" name="titulo" value="<?php echo htmlspecialchars($titulo); ?>" required>
+          <input type="text" name="titulo" maxlength="255" value="<?php echo htmlspecialchars($titulo); ?>" required>
         </label>
 
         <label>Descrição:
-          <textarea name="descricao" rows="5" required><?php echo htmlspecialchars($descricao); ?></textarea>
+          <textarea name="descricao" rows="5" maxlength="1000" required><?php echo htmlspecialchars($descricao); ?></textarea>
         </label>
       </div>
 

@@ -350,13 +350,13 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     <form id="form-ficha" method="post">
       <div class="form-grid">
         <div class="form-column">
-          <label>Nome do Serviço:<textarea name="nome_servico" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Titulo'] ?? '') ?></textarea></label>
-          <label>Descrição do Serviço:<textarea name="descricao_servico" rows="4" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea></label>
+          <label>Nome do Serviço:<textarea name="nome_servico" maxlength="255" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Titulo'] ?? '') ?></textarea></label>
+          <label>Descrição do Serviço:<textarea name="descricao_servico" maxlength="1000" rows="4" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea></label>
           <h3>Informações Adicionais</h3>
-          <label>Área Especialista:<textarea name="area_especialista" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['area_especialista'] ?? '') ?></textarea></label>
-          <label>Alçadas:<textarea name="alcadas" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['alcadas'] ?? '') ?></textarea></label>
-          <label>Procedimento de Exceção:<textarea name="procedimento_excecao" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['procedimento_excecao'] ?? '') ?></textarea></label>
-          <label>Base de Conhecimento:<textarea name="base_conhecimento" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea></label>
+          <label>Área Especialista:<textarea name="area_especialista" maxlength="255" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['area_especialista'] ?? '') ?></textarea></label>
+          <label>Alçadas:<textarea name="alcadas" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['alcadas'] ?? '') ?></textarea></label>
+          <label>Procedimento de Exceção:<textarea name="procedimento_excecao" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['procedimento_excecao'] ?? '') ?></textarea></label>
+          <label>Base de Conhecimento:<textarea name="base_conhecimento" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea></label>
           <label>PO Responsável:
             <select name="po_responsavel" required <?= $isReadOnly ? 'disabled' : '' ?>>
               <option value="">Selecione um PO...</option>
@@ -383,9 +383,9 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             foreach ($diretrizes as $diretriz): ?>
               <div class="grupo">
                 <label>Diretriz <?= $index + 1 ?> - Título:</label>
-                <textarea name="diretrizes[<?= $index ?>][titulo]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($diretriz['titulo']) ?></textarea>
+                <textarea name="diretrizes[<?= $index ?>][titulo]" rows="1" maxlength="255" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($diretriz['titulo']) ?></textarea>
                 <div id="itens_diretriz_<?= $index ?>">
-                  <?php foreach ($diretriz['itens'] as $item): ?><textarea name="diretrizes[<?= $index ?>][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item da diretriz" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
+                  <?php foreach ($diretriz['itens'] as $item): ?><textarea name="diretrizes[<?= $index ?>][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item da diretriz" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
                 </div>
                 <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(<?= $index ?>)">+ Item</button><?php endif; ?>
               </div>
@@ -399,9 +399,9 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             foreach ($padroes as $padrao): ?>
               <div class="grupo">
                 <label>Padrão <?= $index + 1 ?> - Título:</label>
-                <textarea name="padroes[<?= $index ?>][titulo]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($padrao['titulo']) ?></textarea>
+                <textarea name="padroes[<?= $index ?>][titulo]" rows="1" maxlength="255" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($padrao['titulo']) ?></textarea>
                 <div id="itens_padrao_<?= $index ?>">
-                  <?php foreach ($padrao['itens'] as $item): ?><textarea name="padroes[<?= $index ?>][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item do padrão" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
+                  <?php foreach ($padrao['itens'] as $item): ?><textarea name="padroes[<?= $index ?>][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item do padrão" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
                 </div>
                 <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(<?= $index ?>)">+ Item</button><?php endif; ?>
               </div>
@@ -414,8 +414,8 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             <?php $index = 0;
             foreach ($checklist as $item): ?>
               <div class="grupo">
-                <label>Item <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][item]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['item']) ?></textarea>
-                <label>Observação <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][observacao]" rows="1" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['observacao']) ?></textarea>
+                <label>Item <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][item]" rows="1" maxlength="255" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['item']) ?></textarea>
+                <label>Observação <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][observacao]" rows="1" maxlength="1000" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['observacao']) ?></textarea>
               </div>
             <?php $index++;
             endforeach; ?>
