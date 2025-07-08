@@ -10,12 +10,10 @@ $result = $mysqli->query("SELECT * FROM categoria ORDER BY Titulo ASC");
 
 while ($cat = $result->fetch_assoc()) {
     $cat['subcategorias'] = [];
-
     $subres = $mysqli->query("SELECT * FROM subcategoria WHERE ID_Categoria = {$cat['ID']} ORDER BY Titulo ASC");
     while ($sub = $subres->fetch_assoc()) {
         $cat['subcategorias'][] = $sub;
     }
-
     $categorias[] = $cat;
 }
 ?>
@@ -28,7 +26,6 @@ while ($cat = $result->fetch_assoc()) {
     <link rel="stylesheet" href="css/index.css" />
     <title>Catálogo de Serviços</title>
     <style>
-        /* Estilos para a funcionalidade do menu sanfona (accordion) */
         .submenu {
             max-height: 0;
             overflow: hidden;
@@ -39,7 +36,7 @@ while ($cat = $result->fetch_assoc()) {
             padding-left: 5px;
         }
 
-        .menu-button.accordion-toggle {
+        .menu-button {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -112,7 +109,6 @@ while ($cat = $result->fetch_assoc()) {
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const accordionToggles = document.querySelectorAll('.accordion-toggle');
-
             accordionToggles.forEach(button => {
                 button.addEventListener('click', function() {
                     const submenu = this.nextElementSibling;
@@ -125,10 +121,60 @@ while ($cat = $result->fetch_assoc()) {
                     }
                 });
             });
+
+            const inputBusca = document.getElementById('busca-global');
+            const resultadosBox = document.getElementById('resultados-busca');
+            let debounceTimer;
+
+            if (inputBusca && resultadosBox) {
+                const handleSearch = () => {
+                    const termo = inputBusca.value.trim();
+                    if (termo.length < 2) {
+                        resultadosBox.style.display = 'none';
+                        return;
+                    }
+                    fetch('../buscar_servicos.php?termo=' + encodeURIComponent(termo))
+                        .then(response => response.json())
+                        .then(servicos => {
+                            displayResults(servicos);
+                        })
+                        .catch(error => {
+                            console.error('Erro na busca:', error);
+                            resultadosBox.innerHTML = '<div class="resultado-item">Ocorreu um erro na busca.</div>';
+                            resultadosBox.style.display = 'block';
+                        });
+                };
+
+                const displayResults = (servicos) => {
+                    let html = '';
+                    if (servicos && servicos.length > 0) {
+                        html = servicos.map(serv => `
+                            <a href="../view_servico.php?id=${serv.id}" class="resultado-item">
+                                <strong class="resultado-titulo">${serv.titulo}</strong>
+                                <span class="resultado-contexto">em ${serv.categoria} > ${serv.subcategoria}</span>
+                                <small class="resultado-desc">${serv.descricao.substring(0, 80)}...</small>
+                            </a>
+                        `).join('');
+                    } else {
+                        html = '<div class="resultado-item">Nenhum resultado encontrado.</div>';
+                    }
+                    resultadosBox.innerHTML = html;
+                    resultadosBox.style.display = 'block';
+                };
+
+                inputBusca.addEventListener('keyup', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(handleSearch, 300);
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!inputBusca.contains(event.target) && !resultadosBox.contains(event.target)) {
+                        resultadosBox.style.display = 'none';
+                    }
+                });
+            }
         });
     </script>
-    
-    <script src="js/script.js"></script>
 </body>
 
 </html>
