@@ -54,4 +54,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- LÓGICA DA NAVBAR (MENU SANFONA) ---
+    const accordionToggles = document.querySelectorAll('.accordion-toggle');
+
+    accordionToggles.forEach(button => {
+        button.addEventListener('click', function() {
+            // Não executa a lógica sanfona para o botão "Todas Categorias"
+            if (this.onclick && this.onclick.toString().includes("index.php")) {
+                return;
+            }
+            
+            this.classList.toggle('active');
+            
+            const submenu = this.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                if (submenu.style.maxHeight) {
+                    submenu.style.maxHeight = null;
+                } else {
+                    submenu.style.maxHeight = submenu.scrollHeight + "px";
+                }
+            }
+        });
+    });
 });
