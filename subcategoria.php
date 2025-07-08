@@ -97,9 +97,6 @@ $stmt_servicos->close();
                     <a href="view_servico.php?id=<?php echo $serv['ID']; ?>" class="service-card">
                         <h3><?php echo htmlspecialchars($serv['Titulo']); ?></h3>
                         <p class="card-description"><?php echo htmlspecialchars($serv['Descricao']); ?></p>
-                        <?php if (!empty($serv['KBs'])): ?>
-                            <span class="card-kb-link">Ver KB</span>
-                        <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
             </div>
