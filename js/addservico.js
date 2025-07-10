@@ -37,17 +37,19 @@ function autoResize(el) {
 
 function mostrarJustificativa(acao) {
     const modal = document.getElementById('justificativa-modal');
-    modal.style.display = 'block';
-    document.getElementById('justificativa-submit').onclick = function() {
-        const justificativa = document.getElementById('justificativa-texto').value;
-        if (!justificativa.trim()) {
-            alert('A justificativa é obrigatória.');
-            return;
+    if(modal) {
+        modal.style.display = 'block';
+        document.getElementById('justificativa-submit').onclick = function() {
+            const justificativa = document.getElementById('justificativa-texto').value;
+            if (!justificativa.trim()) {
+                alert('A justificativa é obrigatória.');
+                return;
+            }
+            const form = document.getElementById('form-ficha');
+            form.insertAdjacentHTML('beforeend', `<input type="hidden" name="acao" value="${acao}">`);
+            form.insertAdjacentHTML('beforeend', `<input type="hidden" name="justificativa" value="${justificativa}">`);
+            form.submit();
         }
-        const form = document.getElementById('form-ficha');
-        form.insertAdjacentHTML('beforeend', `<input type="hidden" name="acao" value="${acao}">`);
-        form.insertAdjacentHTML('beforeend', `<input type="hidden" name="justificativa" value="${justificativa}">`);
-        form.submit();
     }
 }
 
@@ -63,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
     if (btnEnviarRevisao) {
         btnEnviarRevisao.addEventListener('click', function(event) {
-            const form = document.getElementById('form-ficha');
             
             const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
             if (document.querySelector('input[name="revisores_ids[]"]') && revisoresMarcados === 0) {
@@ -72,25 +73,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const validarTitulos = (selector, nomeDoCampo) => {
-                const campos = form.querySelectorAll(selector);
-                for (const campo of campos) {
-                    if (campo.value.trim() === '') {
-                        event.preventDefault();
-                        alert(`Erro: O campo "${nomeDoCampo}" não pode estar vazio.`);
-                        campo.focus();
-                        campo.style.border = '2px solid red';
-                        campo.addEventListener('input', () => {
-                            campo.style.border = '';
-                        }, { once: true });
-                        return false;
-                    }
+            const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
+            
+            if (diretrizesTitulos.length > 0) {
+                const algumTituloPreenchido = Array.from(diretrizesTitulos).some(t => t.value.trim() !== '');
+                
+                if (!algumTituloPreenchido) {
+                    event.preventDefault();
+                    alert('Erro: Você adicionou uma diretriz, mas não preencheu o título. Por favor, preencha o título de pelo menos uma diretriz.');
+                    diretrizesTitulos[0].focus();
+                    diretrizesTitulos[0].style.border = '2px solid red';
+                    diretrizesTitulos[0].addEventListener('input', () => {
+                        diretrizesTitulos[0].style.border = '';
+                    }, { once: true });
                 }
-                return true;
-            };
-
-            if (!validarTitulos('textarea[name^="diretrizes"][name$="[titulo]"]', 'Título da Diretriz')) {
-                return;
             }
         });
     }
