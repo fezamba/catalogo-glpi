@@ -7,7 +7,6 @@ if ($mysqli->connect_errno) {
 
 $id_categoria = $_GET['id'] ?? 0;
 
-// Busca todas as categorias para a barra lateral
 $categorias = [];
 $result_all_cats = $mysqli->query("SELECT * FROM categoria ORDER BY Titulo ASC");
 while ($cat = $result_all_cats->fetch_assoc()) {
@@ -19,7 +18,6 @@ while ($cat = $result_all_cats->fetch_assoc()) {
     $categorias[] = $cat;
 }
 
-// Busca os detalhes da categoria atual
 $stmt = $mysqli->prepare("SELECT Titulo, Descricao FROM categoria WHERE ID = ?");
 $stmt->bind_param("i", $id_categoria);
 $stmt->execute();
@@ -27,7 +25,6 @@ $stmt->bind_result($tituloCategoria, $descricaoCategoria);
 $stmt->fetch();
 $stmt->close();
 
-// Busca as subcategorias da categoria atual para exibir no conteúdo
 $subcategorias_pagina = [];
 $stmt_sub = $mysqli->prepare("SELECT * FROM subcategoria WHERE ID_Categoria = ? ORDER BY Titulo ASC");
 $stmt_sub->bind_param("i", $id_categoria);
@@ -102,14 +99,12 @@ $stmt_sub->close();
             accordionToggles.forEach(button => {
                 const submenu = button.nextElementSibling;
 
-                // Se a categoria estiver ativa, expande o submenu ao carregar a página
                 if (button.classList.contains('active') && submenu && submenu.classList.contains('submenu')) {
                     submenu.style.maxHeight = submenu.scrollHeight + "px";
                 }
 
                 button.addEventListener('click', function() {
                     if (submenu && submenu.classList.contains('submenu')) {
-                        // Alterna a classe 'active' para o estilo visual
                         this.classList.toggle('active');
 
                         if (submenu.style.maxHeight) {

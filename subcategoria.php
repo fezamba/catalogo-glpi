@@ -107,14 +107,12 @@ $stmt_servicos->close();
             accordionToggles.forEach(button => {
                 const submenu = button.nextElementSibling;
 
-                // Se a categoria estiver ativa, expande o submenu ao carregar a página
                 if (button.classList.contains('active') && submenu && submenu.classList.contains('submenu')) {
                     submenu.style.maxHeight = submenu.scrollHeight + "px";
                 }
 
                 button.addEventListener('click', function() {
                     if (submenu && submenu.classList.contains('submenu')) {
-                        // Alterna a classe 'active' para o estilo visual
                         this.classList.toggle('active');
 
                         if (submenu.style.maxHeight) {
