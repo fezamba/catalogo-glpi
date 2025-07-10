@@ -1,32 +1,56 @@
 function adicionarDiretriz() {
-    const index = document.querySelectorAll('#diretrizes .grupo').length;
+    let contDiretriz = document.querySelectorAll('#diretrizes .grupo').length;
+    const index = contDiretriz++;
     const container = document.createElement('div');
     container.classList.add('grupo');
-    container.innerHTML = `<label>Diretriz ${index + 1} - Título:</label><textarea name="diretrizes[${index}][titulo]" rows="1" maxlength="255" oninput="autoResize(this)"></textarea><div id="itens_diretriz_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(${index})">+ Item</button>`;
+    container.innerHTML = `
+        <label>Diretriz ${index + 1} - Título:</label>
+        <textarea name="diretrizes[${index}][titulo]" rows="1" oninput="autoResize(this)"></textarea>
+        <div id="itens_diretriz_${index}"></div>
+        <button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(${index})">+ Item</button>
+    `;
     document.getElementById('diretrizes').appendChild(container);
 }
 
 function adicionarItemDiretriz(index) {
-    document.getElementById(`itens_diretriz_${index}`).insertAdjacentHTML('beforeend', `<textarea name="diretrizes[${index}][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item da diretriz"></textarea><br>`);
+    document.getElementById(`itens_diretriz_${index}`).insertAdjacentHTML(
+        'beforeend',
+        `<textarea name="diretrizes[${index}][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item da diretriz"></textarea><br>`
+    );
 }
 
 function adicionarPadrao() {
-    const index = document.querySelectorAll('#padroes .grupo').length;
+    let contPadrao = document.querySelectorAll('#padroes .grupo').length;
+    const index = contPadrao++;
     const container = document.createElement('div');
     container.classList.add('grupo');
-    container.innerHTML = `<label>Padrão ${index + 1} - Título:</label><textarea name="padroes[${index}][titulo]" rows="1" maxlength="255" oninput="autoResize(this)"></textarea><div id="itens_padrao_${index}"></div><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(${index})">+ Item</button>`;
+    container.innerHTML = `
+        <label>Padrão ${index + 1} - Título:</label>
+        <textarea name="padroes[${index}][titulo]" rows="1" oninput="autoResize(this)"></textarea>
+        <div id="itens_padrao_${index}"></div>
+        <button type="button" class="btn-salvar" onclick="adicionarItemPadrao(${index})">+ Item</button>
+    `;
     document.getElementById('padroes').appendChild(container);
 }
 
 function adicionarItemPadrao(index) {
-    document.getElementById(`itens_padrao_${index}`).insertAdjacentHTML('beforeend', `<textarea name="padroes[${index}][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item do padrão"></textarea><br>`);
+    document.getElementById(`itens_padrao_${index}`).insertAdjacentHTML(
+        'beforeend',
+        `<textarea name="padroes[${index}][itens][]" rows="1" oninput="autoResize(this)" placeholder="Item do padrão"></textarea><br>`
+    );
 }
 
 function adicionarChecklist() {
-    const index = document.querySelectorAll('#checklist .grupo').length;
+    let contChecklist = document.querySelectorAll('#checklist .grupo').length;
+    const index = contChecklist++;
     const container = document.createElement('div');
     container.classList.add('grupo');
-    container.innerHTML = `<label>Item ${index + 1}:</label><textarea name="checklist[${index}][item]" rows="1" maxlength="255" oninput="autoResize(this)"></textarea><label>Observação ${index + 1}:</label><textarea name="checklist[${index}][observacao]" rows="1" maxlength="1000" oninput="autoResize(this)"></textarea>`;
+    container.innerHTML = `
+        <label>Item ${index + 1}:</label>
+        <textarea name="checklist[${index}][item]" rows="1" oninput="autoResize(this)"></textarea>
+        <label>Observação ${index + 1}:</label>
+        <textarea name="checklist[${index}][observacao]" rows="1" oninput="autoResize(this)"></textarea>
+    `;
     document.getElementById('checklist').appendChild(container);
 }
 
@@ -36,58 +60,71 @@ function autoResize(el) {
 }
 
 function mostrarJustificativa(acao) {
-    const modal = document.getElementById('justificativa-modal');
-    if(modal) {
-        modal.style.display = 'block';
-        document.getElementById('justificativa-submit').onclick = function() {
-            const justificativa = document.getElementById('justificativa-texto').value;
-            if (!justificativa.trim()) {
-                alert('A justificativa é obrigatória.');
-                return;
-            }
-            const form = document.getElementById('form-ficha');
-            form.insertAdjacentHTML('beforeend', `<input type="hidden" name="acao" value="${acao}">`);
-            form.insertAdjacentHTML('beforeend', `<input type="hidden" name="justificativa" value="${justificativa}">`);
-            form.submit();
-        }
+    const formPrincipal = document.getElementById('form-ficha');
+    if (!formPrincipal) {
+        console.error('Erro crítico: Formulário principal #form-ficha não encontrado.');
+        return;
     }
+
+    const justificativaTexto = prompt("Por favor, digite a justificativa para esta ação:", "");
+
+    if (justificativaTexto === null || justificativaTexto.trim() === "") {
+        alert("Ação cancelada. A justificativa é obrigatória.");
+        return;
+    }
+
+    const inputAcao = document.createElement('input');
+    inputAcao.type = 'hidden';
+    inputAcao.name = 'acao';
+    inputAcao.value = acao;
+    formPrincipal.appendChild(inputAcao);
+
+    const inputJustificativa = document.createElement('input');
+    inputJustificativa.type = 'hidden';
+    inputJustificativa.name = 'justificativa';
+    inputJustificativa.value = justificativaTexto;
+    formPrincipal.appendChild(inputJustificativa);
+
+    formPrincipal.submit();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('debug-apply-btn')?.addEventListener('click', function() {
-        const url = new URL(window.location.href);
-        const params = url.searchParams;
-        params.set('forcar_status', document.getElementById('debug-status-ficha').value);
-        params.set('simular_usuario', document.getElementById('debug-simular-usuario').value);
-        window.location.href = url.toString();
-    });
-
     const btnEnviarRevisao = document.getElementById('btn-enviar-revisao');
+    const firstRevisorCheckbox = document.querySelector('input[name="revisores_ids[]"]');
+
     if (btnEnviarRevisao) {
         btnEnviarRevisao.addEventListener('click', function(event) {
             
             const revisoresMarcados = document.querySelectorAll('input[name="revisores_ids[]"]:checked').length;
-            if (document.querySelector('input[name="revisores_ids[]"]') && revisoresMarcados === 0) {
+            if (revisoresMarcados === 0 && firstRevisorCheckbox) {
                 event.preventDefault();
-                alert('Erro: Por favor, selecione ao menos um revisor para continuar.');
+                firstRevisorCheckbox.setCustomValidity('Por favor, selecione ao menos um revisor.');
+                firstRevisorCheckbox.reportValidity();
                 return;
             }
 
             const diretrizesTitulos = document.querySelectorAll('textarea[name^="diretrizes"][name$="[titulo]"]');
-            
-            if (diretrizesTitulos.length > 0) {
-                const algumTituloPreenchido = Array.from(diretrizesTitulos).some(t => t.value.trim() !== '');
-                
-                if (!algumTituloPreenchido) {
-                    event.preventDefault();
-                    alert('Erro: Você adicionou uma diretriz, mas não preencheu o título. Por favor, preencha o título de pelo menos uma diretriz.');
-                    diretrizesTitulos[0].focus();
-                    diretrizesTitulos[0].style.border = '2px solid red';
-                    diretrizesTitulos[0].addEventListener('input', () => {
-                        diretrizesTitulos[0].style.border = '';
-                    }, { once: true });
+            let peloMenosUmTituloPreenchido = false;
+            diretrizesTitulos.forEach((textarea) => {
+                if (textarea.value.trim() !== '') {
+                    peloMenosUmTituloPreenchido = true;
                 }
+            });
+
+            if (diretrizesTitulos.length > 0 && !peloMenosUmTituloPreenchido) {
+                event.preventDefault();
+                alert('Erro: Você precisa preencher o título de pelo menos uma diretriz.');
+                return;
             }
+        });
+    }
+
+    if (firstRevisorCheckbox) {
+        const allRevisorCheckboxes = document.querySelectorAll('input[name="revisores_ids[]"]');
+        allRevisorCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('input', () => {
+                firstRevisorCheckbox.setCustomValidity('');
+            });
         });
     }
 });
