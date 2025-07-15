@@ -31,9 +31,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $titulo = "Solicitação de Serviço: " . $servico['Titulo'];
     $descricao_completa = "Descrição do usuário: \n\n" . $descricao_usuario;
 
-    $glpi_api_url = "http://servicedesk.fazenda.rj.gov.br/glpi/apirest.php"; // URL da API do GLPI
+    $glpi_api_url = "http://servicedesk.fazenda.rj.gov.br/glpi/apirest.php"; // URL da API do GLPI (essa é a de PROD - acho)
     $app_token = "SEU_APP_TOKEN"; 
-    $user_token = "SEU_USER_TOKEN"; 
+    $user_token = "SEU_USER_TOKEN"; // Tente usar o token do Service Desk em PROD, não o 'seu'
     
     $requesttype_id = 1; 
     $entity_id = 0;

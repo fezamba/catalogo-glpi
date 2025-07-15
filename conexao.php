@@ -1,5 +1,6 @@
 <?php
-
+// Substituir pelas credenciais do banco do GLPI
+// Será necessário criar novas tabelas, utilize plguin_nome_da_tabela para criar as tabelas necessárias
 $host = 'yamabiko.proxy.rlwy.net';
 $user = 'root';
 $pass = 'UeNxoVXpTBdeuPmEafuCxNKXCzbtxbaT';

@@ -28,6 +28,8 @@ function fetch_context_data() {
     exit;
 }
 
+// O ideal é usar uma I.A. local e não uma API externa, estudar como fazer isso. Por enquanto, vamos usar a API do Gemini.
+// Provavelmente será necessário criar uma conta no Google Cloud e ativar a API do Gemini, além de configurar as credenciais adequadamente. (Vou revogar a chave atual)
 function call_gemini_api() {
     $apiKey = "AIzaSyD5nmuNijtSJVpHe28ztDAXtMQBTkNxyNQ";
 
