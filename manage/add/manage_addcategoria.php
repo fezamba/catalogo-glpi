@@ -21,7 +21,6 @@ if (isset($_GET['id'])) {
   $stmt->close();
 }
 
-// Ações de POST (salvar ou excluir)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
   $acao = $_POST['acao'];
   $titulo = $_POST["titulo"] ?? '';
