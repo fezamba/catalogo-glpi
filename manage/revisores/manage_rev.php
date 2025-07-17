@@ -18,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome']) && isset($_PO
     $email = trim($_POST['email']);
 
     if (!empty($nome) && !empty($email)) {
-        // --- INÍCIO DA VALIDAÇÃO ---
         $stmt_check = $mysqli->prepare("SELECT nome, email FROM revisores WHERE nome = ? OR email = ?");
         $stmt_check->bind_param("ss", $nome, $email);
         $stmt_check->execute();
@@ -32,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome']) && isset($_PO
                 $mensagem = "<div class='mensagem erro'>Erro: O e-mail '<strong>" . htmlspecialchars($email) . "</strong>' já está cadastrado.</div>";
             }
         } else {
-            // --- FIM DA VALIDAÇÃO ---
             $stmt = $mysqli->prepare("INSERT INTO revisores (nome, email) VALUES (?, ?)");
             $stmt->bind_param("ss", $nome, $email);
             if ($stmt->execute()) {
