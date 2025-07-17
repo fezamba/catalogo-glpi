@@ -24,7 +24,6 @@ while ($cat = $result->fetch_assoc()) {
     ");
   $cat['qtd_servicos'] = $serv->fetch_assoc()['total'];
 
-  // Conta subcategorias diretas
   $sub = $mysqli->query("SELECT COUNT(*) as total FROM subcategoria WHERE ID_Categoria = {$cat['ID']}");
   $cat['qtd_subcategorias'] = $sub->fetch_assoc()['total'];
 
