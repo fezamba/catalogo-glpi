@@ -4,7 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 function fetch_context_data() {
-    $url = 'https://catalogo-glpi-production.up.railway.app/gerar_relatorio.php';
+    $url = 'https://catalogo-glpi-production.up.railway.app/gerar_relatorio.php'; // Substitua pela URL correta do gerar_relatorio.php
     
     header("Content-Type: text/plain; charset=utf-8");
 
@@ -31,7 +31,7 @@ function fetch_context_data() {
 // O ideal é usar uma I.A. local e não uma API externa, estudar como fazer isso. Por enquanto, vamos usar a API do Gemini.
 // Provavelmente será necessário criar uma conta no Google Cloud e ativar a API do Gemini, além de configurar as credenciais adequadamente. (Vou revogar a chave atual)
 function call_gemini_api() {
-    $apiKey = "AIzaSyD5nmuNijtSJVpHe28ztDAXtMQBTkNxyNQ";
+    $apiKey = "AIzaSyD5nmuNijtSJVpHe28ztDAXtMQBTkNxyNQ"; // Substitua pela sua chave de API do Gemini (se for usar o Gemini)
 
     $requestBody = file_get_contents('php://input');
     $data = json_decode($requestBody, true);
