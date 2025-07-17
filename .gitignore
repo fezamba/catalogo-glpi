@@ -4,11 +4,3 @@
 
 *.log
 /cache/
-
-/pip
-
-/script
-
-/script-db
-
-/script (obsoleto)
