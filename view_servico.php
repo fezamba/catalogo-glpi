@@ -1,11 +1,15 @@
 <?php
+// Inclui o arquivo de conexão com o banco de dados.
 require_once 'conexao.php';
 
+// --- Validação Inicial ---
+// Verifica se um ID de serviço foi passado na URL e se é um número válido.
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    die("ID do serviço inválido.");
+    die("ID do serviço inválido."); // Encerra o script se o ID for inválido.
 }
-$id_servico = intval($_GET['id']);
+$id_servico = intval($_GET['id']); // Converte o ID para um inteiro por segurança.
 
+// --- Busca dos Dados Principais do Serviço ---
 $query_principal = "
     SELECT 
         s.*, 
@@ -17,32 +21,41 @@ $query_principal = "
     LEFT JOIN categoria cat ON sub.ID_Categoria = cat.ID
     WHERE s.ID = ?
 ";
+// Prepara a consulta para evitar SQL Injection.
 $stmt = $mysqli->prepare($query_principal);
 $stmt->bind_param("i", $id_servico);
 $stmt->execute();
 $servico = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
+// Se a consulta não retornar nenhum serviço, encerra o script.
 if (!$servico) {
     die("Serviço não encontrado.");
 }
 
+// --- Busca de Dados Relacionados (Diretrizes) ---
 $diretrizes = [];
+// Prepara a busca pelas diretrizes associadas a este serviço.
 $stmt_dir = $mysqli->prepare("SELECT ID, Titulo FROM diretriz WHERE ID_Servico = ? ORDER BY ID");
 $stmt_dir->bind_param("i", $id_servico);
 $stmt_dir->execute();
 $result_dir = $stmt_dir->get_result();
+// Itera sobre cada diretriz encontrada.
 while ($d = $result_dir->fetch_assoc()) {
+    // Para cada diretriz, busca seus itens correspondentes.
     $stmt_item_dir = $mysqli->prepare("SELECT Conteudo FROM itemdiretriz WHERE ID_Diretriz = ? ORDER BY ID");
     $stmt_item_dir->bind_param("i", $d['ID']);
     $stmt_item_dir->execute();
     $result_item_dir = $stmt_item_dir->get_result();
+    // Adiciona os itens encontrados ao array da diretriz.
     $d['itens'] = $result_item_dir->fetch_all(MYSQLI_ASSOC);
     $diretrizes[] = $d;
     $stmt_item_dir->close();
 }
 $stmt_dir->close();
 
+// --- Busca de Dados Relacionados (Padrões) ---
+// A lógica é idêntica à busca de diretrizes.
 $padroes = [];
 $stmt_pad = $mysqli->prepare("SELECT ID, Titulo FROM padrao WHERE ID_Servico = ? ORDER BY ID");
 $stmt_pad->bind_param("i", $id_servico);
@@ -59,6 +72,7 @@ while ($p = $result_pad->fetch_assoc()) {
 }
 $stmt_pad->close();
 
+// --- Busca de Dados Relacionados (Checklist) ---
 $checklist = [];
 $stmt_check = $mysqli->prepare("SELECT NomeItem, Observacao FROM checklist WHERE ID_Servico = ? ORDER BY ID");
 $stmt_check->bind_param("i", $id_servico);
@@ -74,6 +88,7 @@ $stmt_check->close();
     <meta charset="UTF-8">
     <title>Visualizar: <?= htmlspecialchars($servico['Titulo'] ?? 'Serviço') ?></title>
     <link rel="stylesheet" href="css/view_servico.css">
+    <!-- Estilos CSS embutidos para o formulário de chamado -->
     <style>
         .chamado-form-container {
             margin-top: 40px;
@@ -145,6 +160,7 @@ $stmt_check->close();
 
         <div class="header">
             <div class="header-info">
+                <!-- Breadcrumb (caminho de navegação) para ajudar o usuário a se localizar. -->
                 <p class="meta breadcrumb">
                     <a href="index.php">Categorias</a> &gt;
                     <a href="categoria.php?id=<?= $servico['categoria_id'] ?? '0' ?>"><?= htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') ?></a> &gt;
@@ -160,6 +176,7 @@ $stmt_check->close();
         </div>
 
         <h2 class="section-title">Descrição do Serviço</h2>
+        <!-- nl2br() converte quebras de linha (\n) em tags <br> para exibição correta no HTML. -->
         <p><?= nl2br(htmlspecialchars($servico['Descricao'] ?? 'Descrição não informada.')) ?></p>
 
         <h2 class="section-title">Detalhes e Parâmetros</h2>
@@ -176,15 +193,19 @@ $stmt_check->close();
                 <strong>Base de Conhecimento (KB):</strong>
                 <?php
                 $kb_link = $servico['KBs'] ?? '';
+                // Verifica se o campo KB contém uma URL válida.
                 if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
                 ?>
+                    <!-- Se for uma URL, cria um link clicável. -->
                     <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank"><?= htmlspecialchars($kb_link) ?></a>
                 <?php else: ?>
+                    <!-- Caso contrário, exibe o texto como está. -->
                     <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
                 <?php endif; ?>
             </div>
         </div>
 
+        <!-- Seção de Diretrizes: só é exibida se houver diretrizes cadastradas. -->
         <?php if (!empty($diretrizes)): ?>
             <h2 class="section-title">Diretrizes</h2>
             <?php foreach ($diretrizes as $dir): ?>
@@ -201,6 +222,7 @@ $stmt_check->close();
             <?php endforeach; ?>
         <?php endif; ?>
 
+        <!-- Seção de Padrões: só é exibida se houver padrões cadastrados. -->
         <?php if (!empty($padroes)): ?>
             <h2 class="section-title">Padrões</h2>
             <?php foreach ($padroes as $pad): ?>
@@ -217,6 +239,7 @@ $stmt_check->close();
             <?php endforeach; ?>
         <?php endif; ?>
 
+        <!-- Seção de Checklist: só é exibida se houver itens de checklist. -->
         <?php if (!empty($checklist)): ?>
             <h2 class="section-title">Checklist de Verificação</h2>
             <div class="grupo">
@@ -241,10 +264,11 @@ $stmt_check->close();
             <p><?= nl2br(htmlspecialchars($servico['procedimento_excecao'] ?? 'Não informado.')) ?></p>
         </div>
 
+        <!-- Formulário para abertura de chamado no GLPI, integrado à página. -->
         <div class="chamado-form-container">
             <h2 class="section-title">Abrir um Chamado para este Serviço</h2>
             <form action="../chamado/processar_chamado.php" method="POST">
-
+                <!-- Campo oculto que envia o ID do serviço junto com o formulário. -->
                 <input type="hidden" name="servico_id" value="<?= $servico['ID'] ?>">
 
                 <div class="form-group">

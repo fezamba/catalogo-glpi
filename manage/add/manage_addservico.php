@@ -1,11 +1,23 @@
 <?php
+// Inicia a sessão para utilizar variáveis de sessão, como o usuário logado.
 session_start();
+// Inclui o arquivo de conexão com o banco de dados.
 require_once '../../conexao.php';
 
+// Verifica se a conexão com o banco de dados foi bem-sucedida.
 if ($mysqli->connect_errno) {
   die("Erro de conexão com o banco de dados: " . $mysqli->connect_error);
 }
 
+// --- Funções Auxiliares de Banco de Dados ---
+
+/**
+ * Busca um único registro em uma tabela pelo seu ID.
+ * @param mysqli $mysqli A instância da conexão com o banco.
+ * @param string $table O nome da tabela.
+ * @param int $id O ID do registro a ser buscado.
+ * @return array|null Retorna um array associativo com os dados do registro ou null se não for encontrado.
+ */
 function fetch_by_id($mysqli, $table, $id)
 {
   $stmt = $mysqli->prepare("SELECT * FROM $table WHERE ID = ?");
@@ -13,6 +25,14 @@ function fetch_by_id($mysqli, $table, $id)
   $stmt->execute();
   return $stmt->get_result()->fetch_assoc();
 }
+
+/**
+ * Busca todos os registros de uma tabela.
+ * @param mysqli $mysqli A instância da conexão com o banco.
+ * @param string $table O nome da tabela.
+ * @param string|null $order_by A coluna para ordenação (ex: "Titulo ASC").
+ * @return array Retorna um array de registros.
+ */
 function fetch_all($mysqli, $table, $order_by = null)
 {
   $data = [];
@@ -28,6 +48,17 @@ function fetch_all($mysqli, $table, $order_by = null)
   }
   return $data;
 }
+
+/**
+ * Busca dados relacionados que possuem uma estrutura de mestre-detalhe (ex: Diretrizes e seus Itens).
+ * @param mysqli $mysqli A instância da conexão.
+ * @param int $servico_id O ID do serviço principal.
+ * @param string $main_table Tabela principal (ex: 'diretriz').
+ * @param string $item_table Tabela de itens (ex: 'itemdiretriz').
+ * @param string $join_col_main Coluna de junção na tabela principal (ex: 'ID_Servico').
+ * @param string $join_col_item Coluna de junção na tabela de itens (ex: 'ID_Diretriz').
+ * @return array Retorna um array agrupado com os títulos e seus respectivos itens.
+ */
 function fetch_related_items($mysqli, $servico_id, $main_table, $item_table, $join_col_main, $join_col_item)
 {
   $items = [];
@@ -47,6 +78,13 @@ function fetch_related_items($mysqli, $servico_id, $main_table, $item_table, $jo
   }
   return array_values($temp_items);
 }
+
+/**
+ * Busca os itens do checklist associados a um serviço.
+ * @param mysqli $mysqli A instância da conexão.
+ * @param int $servico_id O ID do serviço.
+ * @return array Retorna um array com os itens e observações do checklist.
+ */
 function fetch_checklist($mysqli, $servico_id)
 {
   $checklist = [];
@@ -59,6 +97,11 @@ function fetch_checklist($mysqli, $servico_id)
   }
   return $checklist;
 }
+
+/**
+ * Sincroniza dados relacionados (padrão "delete-then-insert").
+ * Remove todos os dados antigos e insere os novos enviados pelo formulário.
+ */
 function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table, $join_col_main, $join_col_item)
 {
   $mysqli->query("DELETE FROM $main_table WHERE $join_col_main = $servico_id");
@@ -78,6 +121,10 @@ function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table
     }
   }
 }
+
+/**
+ * Sincroniza os dados do checklist (padrão "delete-then-insert").
+ */
 function sync_checklist_data($mysqli, $servico_id, $checklist_data)
 {
   $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $servico_id");
@@ -90,21 +137,34 @@ function sync_checklist_data($mysqli, $servico_id, $checklist_data)
     }
   }
 }
+
+/**
+ * Função de conveniência para redirecionar o usuário e encerrar o script.
+ * @param string $location A URL de destino.
+ */
 function redirect($location)
 {
   header("Location: " . $location);
   exit;
 }
+
+/**
+ * Retorna uma label formatada para um determinado status da ficha.
+ * @param string $status O status da ficha (ex: 'em_revisao').
+ * @return string A label formatada com emoji (ex: '🔍 Em revisão').
+ */
 function get_status_label($status)
 {
   $labels = ['rascunho' => '📝 Em Cadastro', 'em_revisao' => '🔍 Em revisão', 'revisada' => '✅ Revisada', 'em_aprovacao' => '🕒 Em aprovação', 'aprovada' => '☑️ Aprovada', 'publicado' => '📢 Publicado', 'cancelada' => '🚫 Cancelada', 'reprovado_revisor' => '❌ Reprovado pelo Revisor', 'reprovado_po' => '❌ Reprovado pelo PO', 'substituida' => '♻️ Substituída', 'descontinuada' => '⏳ Descontinuada'];
   return $labels[$status] ?? '—';
 }
 
+// --- Lógica de Simulação de Usuário (Painel de Debug) ---
 $lista_revisores_debug = fetch_all($mysqli, 'revisores', 'nome ASC');
 $lista_pos_debug = fetch_all($mysqli, 'pos', 'nome ASC');
-$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD'];
+$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD']; // Usuário padrão
 
+// Se um usuário está sendo simulado via GET, sobrepõe o usuário padrão.
 if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
   $simulacao = explode('_', $_GET['simular_usuario'], 2);
   $tipo_simulado = $simulacao[0];
@@ -122,28 +182,36 @@ if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
     }
   }
 }
+// Armazena o usuário logado (real ou simulado) na sessão.
 $_SESSION['usuario_logado'] = $usuario_logado;
 
+
+// --- Inicialização de Variáveis Principais ---
 $id = isset($_GET['id']) ? intval($_GET['id']) : null;
 $modo_edicao = !is_null($id);
 $mensagem = '';
 
+// --- Processamento do Formulário (POST) ---
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
   $acao = $_POST['acao'];
   $id_post = $modo_edicao ? $id : null;
   $post_data = $_POST;
   $nome_usuario_logado = $usuario_logado['nome'];
 
+  // O switch controla toda a lógica de negócio baseada na ação do botão clicado.
   switch ($acao) {
     case 'nova_versao_auto':
+      // Cria uma nova versão de uma ficha existente, copiando todos os seus dados.
       $servico_antigo = fetch_by_id($mysqli, 'servico', $id_post);
       if ($servico_antigo) {
         $partes = explode('.', $servico_antigo['versao']);
-        $nova_versao = ((int)$partes[0] + 1) . '.0';
+        $nova_versao = ((int)$partes[0] + 1) . '.0'; // Incrementa a versão major.
+        // Insere o novo serviço como um clone do antigo, mas com nova versão e status 'rascunho'.
         $stmt = $mysqli->prepare("INSERT INTO servico (codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha, UltimaAtualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', NOW())");
         $stmt->bind_param("ssssisssssss", $servico_antigo['codigo_ficha'], $nova_versao, $servico_antigo['Titulo'], $servico_antigo['Descricao'], $servico_antigo['ID_SubCategoria'], $servico_antigo['KBs'], $servico_antigo['area_especialista'], $servico_antigo['po_responsavel'], $servico_antigo['alcadas'], $servico_antigo['procedimento_excecao'], $servico_antigo['observacoes'], $nome_usuario_logado);
         $stmt->execute();
         $novo_id = $stmt->insert_id;
+        // Copia os dados relacionados (diretrizes, padrões, checklist) para a nova versão.
         $diretrizes_antigas = fetch_related_items($mysqli, $id_post, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
         sync_related_data($mysqli, $novo_id, $diretrizes_antigas, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
         $padroes_antigos = fetch_related_items($mysqli, $id_post, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
@@ -154,6 +222,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       }
       break;
     case 'publicar_ficha':
+      // Publica a ficha atual e marca as versões anteriores do mesmo código como 'substituida'.
       $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'publicado' WHERE ID = ?");
       $stmt->bind_param("i", $id_post);
       $stmt->execute();
@@ -166,46 +235,56 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       redirect("../list/manage_listservico.php?sucesso=1");
       break;
     case 'criar_servico':
+      // Insere um serviço completamente novo no banco.
       $stmt = $mysqli->prepare("INSERT INTO servico (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha) VALUES ('1.0', ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
       $stmt->bind_param("ssisssssss", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado);
       $stmt->execute();
       $new_id = $stmt->insert_id;
+      // Gera um código de ficha único baseado no ID.
       $codigo_ficha = "FCH-" . str_pad($new_id, 4, "0", STR_PAD_LEFT);
       $mysqli->query("UPDATE servico SET codigo_ficha = '$codigo_ficha' WHERE ID = $new_id");
+      // Sincroniza os dados relacionados.
       sync_related_data($mysqli, $new_id, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $new_id, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $new_id, $post_data['checklist'] ?? []);
       redirect("../list/manage_listservico.php?sucesso=1");
       break;
     case 'salvar_rascunho':
+      // Atualiza os dados de um serviço sem alterar seu status.
       $sql = "UPDATE servico SET Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, UltimaAtualizacao = NOW(), area_especialista = ?, po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, observacoes = ?, usuario_criador = ? WHERE ID = ?";
       $stmt = $mysqli->prepare($sql);
       $stmt->bind_param("ssisssssssi", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado, $id_post);
       $stmt->execute();
+      // Sincroniza os dados relacionados.
       sync_related_data($mysqli, $id_post, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $id_post, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $id_post, $post_data['checklist'] ?? []);
       redirect("manage_addservico.php?id=$id_post&sucesso=1");
       break;
     case 'excluir':
+      // Exclui um serviço permanentemente.
       $delete_id = intval($_POST['delete_id']);
       $stmt = $mysqli->prepare("DELETE FROM servico WHERE ID = ?");
       $stmt->bind_param("i", $delete_id);
       $stmt->execute();
       redirect("../list/manage_listservico.php?excluido=1");
       break;
+    // Casos de mudança de status no fluxo de trabalho.
     case 'enviar_revisao':
     case 'enviar_revisao_novamente':
     case 'aprovar_revisor':
     case 'aprovar_po':
     case 'reprovar_revisor':
     case 'reprovar_po':
+      // Mapeia a ação para o novo status da ficha.
       $status_map = ['enviar_revisao' => 'em_revisao', 'enviar_revisao_novamente' => 'em_revisao', 'aprovar_revisor' => 'revisada', 'aprovar_po' => 'aprovada', 'reprovar_revisor' => 'reprovado_revisor', 'reprovar_po' => 'reprovado_po'];
       $novo_status = $status_map[$acao];
       $justificativa = in_array($acao, ['reprovar_revisor', 'reprovar_po', 'enviar_revisao_novamente']) ? ($post_data['justificativa'] ?? 'Sem justificativa') : null;
+      // Constrói a query de UPDATE dinamicamente.
       $sql = "UPDATE servico SET Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, UltimaAtualizacao = NOW(), area_especialista = ?, po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, observacoes = ?, usuario_criador = ?, status_ficha = ?";
       $params = [$post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado, $novo_status];
       $types = "ssissssssss";
+      // Adiciona campos extras à query conforme a ação.
       if ($justificativa) {
         $sql .= ", justificativa_rejeicao = ?";
         $params[] = $justificativa;
@@ -226,6 +305,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       sync_related_data($mysqli, $id_post, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $id_post, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $id_post, $post_data['checklist'] ?? []);
+      // Se for o primeiro envio para revisão, associa os revisores à ficha.
       if ($acao === 'enviar_revisao') {
         $mysqli->query("DELETE FROM servico_revisores WHERE servico_id = $id_post");
         if (!empty($post_data['revisores_ids'])) {
@@ -240,6 +320,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       break;
     case 'enviar_para_aprovacao':
     case 'cancelar_ficha':
+      // Ações simples que apenas mudam o status.
       $status_map_simple = ['enviar_para_aprovacao' => 'em_aprovacao', 'cancelar_ficha' => 'cancelada'];
       $novo_status = $status_map_simple[$acao];
       $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = ? WHERE ID = ?");
@@ -250,6 +331,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
   }
 }
 
+// --- Mensagens de Feedback (GET) ---
 if (isset($_GET["sucesso"])) {
   $mensagem = "Operação realizada com sucesso!";
 }
@@ -257,6 +339,7 @@ if (isset($_GET["excluido"])) {
   $mensagem = "Serviço excluído com sucesso!";
 }
 
+// --- Carregamento de Dados para Exibição (Modo de Edição) ---
 $dados_edicao = [];
 $diretrizes = [];
 $padroes = [];
@@ -267,9 +350,11 @@ if ($modo_edicao) {
   if (!$dados_edicao) {
     die("Serviço não encontrado.");
   }
+  // Permite forçar um status via GET para fins de debug.
   if (isset($_GET['forcar_status']) && !empty($_GET['forcar_status'])) {
     $dados_edicao['status_ficha'] = $_GET['forcar_status'];
   }
+  // Carrega todos os dados relacionados ao serviço.
   $diretrizes = fetch_related_items($mysqli, $id, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
   $padroes = fetch_related_items($mysqli, $id, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
   $checklist = fetch_checklist($mysqli, $id);
@@ -277,17 +362,23 @@ if ($modo_edicao) {
   $revisores_servico = array_column($revisores_servico_raw, 'revisor_id');
 }
 
+// Carrega dados gerais para preencher os formulários.
 $subcategorias = fetch_all($mysqli, 'subcategoria', 'Titulo ASC');
 $lista_pos = fetch_all($mysqli, 'pos', 'nome ASC');
 $lista_revisores = fetch_all($mysqli, 'revisores', 'nome ASC');
+
+// --- Lógica de Permissões e Estado da UI ---
 $tipo_usuario_atual = $usuario_logado['tipo'];
 $id_usuario_atual = $usuario_logado['id'];
 $nome_usuario_atual = $usuario_logado['nome'];
 $status = $dados_edicao['status_ficha'] ?? 'rascunho';
 
+// Verifica se o usuário logado é um revisor autorizado para esta ficha específica.
 $isRevisorAutorizado = $tipo_usuario_atual === 'revisor' && in_array($id_usuario_atual, $revisores_servico);
+// Verifica se o usuário logado é o PO responsável pela ficha.
 $isPOAutorizado = $tipo_usuario_atual === 'po' && ($nome_usuario_atual === ($dados_edicao['po_responsavel'] ?? ''));
 
+// Define as permissões para cada ação com base no tipo de usuário e no status da ficha.
 $podeSalvarRascunho = $tipo_usuario_atual === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po']);
 $podeEnviarRevisao = $podeSalvarRascunho;
 $podeEnviarAprovacao = $tipo_usuario_atual === 'criador' && $status === 'revisada';
@@ -299,6 +390,7 @@ $podeExcluir = $modo_edicao && $podeSalvarRascunho;
 $podeAprovarRevisor = $status === 'em_revisao' && $isRevisorAutorizado;
 $podeAprovarPO = $status === 'em_aprovacao' && $isPOAutorizado;
 
+// Determina se o formulário inteiro deve ser somente leitura.
 $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'descontinuada']) || ($tipo_usuario_atual === 'revisor' && !$isRevisorAutorizado && $status === 'em_revisao') || ($tipo_usuario_atual === 'po' && !$isPOAutorizado && $status === 'em_aprovacao');
 ?>
 <!DOCTYPE html>
@@ -311,6 +403,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
 </head>
 
 <body>
+  <!-- O painel de debug permite testar a visualização do formulário sob diferentes status e usuários. -->
   <div id="debug-panel">
     <h4>Painel de Testes</h4>
     <label for="debug-status-ficha">Forçar Status:</label>
@@ -342,6 +435,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     <h2 class="form-title"><?php echo $modo_edicao ? "Editar Ficha " . htmlspecialchars($dados_edicao['codigo_ficha'] ?? '') . " (v" . htmlspecialchars($dados_edicao['versao'] ?? '') . ")" : "Adicionar Serviço"; ?></h2>
     <a href="../list/manage_listservico.php" class="btn-back">← Voltar para lista</a>
 
+    <!-- Exibição de informações contextuais como status e justificativas de reprovação. -->
     <?php if ($modo_edicao): ?><p><strong>Status da Ficha:</strong> <?php echo get_status_label($status); ?></p><?php endif; ?>
     <div id="form-error-message" class="mensagem erro" style="display:none;"></div>
     <?php if (!empty($dados_edicao['justificativa_rejeicao']) && in_array($status, ['rascunho', 'em_revisao', 'reprovado_revisor', 'reprovado_po'])): ?><div class="rejection-notice"><strong>Justificativa da Reprovação:</strong><br><em><?php echo nl2br(htmlspecialchars($dados_edicao['justificativa_rejeicao'])); ?></em></div><?php endif; ?>
@@ -350,6 +444,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     <form id="form-ficha" method="post">
       <div class="form-grid">
         <div class="form-column">
+          <!-- Os campos do formulário são desabilitados (readonly/disabled) com base na variável $isReadOnly. -->
           <label>Nome do Serviço:<textarea name="nome_servico" maxlength="255" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Titulo'] ?? '') ?></textarea></label>
           <label>Descrição do Serviço:<textarea name="descricao_servico" maxlength="1000" rows="4" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea></label>
           <h3>Informações Adicionais</h3>
@@ -377,6 +472,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
               </div>
             </div>
           <?php endif; ?>
+          <!-- Seções dinâmicas para Diretrizes, Padrões e Checklist -->
           <h3>Diretrizes</h3>
           <div id="diretrizes">
             <?php $index = 0;
@@ -424,6 +520,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
           <h3>Observações Gerais</h3><textarea name="observacoes_gerais" rows="4" maxlength="1000" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['observacoes'] ?? '') ?></textarea>
         </div>
       </div>
+      <!-- A seção de botões de ação é totalmente dinâmica, exibindo apenas as ações permitidas para o usuário/status atual. -->
       <div class="form-actions-horizontal">
         <?php if (!$modo_edicao): ?>
           <button type="submit" name="acao" value="criar_servico" class="btn-salvar">Criar Serviço</button>
@@ -447,6 +544,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     </form>
   </div>
 
+  <!-- Modal para inserir justificativa de reprovação/devolução. -->
   <div id="justificativa-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="document.getElementById('justificativa-modal').style.display='none'">&times;</span>

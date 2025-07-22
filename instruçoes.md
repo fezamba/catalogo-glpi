@@ -20,7 +20,7 @@
 
 #### **5. Inteligência Artificial (Chatbot)**
 * **Modelo de IA:** Substituir a API do Gemini pelo modelo PHI-2 para o chatbot, motivado por ser uma alternativa de menor custo.
-* **Análise de Viabilidade:** A viabilidade da implementação do PHI-2 deve ser discutida com o Francisco.
+* **Análise de Viabilidade:** A viabilidade da implementação do PHI-2 deve ser discutida com o Francisco, precisa de uma máquina para rodar a IA.
 
 ---
 **Ponto Focal para Dúvidas de Desenvolvimento:**
