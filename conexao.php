@@ -2,22 +2,22 @@
 // Nota do desenvolvedor original:
 // Substituir pelas credenciais do banco do GLPI
 // Será necessário criar novas tabelas, utilize plguin_nome_da_tabela para criar as tabelas necessárias
-// Estou usando o banco de uma plataforma de testes chamada Railway
+// Estou usando o banco dev do GLPI
 
 // --- Credenciais de Conexão com o Banco de Dados ---
 // NOTA DE SEGURANÇA: É uma má prática armazenar credenciais diretamente no código.
 // O ideal é usar variáveis de ambiente ou um arquivo de configuração seguro fora do diretório público.
 
 // Endereço do servidor do banco de dados.
-$host = 'yamabiko.proxy.rlwy.net';
+$host = '10.8.75.87';
 // Nome de usuário para a conexão com o banco.
-$user = 'root';
+$user = 'glpi';
 // Senha para a conexão com o banco.
-$pass = 'UeNxoVXpTBdeuPmEafuCxNKXCzbtxbaT';
+$pass = 'Glpi123#';
 // Nome do banco de dados a ser utilizado.
-$db   = 'railway';
+$db   = 'glpi';
 // Porta de conexão com o banco de dados.
-$port = 15683;
+$port = 3306;
 
 // --- Estabelecimento da Conexão ---
 // Cria uma nova instância do objeto mysqli, tentando estabelecer a conexão com o banco de dados.
