@@ -11,7 +11,7 @@ error_reporting(E_ALL);
  */
 function fetch_context_data() {
     // URL do script que gera o relatório de texto com os dados do catálogo.
-    $url = 'https://catalogo-glpi-production.up.railway.app/gerar_relatorio.php';
+    $url = 'https://seded0032782.sefnet.rj:8080/gerar_relatorio.php';
     
     // Define o cabeçalho da resposta como texto puro com codificação UTF-8.
     header("Content-Type: text/plain; charset=utf-8");
