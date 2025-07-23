@@ -80,6 +80,17 @@ $stmt_check->execute();
 $result_check = $stmt_check->get_result();
 $checklist = $result_check->fetch_all(MYSQLI_ASSOC);
 $stmt_check->close();
+
+// --- Busca de Sugestões ---
+$sugestoes = [];
+$stmt_sugestoes = $mysqli->prepare("SELECT autor_sugestao, data_sugestao, texto_sugestao FROM sugestoes WHERE servico_id = ? ORDER BY data_sugestao DESC");
+$stmt_sugestoes->bind_param("i", $id_servico);
+$stmt_sugestoes->execute();
+$result_sugestoes = $stmt_sugestoes->get_result();
+while ($sugestao = $result_sugestoes->fetch_assoc()) {
+    $sugestoes[] = $sugestao;
+}
+$stmt_sugestoes->close();
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -88,7 +99,7 @@ $stmt_check->close();
     <meta charset="UTF-8">
     <title>Visualizar: <?= htmlspecialchars($servico['Titulo'] ?? 'Serviço') ?></title>
     <link rel="stylesheet" href="css/view_servico.css">
-    <!-- Estilos CSS embutidos para o formulário de chamado -->
+    <!-- Estilos CSS embutidos para os formulários -->
     <style>
         .chamado-form-container {
             margin-top: 40px;
@@ -98,17 +109,14 @@ $stmt_check->close();
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
         }
-
         .chamado-form-container .section-title {
             margin-top: 0;
             border-bottom: none;
             padding-bottom: 0;
         }
-
         .form-group {
             margin-bottom: 20px;
         }
-
         .form-group label {
             display: block;
             font-weight: bold;
@@ -116,7 +124,6 @@ $stmt_check->close();
             font-size: 1.1em;
             color: #333;
         }
-
         .form-group textarea {
             width: 100%;
             padding: 12px;
@@ -127,13 +134,11 @@ $stmt_check->close();
             line-height: 1.5;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-
         .form-group textarea:focus {
             border-color: #f0ad4e;
             box-shadow: 0 0 0 3px rgba(240, 173, 78, 0.2);
             outline: none;
         }
-
         .form-group .btn-primary {
             background-color: #f0ad4e;
             color: white;
@@ -145,9 +150,33 @@ $stmt_check->close();
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
         .form-group .btn-primary:hover {
             background-color: #ec971f;
+        }
+        .sugestoes-container {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .sugestao-item {
+            background-color: #f9fafb;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .sugestao-meta {
+            font-size: 0.85rem;
+            color: #667;
+            margin-bottom: 8px;
+        }
+        .sugestao-meta strong {
+            color: #333;
+        }
+        .sugestao-texto {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #444;
         }
     </style>
 </head>
@@ -193,13 +222,10 @@ $stmt_check->close();
                 <strong>Base de Conhecimento (KB):</strong>
                 <?php
                 $kb_link = $servico['KBs'] ?? '';
-                // Verifica se o campo KB contém uma URL válida.
                 if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
                 ?>
-                    <!-- Se for uma URL, cria um link clicável. -->
                     <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank"><?= htmlspecialchars($kb_link) ?></a>
                 <?php else: ?>
-                    <!-- Caso contrário, exibe o texto como está. -->
                     <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
                 <?php endif; ?>
             </div>
@@ -270,18 +296,47 @@ $stmt_check->close();
             <form action="../chamado/processar_chamado.php" method="POST">
                 <!-- Campo oculto que envia o ID do serviço junto com o formulário. -->
                 <input type="hidden" name="servico_id" value="<?= $servico['ID'] ?>">
-
                 <div class="form-group">
                     <label for="descricao_chamado">Descreva sua solicitação:</label>
                     <textarea id="descricao_chamado" name="descricao_chamado" rows="5" required placeholder="Forneça detalhes sobre o seu problema ou solicitação..."></textarea>
                 </div>
-
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Criar Chamado</button>
                 </div>
             </form>
         </div>
+
+        <!-- Secção de Sugestões -->
+        <div class="sugestoes-container">
+            <h2 class="section-title">Sugestões de Melhoria</h2>
+            
+            <div class="chamado-form-container" style="margin-top: 0; border-top: none; padding-top: 10px;">
+                <form action="processar_sugestao.php" method="POST">
+                    <input type="hidden" name="servico_id" value="<?= $servico['ID'] ?>">
+                    <div class="form-group">
+                        <label for="texto_sugestao">Deixe sua sugestão para este serviço:</label>
+                        <textarea id="texto_sugestao" name="texto_sugestao" rows="4" required placeholder="Escreva aqui sua sugestão de melhoria..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Enviar Sugestão</button>
+                    </div>
+                </form>
+            </div>
+
+            <?php if (count($sugestoes) > 0): ?>
+                <?php foreach ($sugestoes as $sugestao): ?>
+                    <div class="sugestao-item">
+                        <p class="sugestao-meta">
+                            <strong><?= htmlspecialchars($sugestao['autor_sugestao']) ?></strong> em 
+                            <?= date('d/m/Y \à\s H:i', strtotime($sugestao['data_sugestao'])) ?>
+                        </p>
+                        <p class="sugestao-texto"><?= nl2br(htmlspecialchars($sugestao['texto_sugestao'])) ?></p>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p style="text-align: center; margin-top: 20px;">Ainda não há sugestões para este serviço. Seja o primeiro a contribuir!</p>
+            <?php endif; ?>
+        </div>
     </div>
 </body>
-
 </html>

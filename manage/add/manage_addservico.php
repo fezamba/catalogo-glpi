@@ -201,17 +201,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
   // O switch controla toda a lógica de negócio baseada na ação do botão clicado.
   switch ($acao) {
     case 'nova_versao_auto':
-      // Cria uma nova versão de uma ficha existente, copiando todos os seus dados.
       $servico_antigo = fetch_by_id($mysqli, 'servico', $id_post);
       if ($servico_antigo) {
-        $partes = explode('.', $servico_antigo['versao']);
-        $nova_versao = ((int)$partes[0] + 1) . '.0'; // Incrementa a versão major.
-        // Insere o novo serviço como um clone do antigo, mas com nova versão e status 'rascunho'.
+
+        $codigo_ficha = $servico_antigo['codigo_ficha'];
+        $stmt_max_ver = $mysqli->prepare("SELECT MAX(CAST(versao AS DECIMAL(10,2))) as max_versao FROM servico WHERE codigo_ficha = ?");
+        $stmt_max_ver->bind_param("s", $codigo_ficha);
+        $stmt_max_ver->execute();
+        $resultado_max = $stmt_max_ver->get_result()->fetch_assoc();
+        $versao_max_existente = $resultado_max['max_versao'] ?? 0;
+        $stmt_max_ver->close();
+
+        $nova_versao_major = floor($versao_max_existente) + 1;
+        $nova_versao = $nova_versao_major . '.0';
+
         $stmt = $mysqli->prepare("INSERT INTO servico (codigo_ficha, versao, Titulo, Descricao, ID_SubCategoria, KBs, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha, UltimaAtualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'rascunho', NOW())");
         $stmt->bind_param("ssssisssssss", $servico_antigo['codigo_ficha'], $nova_versao, $servico_antigo['Titulo'], $servico_antigo['Descricao'], $servico_antigo['ID_SubCategoria'], $servico_antigo['KBs'], $servico_antigo['area_especialista'], $servico_antigo['po_responsavel'], $servico_antigo['alcadas'], $servico_antigo['procedimento_excecao'], $servico_antigo['observacoes'], $nome_usuario_logado);
         $stmt->execute();
         $novo_id = $stmt->insert_id;
-        // Copia os dados relacionados (diretrizes, padrões, checklist) para a nova versão.
+
         $diretrizes_antigas = fetch_related_items($mysqli, $id_post, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
         sync_related_data($mysqli, $novo_id, $diretrizes_antigas, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
         $padroes_antigos = fetch_related_items($mysqli, $id_post, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
@@ -383,7 +391,7 @@ $podeSalvarRascunho = $tipo_usuario_atual === 'criador' && in_array($status, ['r
 $podeEnviarRevisao = $podeSalvarRascunho;
 $podeEnviarAprovacao = $tipo_usuario_atual === 'criador' && $status === 'revisada';
 $podeDevolverRevisao = ($tipo_usuario_atual === 'criador' && $status === 'revisada') || ($tipo_usuario_atual === 'po' && $status === 'em_aprovacao' && $isPOAutorizado);
-$podeCriarNovaVersao = $tipo_usuario_atual === 'criador' && $status === 'publicado';
+$podeCriarNovaVersao = ($tipo_usuario_atual === 'criador' && $status === 'publicado') || ($tipo_usuario_atual === 'criador' && $status === 'substituida');
 $podePublicar = $tipo_usuario_atual === 'criador' && $status === 'aprovada';
 $podeCancelar = $podePublicar;
 $podeExcluir = $modo_edicao && $podeSalvarRascunho;
