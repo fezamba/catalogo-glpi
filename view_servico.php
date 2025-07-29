@@ -1,15 +1,11 @@
 <?php
-// Inclui o arquivo de conexão com o banco de dados.
 require_once 'conexao.php';
 
-// --- Validação Inicial ---
-// Verifica se um ID de serviço foi passado na URL e se é um número válido.
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    die("ID do serviço inválido."); // Encerra o script se o ID for inválido.
+    die("ID do serviço inválido.");
 }
-$id_servico = intval($_GET['id']); // Converte o ID para um inteiro por segurança.
+$id_servico = intval($_GET['id']);
 
-// --- Busca dos Dados Principais do Serviço ---
 $query_principal = "
     SELECT 
         s.*, 
@@ -21,41 +17,32 @@ $query_principal = "
     LEFT JOIN categoria cat ON sub.ID_Categoria = cat.ID
     WHERE s.ID = ?
 ";
-// Prepara a consulta para evitar SQL Injection.
 $stmt = $mysqli->prepare($query_principal);
 $stmt->bind_param("i", $id_servico);
 $stmt->execute();
 $servico = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// Se a consulta não retornar nenhum serviço, encerra o script.
 if (!$servico) {
     die("Serviço não encontrado.");
 }
 
-// --- Busca de Dados Relacionados (Diretrizes) ---
 $diretrizes = [];
-// Prepara a busca pelas diretrizes associadas a este serviço.
 $stmt_dir = $mysqli->prepare("SELECT ID, Titulo FROM diretriz WHERE ID_Servico = ? ORDER BY ID");
 $stmt_dir->bind_param("i", $id_servico);
 $stmt_dir->execute();
 $result_dir = $stmt_dir->get_result();
-// Itera sobre cada diretriz encontrada.
 while ($d = $result_dir->fetch_assoc()) {
-    // Para cada diretriz, busca seus itens correspondentes.
     $stmt_item_dir = $mysqli->prepare("SELECT Conteudo FROM itemdiretriz WHERE ID_Diretriz = ? ORDER BY ID");
     $stmt_item_dir->bind_param("i", $d['ID']);
     $stmt_item_dir->execute();
     $result_item_dir = $stmt_item_dir->get_result();
-    // Adiciona os itens encontrados ao array da diretriz.
     $d['itens'] = $result_item_dir->fetch_all(MYSQLI_ASSOC);
     $diretrizes[] = $d;
     $stmt_item_dir->close();
 }
 $stmt_dir->close();
 
-// --- Busca de Dados Relacionados (Padrões) ---
-// A lógica é idêntica à busca de diretrizes.
 $padroes = [];
 $stmt_pad = $mysqli->prepare("SELECT ID, Titulo FROM padrao WHERE ID_Servico = ? ORDER BY ID");
 $stmt_pad->bind_param("i", $id_servico);
@@ -72,7 +59,6 @@ while ($p = $result_pad->fetch_assoc()) {
 }
 $stmt_pad->close();
 
-// --- Busca de Dados Relacionados (Checklist) ---
 $checklist = [];
 $stmt_check = $mysqli->prepare("SELECT NomeItem, Observacao FROM checklist WHERE ID_Servico = ? ORDER BY ID");
 $stmt_check->bind_param("i", $id_servico);
@@ -81,7 +67,6 @@ $result_check = $stmt_check->get_result();
 $checklist = $result_check->fetch_all(MYSQLI_ASSOC);
 $stmt_check->close();
 
-// --- Busca de Sugestões ---
 $sugestoes = [];
 $stmt_sugestoes = $mysqli->prepare("SELECT autor_sugestao, data_sugestao, texto_sugestao FROM sugestoes WHERE servico_id = ? ORDER BY data_sugestao DESC");
 $stmt_sugestoes->bind_param("i", $id_servico);
@@ -97,23 +82,115 @@ $stmt_sugestoes->close();
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualizar: <?= htmlspecialchars($servico['Titulo'] ?? 'Serviço') ?></title>
     <link rel="stylesheet" href="css/view_servico.css">
-    <!-- Estilos CSS embutidos para os formulários -->
     <style>
-        .chamado-form-container {
-            margin-top: 40px;
-            padding: 25px;
-            border-top: 2px solid #f0ad4e;
+        .wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
             background-color: #fcfcfc;
             border-radius: 8px;
+            padding: 25px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            border-top: 2px solid #eee;
         }
-        .chamado-form-container .section-title {
+        .card.header-card {
+            border-top: 2px solid #f0ad4e;
+        }
+
+        .btn-back {
+            display: inline-block;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #212529;
+            font-weight: 500;
+        }
+        .btn-back:hover {
+            background-color: #e9ecef;
+        }
+
+        .breadcrumb {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin: 0 0 10px 0;
+        }
+        .breadcrumb a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+        }
+
+        .meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            border-bottom: 2px solid #f0ad4e;
+            padding-bottom: 10px;
             margin-top: 0;
-            border-bottom: none;
-            padding-bottom: 0;
+            margin-bottom: 20px;
         }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .info-item strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .info-item a {
+            color: #007bff;
+        }
+
+        .grupo {
+            margin-bottom: 20px;
+        }
+        .grupo:last-child {
+            margin-bottom: 0;
+        }
+        .grupo h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .grupo ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+        .grupo li {
+            margin-bottom: 8px;
+        }
+        .grupo p {
+            margin-top: 0;
+        }
+
+        .chamado-form-container {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
@@ -133,13 +210,14 @@ $stmt_sugestoes->close();
             font-size: 1em;
             line-height: 1.5;
             transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
         }
         .form-group textarea:focus {
             border-color: #f0ad4e;
             box-shadow: 0 0 0 3px rgba(240, 173, 78, 0.2);
             outline: none;
         }
-        .form-group .btn-primary {
+        .btn-primary {
             background-color: #f0ad4e;
             color: white;
             padding: 12px 25px;
@@ -150,13 +228,12 @@ $stmt_sugestoes->close();
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        .form-group .btn-primary:hover {
+        .btn-primary:hover {
             background-color: #ec971f;
         }
+
         .sugestoes-container {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            margin-top: 20px;
         }
         .sugestao-item {
             background-color: #f9fafb;
@@ -183,139 +260,136 @@ $stmt_sugestoes->close();
 
 <body>
     <div class="wrapper">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <a href="subcategoria.php?id=<?= $servico['ID_SubCategoria'] ?? '0' ?>" class="btn btn-back">← Voltar ao Catálogo</a>
+        <div>
+            <a href="subcategoria.php?id=<?= $servico['ID_SubCategoria'] ?? '0' ?>" class="btn-back">← Voltar ao Catálogo</a>
         </div>
 
-        <div class="header">
-            <div class="header-info">
-                <!-- Breadcrumb (caminho de navegação) para ajudar o usuário a se localizar. -->
-                <p class="meta breadcrumb">
-                    <a href="index.php">Categorias</a> &gt;
-                    <a href="categoria.php?id=<?= $servico['categoria_id'] ?? '0' ?>"><?= htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') ?></a> &gt;
-                    <?= htmlspecialchars($servico['subcategoria_titulo'] ?? 'N/A') ?>
-                </p>
-                <h1><?= htmlspecialchars($servico['Titulo'] ?? 'Serviço Sem Título') ?></h1>
-                <p class="meta">
-                    Ficha: <strong><?= htmlspecialchars($servico['codigo_ficha'] ?? '-') ?></strong> |
-                    Versão: <strong><?= htmlspecialchars($servico['versao'] ?? '-') ?></strong> |
-                    Status: <strong><?= htmlspecialchars(ucfirst($servico['status_ficha'] ?? '-')) ?></strong>
-                </p>
+        <div class="card header-card">
+            <p class="meta breadcrumb">
+                <a href="index.php">Categorias</a> &gt;
+                <a href="categoria.php?id=<?= $servico['categoria_id'] ?? '0' ?>"><?= htmlspecialchars($servico['categoria_titulo'] ?? 'N/A') ?></a> &gt;
+                <?= htmlspecialchars($servico['subcategoria_titulo'] ?? 'N/A') ?>
+            </p>
+            <h1><?= htmlspecialchars($servico['Titulo'] ?? 'Serviço Sem Título') ?></h1>
+            <p class="meta">
+                Ficha: <strong><?= htmlspecialchars($servico['codigo_ficha'] ?? '-') ?></strong> |
+                Versão: <strong><?= htmlspecialchars($servico['versao'] ?? '-') ?></strong> |
+                Status: <strong><?= htmlspecialchars(ucfirst($servico['status_ficha'] ?? '-')) ?></strong>
+            </p>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Descrição do Serviço</h2>
+            <p><?= nl2br(htmlspecialchars($servico['Descricao'] ?? 'Descrição não informada.')) ?></p>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Detalhes e Parâmetros</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Área Especialista:</strong>
+                    <span><?= htmlspecialchars($servico['area_especialista'] ?? 'Não informado') ?></span>
+                </div>
+                <div class="info-item">
+                    <strong>PO Responsável:</strong>
+                    <span><?= htmlspecialchars($servico['po_responsavel'] ?? 'Não informado') ?></span>
+                </div>
+                <div class="info-item" style="grid-column: 1 / -1;">
+                    <strong>Base de Conhecimento (KB):</strong>
+                    <?php
+                    $kb_link = $servico['KBs'] ?? '';
+                    if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
+                    ?>
+                        <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($kb_link) ?></a>
+                    <?php else: ?>
+                        <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
-        <h2 class="section-title">Descrição do Serviço</h2>
-        <!-- nl2br() converte quebras de linha (\n) em tags <br> para exibição correta no HTML. -->
-        <p><?= nl2br(htmlspecialchars($servico['Descricao'] ?? 'Descrição não informada.')) ?></p>
-
-        <h2 class="section-title">Detalhes e Parâmetros</h2>
-        <div class="info-grid">
-            <div class="info-item">
-                <strong>Área Especialista:</strong>
-                <span><?= htmlspecialchars($servico['area_especialista'] ?? 'Não informado') ?></span>
-            </div>
-            <div class="info-item">
-                <strong>PO Responsável:</strong>
-                <span><?= htmlspecialchars($servico['po_responsavel'] ?? 'Não informado') ?></span>
-            </div>
-        </div>
-
-        <!-- Seção de Diretrizes: só é exibida se houver diretrizes cadastradas. -->
         <?php if (!empty($diretrizes)): ?>
-            <h2 class="section-title">Diretrizes</h2>
-            <?php foreach ($diretrizes as $dir): ?>
-                <div class="grupo">
-                    <h4><?= htmlspecialchars($dir['Titulo']) ?></h4>
-                    <?php if (!empty($dir['itens'])): ?>
-                        <ul>
-                            <?php foreach ($dir['itens'] as $item): ?>
-                                <li><?= htmlspecialchars($item['Conteudo']) ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-
-        <div class="grupo">
-            <h4>Alçadas</h4>
-            <p><?= nl2br(htmlspecialchars($servico['alcadas'] ?? 'Não informado.')) ?></p>
-        </div>
-
-        <!-- Seção de Padrões: só é exibida se houver padrões cadastrados. -->
-        <?php if (!empty($padroes)): ?>
-            <h2 class="section-title">Padrões</h2>
-            <?php foreach ($padroes as $pad): ?>
-                <div class="grupo">
-                    <h4><?= htmlspecialchars($pad['Titulo']) ?></h4>
-                    <?php if (!empty($pad['itens'])): ?>
-                        <ul>
-                            <?php foreach ($pad['itens'] as $item): ?>
-                                <li><?= htmlspecialchars($item['Conteudo']) ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-        
-        <div class="grupo">
-            <h4>Procedimento de Exceção</h4>
-            <p><?= nl2br(htmlspecialchars($servico['procedimento_excecao'] ?? 'Não informado.')) ?></p>
-        </div>
-        
-        <div class="info-grid">
-             <div class="info-item" style="grid-column: 1 / -1;">
-                <strong>Base de Conhecimento (KB):</strong>
-                <?php
-                $kb_link = $servico['KBs'] ?? '';
-                // Verifica se o campo KB contém uma URL válida.
-                if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
-                ?>
-                    <!-- Se for uma URL, cria um link clicável. -->
-                    <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank"><?= htmlspecialchars($kb_link) ?></a>
-                <?php else: ?>
-                    <!-- Caso contrário, exibe o texto como está. -->
-                    <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
-                <?php endif; ?>
+            <div class="card">
+                <h2 class="section-title">Diretrizes</h2>
+                <?php foreach ($diretrizes as $dir): ?>
+                    <div class="grupo">
+                        <h4><?= htmlspecialchars($dir['Titulo']) ?></h4>
+                        <?php if (!empty($dir['itens'])): ?>
+                            <ul>
+                                <?php foreach ($dir['itens'] as $item): ?>
+                                    <li><?= htmlspecialchars($item['Conteudo']) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        </div>
+        <?php endif; ?>
 
-        <!-- Seção de Checklist: só é exibida se houver itens de checklist. -->
-        <?php if (!empty($checklist)): ?>
-            <h2 class="section-title">Checklist de Verificação</h2>
+        <div class="card">
+            <h2 class="section-title">Alçadas</h2>
             <div class="grupo">
-                <ul>
-                    <?php foreach ($checklist as $item): ?>
-                        <li>
-                            <strong><?= htmlspecialchars($item['NomeItem']) ?>:</strong>
-                            <?= htmlspecialchars($item['Observacao']) ?>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                <p><?= nl2br(htmlspecialchars($servico['alcadas'] ?? 'Não informado.')) ?></p>
+            </div>
+        </div>
+
+        <?php if (!empty($padroes)): ?>
+            <div class="card">
+                <h2 class="section-title">Padrões</h2>
+                <?php foreach ($padroes as $pad): ?>
+                    <div class="grupo">
+                        <h4><?= htmlspecialchars($pad['Titulo']) ?></h4>
+                        <?php if (!empty($pad['itens'])): ?>
+                            <ul>
+                                <?php foreach ($pad['itens'] as $item): ?>
+                                    <li><?= htmlspecialchars($item['Conteudo']) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        
+        <div class="card">
+            <h2 class="section-title">Procedimento de Exceção</h2>
+            <div class="grupo">
+                <p><?= nl2br(htmlspecialchars($servico['procedimento_excecao'] ?? 'Não informado.')) ?></p>
+            </div>
+        </div>
+
+        <?php if (!empty($checklist)): ?>
+            <div class="card">
+                <h2 class="section-title">Checklist de Verificação</h2>
+                <div class="grupo">
+                    <ul>
+                        <?php foreach ($checklist as $item): ?>
+                            <li>
+                                <strong><?= htmlspecialchars($item['NomeItem']) ?>:</strong>
+                                <?= htmlspecialchars($item['Observacao']) ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
             </div>
         <?php endif; ?>
 
-        <!-- Formulário para abertura de chamado no GLPI, integrado à página. -->
-        <div class="chamado-form-container">
+        <div class="card">
             <h2 class="section-title">Abrir um Chamado para este Serviço</h2>
             <form action="../chamado/processar_chamado.php" method="POST">
-                <!-- Campo oculto que envia o ID do serviço junto com o formulário. -->
                 <input type="hidden" name="servico_id" value="<?= $servico['ID'] ?>">
                 <div class="form-group">
                     <label for="descricao_chamado">Descreva sua solicitação:</label>
                     <textarea id="descricao_chamado" name="descricao_chamado" rows="5" required placeholder="Forneça detalhes sobre o seu problema ou solicitação..."></textarea>
                 </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Criar Chamado</button>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="submit" class="btn-primary">Criar Chamado</button>
                 </div>
             </form>
         </div>
-
-        <!-- Secção de Sugestões -->
-        <div class="sugestoes-container">
+        
+        <div class="card">
             <h2 class="section-title">Sugestões de Melhoria</h2>
-            
             <div class="chamado-form-container" style="margin-top: 0; border-top: none; padding-top: 10px;">
                 <form action="processar_sugestao.php" method="POST">
                     <input type="hidden" name="servico_id" value="<?= $servico['ID'] ?>">
@@ -323,26 +397,29 @@ $stmt_sugestoes->close();
                         <label for="texto_sugestao">Deixe sua sugestão para este serviço:</label>
                         <textarea id="texto_sugestao" name="texto_sugestao" rows="4" required placeholder="Escreva aqui sua sugestão de melhoria..."></textarea>
                     </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Enviar Sugestão</button>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <button type="submit" class="btn-primary">Enviar Sugestão</button>
                     </div>
                 </form>
             </div>
 
             <?php if (count($sugestoes) > 0): ?>
-                <?php foreach ($sugestoes as $sugestao): ?>
-                    <div class="sugestao-item">
-                        <p class="sugestao-meta">
-                            <strong><?= htmlspecialchars($sugestao['autor_sugestao']) ?></strong> em 
-                            <?= date('d/m/Y \à\s H:i', strtotime($sugestao['data_sugestao'])) ?>
-                        </p>
-                        <p class="sugestao-texto"><?= nl2br(htmlspecialchars($sugestao['texto_sugestao'])) ?></p>
-                    </div>
-                <?php endforeach; ?>
+                <div class="sugestoes-container">
+                    <?php foreach ($sugestoes as $sugestao): ?>
+                        <div class="sugestao-item">
+                            <p class="sugestao-meta">
+                                <strong><?= htmlspecialchars($sugestao['autor_sugestao']) ?></strong> em 
+                                <?= date('d/m/Y \à\s H:i', strtotime($sugestao['data_sugestao'])) ?>
+                            </p>
+                            <p class="sugestao-texto"><?= nl2br(htmlspecialchars($sugestao['texto_sugestao'])) ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             <?php else: ?>
                 <p style="text-align: center; margin-top: 20px;">Ainda não há sugestões para este serviço. Seja o primeiro a contribuir!</p>
             <?php endif; ?>
         </div>
+
     </div>
 </body>
 </html>
