@@ -1,23 +1,13 @@
 <?php
-// Inicia a sessão para utilizar variáveis de sessão, como o usuário logado.
 session_start();
-// Inclui o arquivo de conexão com o banco de dados.
 require_once '../../conexao.php';
 
-// Verifica se a conexão com o banco de dados foi bem-sucedida.
 if ($mysqli->connect_errno) {
   die("Erro de conexão com o banco de dados: " . $mysqli->connect_error);
 }
 
 // --- Funções Auxiliares de Banco de Dados ---
 
-/**
- * Busca um único registro em uma tabela pelo seu ID.
- * @param mysqli $mysqli A instância da conexão com o banco.
- * @param string $table O nome da tabela.
- * @param int $id O ID do registro a ser buscado.
- * @return array|null Retorna um array associativo com os dados do registro ou null se não for encontrado.
- */
 function fetch_by_id($mysqli, $table, $id)
 {
   $stmt = $mysqli->prepare("SELECT * FROM $table WHERE ID = ?");
@@ -26,13 +16,21 @@ function fetch_by_id($mysqli, $table, $id)
   return $stmt->get_result()->fetch_assoc();
 }
 
-/**
- * Busca todos os registros de uma tabela.
- * @param mysqli $mysqli A instância da conexão com o banco.
- * @param string $table O nome da tabela.
- * @param string|null $order_by A coluna para ordenação (ex: "Titulo ASC").
- * @return array Retorna um array de registros.
- */
+function fetch_glpi_revisor_by_id($mysqli, $id)
+{
+  $query = "
+        SELECT u.id AS ID, CONCAT(u.firstname, ' ', u.realname) AS nome
+        FROM glpi_users u
+        JOIN glpi_profiles_users pu ON u.id = pu.users_id
+        JOIN glpi_profiles p ON pu.profiles_id = p.id
+        WHERE p.name = 'Revisor' AND u.is_active = 1 AND u.id = ?
+    ";
+  $stmt = $mysqli->prepare($query);
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  return $stmt->get_result()->fetch_assoc();
+}
+
 function fetch_all($mysqli, $table, $order_by = null)
 {
   $data = [];
@@ -49,16 +47,6 @@ function fetch_all($mysqli, $table, $order_by = null)
   return $data;
 }
 
-/**
- * Busca dados relacionados que possuem uma estrutura de mestre-detalhe (ex: Diretrizes e seus Itens).
- * @param mysqli $mysqli A instância da conexão.
- * @param int $servico_id O ID do serviço principal.
- * @param string $main_table Tabela principal (ex: 'diretriz').
- * @param string $item_table Tabela de itens (ex: 'itemdiretriz').
- * @param string $join_col_main Coluna de junção na tabela principal (ex: 'ID_Servico').
- * @param string $join_col_item Coluna de junção na tabela de itens (ex: 'ID_Diretriz').
- * @return array Retorna um array agrupado com os títulos e seus respectivos itens.
- */
 function fetch_related_items($mysqli, $servico_id, $main_table, $item_table, $join_col_main, $join_col_item)
 {
   $items = [];
@@ -79,12 +67,6 @@ function fetch_related_items($mysqli, $servico_id, $main_table, $item_table, $jo
   return array_values($temp_items);
 }
 
-/**
- * Busca os itens do checklist associados a um serviço.
- * @param mysqli $mysqli A instância da conexão.
- * @param int $servico_id O ID do serviço.
- * @return array Retorna um array com os itens e observações do checklist.
- */
 function fetch_checklist($mysqli, $servico_id)
 {
   $checklist = [];
@@ -98,10 +80,6 @@ function fetch_checklist($mysqli, $servico_id)
   return $checklist;
 }
 
-/**
- * Sincroniza dados relacionados (padrão "delete-then-insert").
- * Remove todos os dados antigos e insere os novos enviados pelo formulário.
- */
 function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table, $join_col_main, $join_col_item)
 {
   $mysqli->query("DELETE FROM $main_table WHERE $join_col_main = $servico_id");
@@ -122,9 +100,6 @@ function sync_related_data($mysqli, $servico_id, $data, $main_table, $item_table
   }
 }
 
-/**
- * Sincroniza os dados do checklist (padrão "delete-then-insert").
- */
 function sync_checklist_data($mysqli, $servico_id, $checklist_data)
 {
   $mysqli->query("DELETE FROM checklist WHERE ID_Servico = $servico_id");
@@ -138,40 +113,49 @@ function sync_checklist_data($mysqli, $servico_id, $checklist_data)
   }
 }
 
-/**
- * Função de conveniência para redirecionar o usuário e encerrar o script.
- * @param string $location A URL de destino.
- */
 function redirect($location)
 {
   header("Location: " . $location);
   exit;
 }
 
-/**
- * Retorna uma label formatada para um determinado status da ficha.
- * @param string $status O status da ficha (ex: 'em_revisao').
- * @return string A label formatada com emoji (ex: '🔍 Em revisão').
- */
 function get_status_label($status)
 {
   $labels = ['rascunho' => '📝 Em Cadastro', 'em_revisao' => '🔍 Em revisão', 'revisada' => '✅ Revisada', 'em_aprovacao' => '🕒 Em aprovação', 'aprovada' => '☑️ Aprovada', 'publicado' => '📢 Publicado', 'cancelada' => '🚫 Cancelada', 'reprovado_revisor' => '❌ Reprovado pelo Revisor', 'reprovado_po' => '❌ Reprovado pelo PO', 'substituida' => '♻️ Substituída', 'descontinuada' => '⏳ Descontinuada'];
   return $labels[$status] ?? '—';
 }
 
-// --- Lógica de Simulação de Usuário (Painel de Debug) ---
-$lista_revisores_debug = fetch_all($mysqli, 'revisores', 'nome ASC');
-$lista_pos_debug = fetch_all($mysqli, 'pos', 'nome ASC');
-$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD']; // Usuário padrão
+// --- Carregamento de Dados Unificado ---
+$lista_pos = fetch_all($mysqli, 'pos', 'nome ASC');
+$subcategorias = fetch_all($mysqli, 'subcategoria', 'Titulo ASC');
 
-// Se um usuário está sendo simulado via GET, sobrepõe o usuário padrão.
+$lista_revisores = [];
+$query_revisores_glpi = "
+    SELECT u.id AS ID, CONCAT(u.firstname, ' ', u.realname) AS nome, ue.email
+    FROM glpi_users u
+    JOIN glpi_profiles_users pu ON u.id = pu.users_id
+    JOIN glpi_profiles p ON pu.profiles_id = p.id
+    LEFT JOIN glpi_useremails ue ON u.id = ue.users_id AND ue.is_default = 1
+    WHERE p.name = 'Revisor' AND u.is_active = 1
+    ORDER BY nome ASC
+";
+$res_revisores = $mysqli->query($query_revisores_glpi);
+if ($res_revisores) {
+  $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
+}
+
+// --- Lógica de Simulação de Usuário (Painel de Debug) ---
+$lista_revisores_debug = $lista_revisores; // Usa a mesma lista do GLPI
+$lista_pos_debug = $lista_pos;
+$usuario_logado = ['tipo' => 'criador', 'id' => 0, 'nome' => 'Service-Desk/WD'];
+
 if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
   $simulacao = explode('_', $_GET['simular_usuario'], 2);
   $tipo_simulado = $simulacao[0];
   $id_simulado = intval($simulacao[1]);
 
   if ($tipo_simulado === 'revisor') {
-    $user_data = fetch_by_id($mysqli, 'revisores', $id_simulado);
+    $user_data = fetch_glpi_revisor_by_id($mysqli, $id_simulado);
     if ($user_data) {
       $usuario_logado = ['tipo' => 'revisor', 'id' => $user_data['ID'], 'nome' => $user_data['nome']];
     }
@@ -182,7 +166,6 @@ if (isset($_GET['simular_usuario']) && !empty($_GET['simular_usuario'])) {
     }
   }
 }
-// Armazena o usuário logado (real ou simulado) na sessão.
 $_SESSION['usuario_logado'] = $usuario_logado;
 
 
@@ -198,7 +181,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
   $post_data = $_POST;
   $nome_usuario_logado = $usuario_logado['nome'];
 
-  // O switch controla toda a lógica de negócio baseada na ação do botão clicado.
   switch ($acao) {
     case 'nova_versao_auto':
       $servico_antigo = fetch_by_id($mysqli, 'servico', $id_post);
@@ -230,7 +212,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       }
       break;
     case 'publicar_ficha':
-      // Publica a ficha atual e marca as versões anteriores do mesmo código como 'substituida'.
       $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = 'publicado' WHERE ID = ?");
       $stmt->bind_param("i", $id_post);
       $stmt->execute();
@@ -243,56 +224,46 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       redirect("../list/manage_listservico.php?sucesso=1");
       break;
     case 'criar_servico':
-      // Insere um serviço completamente novo no banco.
       $stmt = $mysqli->prepare("INSERT INTO servico (versao, Titulo, Descricao, ID_SubCategoria, KBs, UltimaAtualizacao, area_especialista, po_responsavel, alcadas, procedimento_excecao, observacoes, usuario_criador, status_ficha) VALUES ('1.0', ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, 'rascunho')");
       $stmt->bind_param("ssisssssss", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado);
       $stmt->execute();
       $new_id = $stmt->insert_id;
-      // Gera um código de ficha único baseado no ID.
       $codigo_ficha = "FCH-" . str_pad($new_id, 4, "0", STR_PAD_LEFT);
       $mysqli->query("UPDATE servico SET codigo_ficha = '$codigo_ficha' WHERE ID = $new_id");
-      // Sincroniza os dados relacionados.
       sync_related_data($mysqli, $new_id, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $new_id, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $new_id, $post_data['checklist'] ?? []);
       redirect("../list/manage_listservico.php?sucesso=1");
       break;
     case 'salvar_rascunho':
-      // Atualiza os dados de um serviço sem alterar seu status.
       $sql = "UPDATE servico SET Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, UltimaAtualizacao = NOW(), area_especialista = ?, po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, observacoes = ?, usuario_criador = ? WHERE ID = ?";
       $stmt = $mysqli->prepare($sql);
       $stmt->bind_param("ssisssssssi", $post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado, $id_post);
       $stmt->execute();
-      // Sincroniza os dados relacionados.
       sync_related_data($mysqli, $id_post, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $id_post, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $id_post, $post_data['checklist'] ?? []);
       redirect("manage_addservico.php?id=$id_post&sucesso=1");
       break;
     case 'excluir':
-      // Exclui um serviço permanentemente.
       $delete_id = intval($_POST['delete_id']);
       $stmt = $mysqli->prepare("DELETE FROM servico WHERE ID = ?");
       $stmt->bind_param("i", $delete_id);
       $stmt->execute();
       redirect("../list/manage_listservico.php?excluido=1");
       break;
-    // Casos de mudança de status no fluxo de trabalho.
     case 'enviar_revisao':
     case 'enviar_revisao_novamente':
     case 'aprovar_revisor':
     case 'aprovar_po':
     case 'reprovar_revisor':
     case 'reprovar_po':
-      // Mapeia a ação para o novo status da ficha.
       $status_map = ['enviar_revisao' => 'em_revisao', 'enviar_revisao_novamente' => 'em_revisao', 'aprovar_revisor' => 'revisada', 'aprovar_po' => 'aprovada', 'reprovar_revisor' => 'reprovado_revisor', 'reprovar_po' => 'reprovado_po'];
       $novo_status = $status_map[$acao];
       $justificativa = in_array($acao, ['reprovar_revisor', 'reprovar_po', 'enviar_revisao_novamente']) ? ($post_data['justificativa'] ?? 'Sem justificativa') : null;
-      // Constrói a query de UPDATE dinamicamente.
       $sql = "UPDATE servico SET Titulo = ?, Descricao = ?, ID_SubCategoria = ?, KBs = ?, UltimaAtualizacao = NOW(), area_especialista = ?, po_responsavel = ?, alcadas = ?, procedimento_excecao = ?, observacoes = ?, usuario_criador = ?, status_ficha = ?";
       $params = [$post_data['nome_servico'], $post_data['descricao_servico'], $post_data['id_subcategoria'], $post_data['base_conhecimento'], $post_data['area_especialista'], $post_data['po_responsavel'], $post_data['alcadas'], $post_data['procedimento_excecao'], $post_data['observacoes_gerais'], $nome_usuario_logado, $novo_status];
       $types = "ssissssssss";
-      // Adiciona campos extras à query conforme a ação.
       if ($justificativa) {
         $sql .= ", justificativa_rejeicao = ?";
         $params[] = $justificativa;
@@ -313,7 +284,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       sync_related_data($mysqli, $id_post, $post_data['diretrizes'] ?? [], 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
       sync_related_data($mysqli, $id_post, $post_data['padroes'] ?? [], 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
       sync_checklist_data($mysqli, $id_post, $post_data['checklist'] ?? []);
-      // Se for o primeiro envio para revisão, associa os revisores à ficha.
       if ($acao === 'enviar_revisao') {
         $mysqli->query("DELETE FROM servico_revisores WHERE servico_id = $id_post");
         if (!empty($post_data['revisores_ids'])) {
@@ -328,7 +298,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['acao'])) {
       break;
     case 'enviar_para_aprovacao':
     case 'cancelar_ficha':
-      // Ações simples que apenas mudam o status.
       $status_map_simple = ['enviar_para_aprovacao' => 'em_aprovacao', 'cancelar_ficha' => 'cancelada'];
       $novo_status = $status_map_simple[$acao];
       $stmt = $mysqli->prepare("UPDATE servico SET status_ficha = ? WHERE ID = ?");
@@ -358,34 +327,14 @@ if ($modo_edicao) {
   if (!$dados_edicao) {
     die("Serviço não encontrado.");
   }
-  // Permite forçar um status via GET para fins de debug.
   if (isset($_GET['forcar_status']) && !empty($_GET['forcar_status'])) {
     $dados_edicao['status_ficha'] = $_GET['forcar_status'];
   }
-  // Carrega todos os dados relacionados ao serviço.
   $diretrizes = fetch_related_items($mysqli, $id, 'diretriz', 'itemdiretriz', 'ID_Servico', 'ID_Diretriz');
   $padroes = fetch_related_items($mysqli, $id, 'padrao', 'itempadrao', 'ID_Servico', 'ID_Padrao');
   $checklist = fetch_checklist($mysqli, $id);
   $revisores_servico_raw = fetch_all($mysqli, 'servico_revisores WHERE servico_id = ' . $id, null);
   $revisores_servico = array_column($revisores_servico_raw, 'revisor_id');
-}
-
-// Carrega dados gerais para preencher os formulários.
-$subcategorias = fetch_all($mysqli, 'subcategoria', 'Titulo ASC');
-$lista_pos = fetch_all($mysqli, 'pos', 'nome ASC');
-$lista_revisores = [];
-$query_revisores_glpi = "
-    SELECT u.id AS ID, CONCAT(u.firstname, ' ', u.realname) AS nome, ue.email
-    FROM glpi_users u
-    JOIN glpi_profiles_users pu ON u.id = pu.users_id
-    JOIN glpi_profiles p ON pu.profiles_id = p.id
-    LEFT JOIN glpi_useremails ue ON u.id = ue.users_id AND ue.is_default = 1
-    WHERE p.name = 'Revisor' AND u.is_active = 1
-    ORDER BY nome ASC
-";
-$res_revisores = $mysqli->query($query_revisores_glpi);
-if ($res_revisores) {
-  $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
 }
 
 // --- Lógica de Permissões e Estado da UI ---
@@ -394,12 +343,9 @@ $id_usuario_atual = $usuario_logado['id'];
 $nome_usuario_atual = $usuario_logado['nome'];
 $status = $dados_edicao['status_ficha'] ?? 'rascunho';
 
-// Verifica se o usuário logado é um revisor autorizado para esta ficha específica.
 $isRevisorAutorizado = $tipo_usuario_atual === 'revisor' && in_array($id_usuario_atual, $revisores_servico);
-// Verifica se o usuário logado é o PO responsável pela ficha.
 $isPOAutorizado = $tipo_usuario_atual === 'po' && ($nome_usuario_atual === ($dados_edicao['po_responsavel'] ?? ''));
 
-// Define as permissões para cada ação com base no tipo de usuário e no status da ficha.
 $podeSalvarRascunho = $tipo_usuario_atual === 'criador' && in_array($status, ['rascunho', 'reprovado_revisor', 'reprovado_po']);
 $podeEnviarRevisao = $podeSalvarRascunho;
 $podeEnviarAprovacao = $tipo_usuario_atual === 'criador' && $status === 'revisada';
@@ -411,7 +357,6 @@ $podeExcluir = $modo_edicao && $podeSalvarRascunho;
 $podeAprovarRevisor = $status === 'em_revisao' && $isRevisorAutorizado;
 $podeAprovarPO = $status === 'em_aprovacao' && $isPOAutorizado;
 
-// Determina se o formulário inteiro deve ser somente leitura.
 $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'descontinuada']) || ($tipo_usuario_atual === 'revisor' && !$isRevisorAutorizado && $status === 'em_revisao') || ($tipo_usuario_atual === 'po' && !$isPOAutorizado && $status === 'em_aprovacao');
 ?>
 <!DOCTYPE html>
@@ -424,14 +369,13 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
 </head>
 
 <body>
-  <!-- O painel de debug permite testar a visualização do formulário sob diferentes status e usuários. -->
   <div id="debug-panel">
     <h4>Painel de Testes</h4>
     <label for="debug-status-ficha">Forçar Status:</label>
     <select id="debug-status-ficha">
       <option value="">-- Status Atual --</option>
       <?php $todos_status = ['rascunho', 'em_revisao', 'revisada', 'em_aprovacao', 'aprovada', 'publicado', 'cancelada', 'reprovado_revisor', 'reprovado_po', 'substituida', 'descontinuada'];
-      foreach ($todos_status as $status_opcao): ?>
+      foreach ($todos_status as $status_opcao) : ?>
         <option value="<?= $status_opcao ?>" <?= (($dados_edicao['status_ficha'] ?? '') === $status_opcao) ? 'selected' : '' ?>><?= ucfirst(str_replace('_', ' ', $status_opcao)) ?></option>
       <?php endforeach; ?>
     </select>
@@ -439,12 +383,12 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     <select id="debug-simular-usuario">
       <option value="criador_0" <?= $usuario_logado['tipo'] === 'criador' ? 'selected' : '' ?>>Criador (Padrão)</option>
       <optgroup label="Revisores">
-        <?php foreach ($lista_revisores_debug as $rev): ?>
+        <?php foreach ($lista_revisores_debug as $rev) : ?>
           <option value="revisor_<?= $rev['ID'] ?>" <?= ($usuario_logado['tipo'] === 'revisor' && $usuario_logado['id'] == $rev['ID']) ? 'selected' : '' ?>><?= htmlspecialchars($rev['nome']) ?></option>
         <?php endforeach; ?>
       </optgroup>
       <optgroup label="Product Owners">
-        <?php foreach ($lista_pos_debug as $po): ?>
+        <?php foreach ($lista_pos_debug as $po) : ?>
           <option value="po_<?= $po['ID'] ?>" <?= ($usuario_logado['tipo'] === 'po' && $usuario_logado['id'] == $po['ID']) ? 'selected' : '' ?>><?= htmlspecialchars($po['nome']) ?></option>
         <?php endforeach; ?>
       </optgroup>
@@ -456,11 +400,10 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     <h2 class="form-title"><?php echo $modo_edicao ? "Editar Ficha " . htmlspecialchars($dados_edicao['codigo_ficha'] ?? '') . " (v" . htmlspecialchars($dados_edicao['versao'] ?? '') . ")" : "Adicionar Serviço"; ?></h2>
     <a href="../list/manage_listservico.php" class="btn-back">← Voltar para lista</a>
 
-    <!-- Exibição de informações contextuais como status e justificativas de reprovação. -->
-    <?php if ($modo_edicao): ?><p><strong>Status da Ficha:</strong> <?php echo get_status_label($status); ?></p><?php endif; ?>
+    <?php if ($modo_edicao) : ?><p><strong>Status da Ficha:</strong> <?php echo get_status_label($status); ?></p><?php endif; ?>
     <div id="form-error-message" class="mensagem erro" style="display:none;"></div>
-    <?php if (!empty($dados_edicao['justificativa_rejeicao']) && in_array($status, ['rascunho', 'em_revisao', 'reprovado_revisor', 'reprovado_po'])): ?><div class="rejection-notice"><strong>Justificativa da Reprovação:</strong><br><em><?php echo nl2br(htmlspecialchars($dados_edicao['justificativa_rejeicao'])); ?></em></div><?php endif; ?>
-    <?php if (!empty($mensagem)): ?><div class="mensagem"><?php echo htmlspecialchars($mensagem); ?></div><?php endif; ?>
+    <?php if (!empty($dados_edicao['justificativa_rejeicao']) && in_array($status, ['rascunho', 'em_revisao', 'reprovado_revisor', 'reprovado_po'])) : ?><div class="rejection-notice"><strong>Justificativa da Reprovação:</strong><br><em><?php echo nl2br(htmlspecialchars($dados_edicao['justificativa_rejeicao'])); ?></em></div><?php endif; ?>
+    <?php if (!empty($mensagem)) : ?><div class="mensagem"><?php echo htmlspecialchars($mensagem); ?></div><?php endif; ?>
 
     <form id="form-ficha" method="post">
       <div class="form-grid">
@@ -474,15 +417,22 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
           <label>PO Responsável:
             <select name="po_responsavel" required <?= $isReadOnly ? 'disabled' : '' ?>>
               <option value="">Selecione um PO...</option>
-              <?php foreach ($lista_pos as $po): ?><option value="<?= htmlspecialchars($po['nome']) ?>" <?= (($dados_edicao['po_responsavel'] ?? '') === $po['nome']) ? 'selected' : '' ?>><?= htmlspecialchars($po['nome']) ?></option><?php endforeach; ?>
+              <?php foreach ($lista_pos as $po) : ?><option value="<?= htmlspecialchars($po['nome']) ?>" <?= (($dados_edicao['po_responsavel'] ?? '') === $po['nome']) ? 'selected' : '' ?>><?= htmlspecialchars($po['nome']) ?></option><?php endforeach; ?>
             </select>
           </label>
 
-          <?php if ($modo_edicao): ?>
+          <label>Subcategoria:
+            <select name="id_subcategoria" required <?= $isReadOnly ? 'disabled' : '' ?>>
+              <option value="">Selecione uma subcategoria</option>
+              <?php foreach ($subcategorias as $sub) : ?><option value="<?php echo $sub['ID']; ?>" <?php if (($dados_edicao['ID_SubCategoria'] ?? '') == $sub['ID']) echo 'selected'; ?>><?php echo htmlspecialchars($sub['Titulo']); ?></option><?php endforeach; ?>
+            </select>
+          </label>
+
+          <?php if ($modo_edicao) : ?>
             <div class="revisores-container">
               <label>Revisores Designados</label>
               <div class="checkbox-list">
-                <?php foreach ($lista_revisores as $revisor): ?><label class="checkbox-label"><input type="checkbox" name="revisores_ids[]" value="<?= $revisor['ID'] ?>" <?= in_array($revisor['ID'], $revisores_servico) ? 'checked' : '' ?> <?= $isReadOnly || !$podeEnviarRevisao ? 'disabled' : '' ?>> <?= htmlspecialchars($revisor['nome']) ?></label><?php endforeach; ?>
+                <?php foreach ($lista_revisores as $revisor) : ?><label class="checkbox-label"><input type="checkbox" name="revisores_ids[]" value="<?= $revisor['ID'] ?>" <?= in_array($revisor['ID'], $revisores_servico) ? 'checked' : '' ?> <?= $isReadOnly || !$podeEnviarRevisao ? 'disabled' : '' ?>> <?= htmlspecialchars($revisor['nome']) ?></label><?php endforeach; ?>
               </div>
             </div>
           <?php endif; ?>
@@ -490,19 +440,19 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
           <h3>Diretrizes</h3>
           <div id="diretrizes">
             <?php $index = 0;
-            foreach ($diretrizes as $diretriz): ?>
+            foreach ($diretrizes as $diretriz) : ?>
               <div class="grupo">
                 <label>Diretriz <?= $index + 1 ?> - Título:</label>
                 <textarea name="diretrizes[<?= $index ?>][titulo]" rows="1" maxlength="255" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($diretriz['titulo']) ?></textarea>
                 <div id="itens_diretriz_<?= $index ?>">
-                  <?php foreach ($diretriz['itens'] as $item): ?><textarea name="diretrizes[<?= $index ?>][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item da diretriz" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
+                  <?php foreach ($diretriz['itens'] as $item) : ?><textarea name="diretrizes[<?= $index ?>][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item da diretriz" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
                 </div>
-                <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(<?= $index ?>)">+ Item</button><?php endif; ?>
+                <?php if (!$isReadOnly) : ?><button type="button" class="btn-salvar" onclick="adicionarItemDiretriz(<?= $index ?>)">+ Item</button><?php endif; ?>
               </div>
             <?php $index++;
             endforeach; ?>
           </div>
-          <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarDiretriz()">+ Adicionar Diretriz</button><?php endif; ?>
+          <?php if (!$isReadOnly) : ?><button type="button" class="btn-salvar" onclick="adicionarDiretriz()">+ Adicionar Diretriz</button><?php endif; ?>
         </div>
 
         <div class="form-column">
@@ -511,19 +461,19 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
           <h3>Padrões</h3>
           <div id="padroes">
             <?php $index = 0;
-            foreach ($padroes as $padrao): ?>
+            foreach ($padroes as $padrao) : ?>
               <div class="grupo">
                 <label>Padrão <?= $index + 1 ?> - Título:</label>
                 <textarea name="padroes[<?= $index ?>][titulo]" rows="1" maxlength="255" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($padrao['titulo']) ?></textarea>
                 <div id="itens_padrao_<?= $index ?>">
-                  <?php foreach ($padrao['itens'] as $item): ?><textarea name="padroes[<?= $index ?>][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item do padrão" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
+                  <?php foreach ($padrao['itens'] as $item) : ?><textarea name="padroes[<?= $index ?>][itens][]" rows="1" maxlength="1000" oninput="autoResize(this)" placeholder="Item do padrão" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item) ?></textarea><br><?php endforeach; ?>
                 </div>
-                <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(<?= $index ?>)">+ Item</button><?php endif; ?>
+                <?php if (!$isReadOnly) : ?><button type="button" class="btn-salvar" onclick="adicionarItemPadrao(<?= $index ?>)">+ Item</button><?php endif; ?>
               </div>
             <?php $index++;
             endforeach; ?>
           </div>
-          <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarPadrao()">+ Adicionar Padrão</button><?php endif; ?>
+          <?php if (!$isReadOnly) : ?><button type="button" class="btn-salvar" onclick="adicionarPadrao()">+ Adicionar Padrão</button><?php endif; ?>
 
           <label>Procedimento de Exceção:<textarea name="procedimento_excecao" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['procedimento_excecao'] ?? '') ?></textarea></label>
           <label>Base de Conhecimento:<textarea name="base_conhecimento" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea></label>
@@ -531,7 +481,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
           <h3>Checklist de Verificação</h3>
           <div id="checklist">
             <?php $index = 0;
-            foreach ($checklist as $item): ?>
+            foreach ($checklist as $item) : ?>
               <div class="grupo">
                 <label>Item <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][item]" rows="1" maxlength="255" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['item']) ?></textarea>
                 <label>Observação <?= $index + 1 ?>:</label><textarea name="checklist[<?= $index ?>][observacao]" rows="1" maxlength="1000" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?= htmlspecialchars($item['observacao']) ?></textarea>
@@ -539,34 +489,27 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             <?php $index++;
             endforeach; ?>
           </div>
-          <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarChecklist()">+ Adicionar Item</button><?php endif; ?>
+          <?php if (!$isReadOnly) : ?><button type="button" class="btn-salvar" onclick="adicionarChecklist()">+ Adicionar Item</button><?php endif; ?>
 
           <h3>Observações Gerais</h3><textarea name="observacoes_gerais" rows="4" maxlength="1000" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['observacoes'] ?? '') ?></textarea>
 
-          <label>Subcategoria:
-            <select name="id_subcategoria" required <?= $isReadOnly ? 'disabled' : '' ?>>
-              <option value="">Selecione uma subcategoria</option>
-              <?php foreach ($subcategorias as $sub): ?><option value="<?php echo $sub['ID']; ?>" <?php if (($dados_edicao['ID_SubCategoria'] ?? '') == $sub['ID']) echo 'selected'; ?>><?php echo htmlspecialchars($sub['Titulo']); ?></option><?php endforeach; ?>
-            </select>
-          </label>
         </div>
       </div>
-      <!-- A seção de botões de ação é totalmente dinâmica, exibindo apenas as ações permitidas para o usuário/status atual. -->
       <div class="form-actions-horizontal">
-        <?php if (!$modo_edicao): ?>
+        <?php if (!$modo_edicao) : ?>
           <button type="submit" name="acao" value="criar_servico" class="btn-salvar">Criar Serviço</button>
-        <?php else: ?>
-          <?php if ($podeSalvarRascunho): ?><button type="submit" name="acao" value="salvar_rascunho" class="btn-info">Salvar Alterações</button><?php endif; ?>
-          <?php if ($podeEnviarRevisao): ?><button type="submit" id="btn-enviar-revisao" name="acao" value="enviar_revisao" class="btn-salvar">Enviar para Revisão</button><?php endif; ?>
-          <?php if ($podeEnviarAprovacao): ?><button type="submit" name="acao" value="enviar_para_aprovacao" class="btn-salvar">Enviar para Aprovação do PO</button><?php endif; ?>
-          <?php if ($podeDevolverRevisao && $tipo_usuario_atual === 'criador'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
-          <?php if ($podePublicar): ?><button type="submit" name="acao" value="publicar_ficha" class="btn-salvar">Publicar Ficha</button><?php endif; ?>
-          <?php if ($podeCancelar): ?><button type="submit" name="acao" value="cancelar_ficha" class="btn-danger" onclick="return confirm('Tem certeza que deseja cancelar esta ficha?')">Cancelar</button><?php endif; ?>
-          <?php if ($podeCriarNovaVersao): ?><button type="submit" name="acao" value="nova_versao_auto" class="btn-salvar">Nova Versão</button><?php endif; ?>
-          <?php if ($podeAprovarRevisor): ?><button type="submit" name="acao" value="aprovar_revisor" class="btn-salvar">Concluir Revisão</button><button type="button" class="btn-danger" onclick="mostrarJustificativa('reprovar_revisor')">Reprovar</button><?php endif; ?>
-          <?php if ($podeAprovarPO): ?><button type="submit" name="acao" value="aprovar_po" class="btn-salvar">Aprovar Ficha</button><?php endif; ?>
-          <?php if ($podeDevolverRevisao && $tipo_usuario_atual === 'po'): ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
-          <?php if ($podeExcluir): ?>
+        <?php else : ?>
+          <?php if ($podeSalvarRascunho) : ?><button type="submit" name="acao" value="salvar_rascunho" class="btn-info">Salvar Alterações</button><?php endif; ?>
+          <?php if ($podeEnviarRevisao) : ?><button type="submit" id="btn-enviar-revisao" name="acao" value="enviar_revisao" class="btn-salvar">Enviar para Revisão</button><?php endif; ?>
+          <?php if ($podeEnviarAprovacao) : ?><button type="submit" name="acao" value="enviar_para_aprovacao" class="btn-salvar">Enviar para Aprovação do PO</button><?php endif; ?>
+          <?php if ($podeDevolverRevisao && $tipo_usuario_atual === 'criador') : ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
+          <?php if ($podePublicar) : ?><button type="submit" name="acao" value="publicar_ficha" class="btn-salvar">Publicar Ficha</button><?php endif; ?>
+          <?php if ($podeCancelar) : ?><button type="submit" name="acao" value="cancelar_ficha" class="btn-danger" onclick="return confirm('Tem certeza que deseja cancelar esta ficha?')">Cancelar</button><?php endif; ?>
+          <?php if ($podeCriarNovaVersao) : ?><button type="submit" name="acao" value="nova_versao_auto" class="btn-salvar">Nova Versão</button><?php endif; ?>
+          <?php if ($podeAprovarRevisor) : ?><button type="submit" name="acao" value="aprovar_revisor" class="btn-salvar">Concluir Revisão</button><button type="button" class="btn-danger" onclick="mostrarJustificativa('reprovar_revisor')">Reprovar</button><?php endif; ?>
+          <?php if ($podeAprovarPO) : ?><button type="submit" name="acao" value="aprovar_po" class="btn-salvar">Aprovar Ficha</button><?php endif; ?>
+          <?php if ($podeDevolverRevisao && $tipo_usuario_atual === 'po') : ?><button type="button" class="btn-info" onclick="mostrarJustificativa('enviar_revisao_novamente')">Devolver para Revisão</button><?php endif; ?>
+          <?php if ($podeExcluir) : ?>
             <input type="hidden" name="delete_id" value="<?php echo $id; ?>">
             <button type="submit" name="acao" value="excluir" class="btn-danger" onclick="return confirm('Tem certeza que deseja excluir permanentemente este serviço?')">Excluir</button>
           <?php endif; ?>
@@ -575,7 +518,6 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     </form>
   </div>
 
-  <!-- Modal para inserir justificativa de reprovação/devolução. -->
   <div id="justificativa-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="document.getElementById('justificativa-modal').style.display='none'">&times;</span>
