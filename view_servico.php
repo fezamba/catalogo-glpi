@@ -218,17 +218,6 @@ $stmt_sugestoes->close();
                 <strong>PO Responsável:</strong>
                 <span><?= htmlspecialchars($servico['po_responsavel'] ?? 'Não informado') ?></span>
             </div>
-            <div class="info-item" style="grid-column: 1 / -1;">
-                <strong>Base de Conhecimento (KB):</strong>
-                <?php
-                $kb_link = $servico['KBs'] ?? '';
-                if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
-                ?>
-                    <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank"><?= htmlspecialchars($kb_link) ?></a>
-                <?php else: ?>
-                    <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
-                <?php endif; ?>
-            </div>
         </div>
 
         <!-- Seção de Diretrizes: só é exibida se houver diretrizes cadastradas. -->
@@ -248,6 +237,11 @@ $stmt_sugestoes->close();
             <?php endforeach; ?>
         <?php endif; ?>
 
+        <div class="grupo">
+            <h4>Alçadas</h4>
+            <p><?= nl2br(htmlspecialchars($servico['alcadas'] ?? 'Não informado.')) ?></p>
+        </div>
+
         <!-- Seção de Padrões: só é exibida se houver padrões cadastrados. -->
         <?php if (!empty($padroes)): ?>
             <h2 class="section-title">Padrões</h2>
@@ -264,6 +258,28 @@ $stmt_sugestoes->close();
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
+        
+        <div class="grupo">
+            <h4>Procedimento de Exceção</h4>
+            <p><?= nl2br(htmlspecialchars($servico['procedimento_excecao'] ?? 'Não informado.')) ?></p>
+        </div>
+        
+        <div class="info-grid">
+             <div class="info-item" style="grid-column: 1 / -1;">
+                <strong>Base de Conhecimento (KB):</strong>
+                <?php
+                $kb_link = $servico['KBs'] ?? '';
+                // Verifica se o campo KB contém uma URL válida.
+                if (!empty($kb_link) && filter_var($kb_link, FILTER_VALIDATE_URL)) :
+                ?>
+                    <!-- Se for uma URL, cria um link clicável. -->
+                    <a href="<?= htmlspecialchars($kb_link) ?>" target="_blank"><?= htmlspecialchars($kb_link) ?></a>
+                <?php else: ?>
+                    <!-- Caso contrário, exibe o texto como está. -->
+                    <span><?= htmlspecialchars($servico['KBs'] ?? 'Nenhum KB informado') ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
 
         <!-- Seção de Checklist: só é exibida se houver itens de checklist. -->
         <?php if (!empty($checklist)): ?>
@@ -279,16 +295,6 @@ $stmt_sugestoes->close();
                 </ul>
             </div>
         <?php endif; ?>
-
-        <h2 class="section-title">Outras Informações</h2>
-        <div class="grupo">
-            <h4>Alçadas</h4>
-            <p><?= nl2br(htmlspecialchars($servico['alcadas'] ?? 'Não informado.')) ?></p>
-        </div>
-        <div class="grupo">
-            <h4>Procedimento de Exceção</h4>
-            <p><?= nl2br(htmlspecialchars($servico['procedimento_excecao'] ?? 'Não informado.')) ?></p>
-        </div>
 
         <!-- Formulário para abertura de chamado no GLPI, integrado à página. -->
         <div class="chamado-form-container">

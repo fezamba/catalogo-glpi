@@ -385,7 +385,7 @@ $query_revisores_glpi = "
 ";
 $res_revisores = $mysqli->query($query_revisores_glpi);
 if ($res_revisores) {
-    $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
+  $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
 }
 
 // --- Lógica de Permissões e Estado da UI ---
@@ -465,26 +465,19 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
     <form id="form-ficha" method="post">
       <div class="form-grid">
         <div class="form-column">
-          <!-- Os campos do formulário são desabilitados (readonly/disabled) com base na variável $isReadOnly. -->
           <label>Nome do Serviço:<textarea name="nome_servico" maxlength="255" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Titulo'] ?? '') ?></textarea></label>
           <label>Descrição do Serviço:<textarea name="descricao_servico" maxlength="1000" rows="4" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['Descricao'] ?? '') ?></textarea></label>
+
           <h3>Informações Adicionais</h3>
           <label>Área Especialista:<textarea name="area_especialista" maxlength="255" rows="1" required <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['area_especialista'] ?? '') ?></textarea></label>
-          <label>Alçadas:<textarea name="alcadas" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['alcadas'] ?? '') ?></textarea></label>
-          <label>Procedimento de Exceção:<textarea name="procedimento_excecao" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['procedimento_excecao'] ?? '') ?></textarea></label>
-          <label>Base de Conhecimento:<textarea name="base_conhecimento" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea></label>
+
           <label>PO Responsável:
             <select name="po_responsavel" required <?= $isReadOnly ? 'disabled' : '' ?>>
               <option value="">Selecione um PO...</option>
               <?php foreach ($lista_pos as $po): ?><option value="<?= htmlspecialchars($po['nome']) ?>" <?= (($dados_edicao['po_responsavel'] ?? '') === $po['nome']) ? 'selected' : '' ?>><?= htmlspecialchars($po['nome']) ?></option><?php endforeach; ?>
             </select>
           </label>
-          <label>Subcategoria:
-            <select name="id_subcategoria" required <?= $isReadOnly ? 'disabled' : '' ?>>
-              <option value="">Selecione uma subcategoria</option>
-              <?php foreach ($subcategorias as $sub): ?><option value="<?php echo $sub['ID']; ?>" <?php if (($dados_edicao['ID_SubCategoria'] ?? '') == $sub['ID']) echo 'selected'; ?>><?php echo htmlspecialchars($sub['Titulo']); ?></option><?php endforeach; ?>
-            </select>
-          </label>
+
           <?php if ($modo_edicao): ?>
             <div class="revisores-container">
               <label>Revisores Designados</label>
@@ -493,7 +486,7 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
               </div>
             </div>
           <?php endif; ?>
-          <!-- Seções dinâmicas para Diretrizes, Padrões e Checklist -->
+
           <h3>Diretrizes</h3>
           <div id="diretrizes">
             <?php $index = 0;
@@ -510,6 +503,11 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             endforeach; ?>
           </div>
           <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarDiretriz()">+ Adicionar Diretriz</button><?php endif; ?>
+        </div>
+
+        <div class="form-column">
+          <label>Alçadas:<textarea name="alcadas" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['alcadas'] ?? '') ?></textarea></label>
+
           <h3>Padrões</h3>
           <div id="padroes">
             <?php $index = 0;
@@ -526,6 +524,10 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             endforeach; ?>
           </div>
           <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarPadrao()">+ Adicionar Padrão</button><?php endif; ?>
+
+          <label>Procedimento de Exceção:<textarea name="procedimento_excecao" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['procedimento_excecao'] ?? '') ?></textarea></label>
+          <label>Base de Conhecimento:<textarea name="base_conhecimento" maxlength="1000" rows="1" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['KBs'] ?? '') ?></textarea></label>
+
           <h3>Checklist de Verificação</h3>
           <div id="checklist">
             <?php $index = 0;
@@ -538,7 +540,15 @@ $isReadOnly = in_array($status, ['publicado', 'cancelada', 'substituida', 'desco
             endforeach; ?>
           </div>
           <?php if (!$isReadOnly): ?><button type="button" class="btn-salvar" onclick="adicionarChecklist()">+ Adicionar Item</button><?php endif; ?>
+
           <h3>Observações Gerais</h3><textarea name="observacoes_gerais" rows="4" maxlength="1000" oninput="autoResize(this)" <?= $isReadOnly ? 'readonly' : '' ?>><?php echo htmlspecialchars($dados_edicao['observacoes'] ?? '') ?></textarea>
+
+          <label>Subcategoria:
+            <select name="id_subcategoria" required <?= $isReadOnly ? 'disabled' : '' ?>>
+              <option value="">Selecione uma subcategoria</option>
+              <?php foreach ($subcategorias as $sub): ?><option value="<?php echo $sub['ID']; ?>" <?php if (($dados_edicao['ID_SubCategoria'] ?? '') == $sub['ID']) echo 'selected'; ?>><?php echo htmlspecialchars($sub['Titulo']); ?></option><?php endforeach; ?>
+            </select>
+          </label>
         </div>
       </div>
       <!-- A seção de botões de ação é totalmente dinâmica, exibindo apenas as ações permitidas para o usuário/status atual. -->
