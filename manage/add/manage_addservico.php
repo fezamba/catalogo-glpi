@@ -373,7 +373,20 @@ if ($modo_edicao) {
 // Carrega dados gerais para preencher os formulários.
 $subcategorias = fetch_all($mysqli, 'subcategoria', 'Titulo ASC');
 $lista_pos = fetch_all($mysqli, 'pos', 'nome ASC');
-$lista_revisores = fetch_all($mysqli, 'revisores', 'nome ASC');
+$lista_revisores = [];
+$query_revisores_glpi = "
+    SELECT u.id AS ID, CONCAT(u.firstname, ' ', u.realname) AS nome, ue.email
+    FROM glpi_users u
+    JOIN glpi_profiles_users pu ON u.id = pu.users_id
+    JOIN glpi_profiles p ON pu.profiles_id = p.id
+    LEFT JOIN glpi_useremails ue ON u.id = ue.users_id AND ue.is_default = 1
+    WHERE p.name = 'Revisor' AND u.is_active = 1
+    ORDER BY nome ASC
+";
+$res_revisores = $mysqli->query($query_revisores_glpi);
+if ($res_revisores) {
+    $lista_revisores = $res_revisores->fetch_all(MYSQLI_ASSOC);
+}
 
 // --- Lógica de Permissões e Estado da UI ---
 $tipo_usuario_atual = $usuario_logado['tipo'];
