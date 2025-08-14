@@ -51,9 +51,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // --- Configurações da API do GLPI ---
     // NOTA: É uma má prática armazenar credenciais diretamente no código.
     // O ideal é usar variáveis de ambiente ou um arquivo de configuração seguro.
-    $glpi_api_url = "http://prhel8glpi002v.sefnet.rj/glpi/apirest.php/";
-    $app_token = "D50oijbJcf6RRgv5k7MHlPsAtm7HdjArqdFR0Nie"; // Substituir pelo token real da aplicação.
-    $user_token = "0HzCAomqUDw6c9AGMGtgjax5ffmfooVmWvEJOQ2b"; // Substituir pelo token do usuário "master" do GLPI.
+    $glpi_api_url = "xxxxxx/glpi/apirest.php/"; //Substituir pela URL da API do GLPI
+    $app_token = "xxxxxx"; // Substituir pelo token real da aplicação.
+    $user_token = "xxxxxx"; // Substituir pelo token do usuário "master" do GLPI.
     
     // Define IDs fixos para o tipo de requisição e entidade.
     $requesttype_id = 1; // ID para "Solicitação".
