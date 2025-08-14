@@ -11,7 +11,7 @@ error_reporting(E_ALL);
  */
 function fetch_context_data() {
     // URL do script que gera o relatório de texto com os dados do catálogo.
-    $url = 'https://seded0032782.sefnet.rj:8080/gerar_relatorio.php';
+    $url = 'url-da-aplicação/gerar_relatorio.php'; // Substituir pela URL da aplicação /gerar_relatorio.php
     
     // Define o cabeçalho da resposta como texto puro com codificação UTF-8.
     header("Content-Type: text/plain; charset=utf-8");
@@ -50,7 +50,7 @@ function fetch_context_data() {
 function call_gemini_api() {
     // NOTA DE SEGURANÇA: A chave da API está visível no código. O ideal é armazená-la em uma variável de ambiente
     // ou em um arquivo de configuração seguro fora do diretório público da web para maior segurança.
-    $apiKey = "AIzaSyD5nmuNijtSJVpHe28ztDAXtMQBTkNxyNQ";
+    $apiKey = "chave-api-do-gemini"; //Substituir pela Chave da API do Gemini
 
     // Pega o corpo da requisição POST enviada pelo JavaScript.
     $requestBody = file_get_contents('php://input');
