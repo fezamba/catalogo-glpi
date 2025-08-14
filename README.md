@@ -2,7 +2,7 @@
 
 ## 📖 Sobre o Projeto
 
-Este projeto é um **Catálogo de Serviços de TI** dinâmico e interativo, desenvolvido em PHP e MySQL. O objetivo é centralizar, padronizar e facilitar o acesso à documentação de todos os serviços oferecidos, servindo como uma fonte única de verdade para colaboradores e para a equipe de TI.
+Este projeto é um **Catálogo de Serviços de TI** dinâmico e interativo, desenvolvido em PHP. O objetivo é centralizar, padronizar e facilitar o acesso à documentação de todos os serviços oferecidos, servindo como uma fonte única de verdade para colaboradores e para a equipe de TI.
 
 A plataforma vai além de uma simples documentação, integrando um workflow completo de criação, revisão e aprovação de fichas de serviço, um assistente virtual para suporte primário e um mecanismo para abertura de chamados diretamente para o GLPI.
 
@@ -19,7 +19,7 @@ A plataforma vai além de uma simples documentação, integrando um workflow com
     * **Product Owners (POs):** Cadastro de responsáveis pelos serviços.
     * **Revisores:** Cadastro de usuários responsáveis pela revisão técnica das fichas.
 * **Workflow de Aprovação e Versionamento:**
-    * Um fluxo de trabalho robusto com múltiplos estágios (`Rascunho`, `Em Revisão`, `Revisada`, `Em Aprovação`, `Aprovada`, `Publicado`, `Cancelada`, `Reprovada`).
+    * Um fluxo de trabalho robusto com múltiplos estágios (`Rascunho`, `Em Revisão`, `Revisada`, `Em Aprovação`, `Aprovada`, `Publicado`, `Cancelada`, `Reprovada`, `Substituída`).
     * Atribuição de múltiplos revisores para uma única ficha.
     * Criação de novas versões de fichas já publicadas, mantendo o histórico e substituindo as antigas automaticamente.
 * **Painel de Debug (Testes):** Uma ferramenta administrativa que permite simular a visualização do sistema como diferentes tipos de usuários (Criador, Revisor, PO) e forçar o status de uma ficha para testar as regras de negócio e permissões.
@@ -28,8 +28,8 @@ A plataforma vai além de uma simples documentação, integrando um workflow com
 
 * **Backend:** PHP 8+
 * **Banco de Dados:** MySQL
-* **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
-* **APIs Externas:** Google Gemini API (para o chatbot)
+* **Frontend:** HTML5, CSS3, JavaScript
+* **APIs Externas:** Google Gemini API (para o chatbot) e API GLPI (para a criação de chamados)
 
 ## 🚀 Como Executar o Projeto
 
