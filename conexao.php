@@ -1,8 +1,4 @@
 <?php
-// Nota do desenvolvedor original:
-// Substituir pelas credenciais do banco do GLPI
-// Será necessário criar novas tabelas, utilize catalogo_nome_da_tabela para criar as tabelas necessárias
-// Estou usando o banco dev do GLPI
 
 // --- Credenciais de Conexão com o Banco de Dados ---
 // NOTA DE SEGURANÇA: É uma má prática armazenar credenciais diretamente no código.
