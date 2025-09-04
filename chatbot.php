@@ -50,7 +50,7 @@ function fetch_context_data() {
 function call_gemini_api() {
     // NOTA DE SEGURANÇA: A chave da API está visível no código. O ideal é armazená-la em uma variável de ambiente
     // ou em um arquivo de configuração seguro fora do diretório público da web para maior segurança.
-    $apiKey = "AIzaSyD5nmuNijtSJVpHe28ztDAXtMQBTkNxyNQ";
+    $apiKey = "";
 
     // Pega o corpo da requisição POST enviada pelo JavaScript.
     $requestBody = file_get_contents('php://input');
