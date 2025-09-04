@@ -4,7 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 function fetch_context_data() {
-    $url = 'https://catalogo-glpi-production.up.railway.app/gerar_relatorio.php';
+    $url = '';
     
     header("Content-Type: text/plain; charset=utf-8");
 
