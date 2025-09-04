@@ -35,9 +35,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $descricao_completa = "Descrição do usuário: \n\n" . $descricao_usuario;
 
     // --- Configurações da API do GLPI ---
-    $glpi_api_url = "http://prhel8glpi002v.sefnet.rj/glpi/apirest.php/";
-    $app_token = "D50oijbJcf6RRgv5k7MHlPsAtm7HdjArqdFR0Nie";
-    $user_token = "0HzCAomqUDw6c9AGMGtgjax5ffmfooVmWvEJOQ2b";
+    $glpi_api_url = "";
+    $app_token = "";
+    $user_token = "";
     
     $requesttype_id = 1;
     $entity_id = 0;
