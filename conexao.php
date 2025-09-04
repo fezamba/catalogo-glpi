@@ -2,22 +2,21 @@
 // Nota do desenvolvedor original:
 // Substituir pelas credenciais do banco do GLPI
 // Será necessário criar novas tabelas, utilize catalogo_nome_da_tabela para criar as tabelas necessárias
-// Estou usando o banco dev do GLPI
 
 // --- Credenciais de Conexão com o Banco de Dados ---
 // NOTA DE SEGURANÇA: É uma má prática armazenar credenciais diretamente no código.
 // O ideal é usar variáveis de ambiente ou um arquivo de configuração seguro fora do diretório público.
 
 // Endereço do servidor do banco de dados.
-$host = '10.8.75.87';
+$host = '';
 // Nome de usuário para a conexão com o banco.
-$user = 'glpi';
+$user = '';
 // Senha para a conexão com o banco.
-$pass = 'Glpi123#';
+$pass = '';
 // Nome do banco de dados a ser utilizado.
-$db   = 'glpi';
+$db   = '';
 // Porta de conexão com o banco de dados.
-$port = 3306;
+$port = ;
 
 // --- Estabelecimento da Conexão ---
 // Cria uma nova instância do objeto mysqli, tentando estabelecer a conexão com o banco de dados.
