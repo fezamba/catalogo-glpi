@@ -39,4 +39,5 @@ A plataforma vai além de uma simples documentação, integrando um workflow com
 * PHP com as extensões `mysqli` e `curl` ativadas.
 * Será necessário configurar o GLPI, credenciais de banco de dados e API
 
-## Projeto ainda não está pronto, deixei ele de lado para focar em outros projetos.
+## ⚠️ Alerta
+Projeto ainda não está pronto, deixei ele de lado para focar em outros projetos.
