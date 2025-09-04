@@ -1,10 +1,10 @@
 <?php
 
-$host = 'yamabiko.proxy.rlwy.net';
-$user = 'root';
-$pass = 'UeNxoVXpTBdeuPmEafuCxNKXCzbtxbaT';
-$db   = 'railway';
-$port = 15683;
+$host = '';
+$user = '';
+$pass = '';
+$db   = '';
+$port = ;
 
 $mysqli = new mysqli($host, $user, $pass, $db, $port);
 
